@@ -8,7 +8,7 @@ on:
 
 jobs:
   deploy:
-    name: Deploy (${{ github.ref_name == 'master' && 'production' || 'staging' }})
+    name: Deploy (${{ github.ref_name == 'master' || 'staging' }})
     runs-on: ubuntu-latest
 
     steps:
@@ -24,18 +24,26 @@ jobs:
             echo "ENV_NAME=production"                             >> $GITHUB_OUTPUT
             echo "SSH_HOST=${{ secrets.HOST }}"              >> $GITHUB_OUTPUT
             echo "SSH_USER=${{ secrets.USER }}"              >> $GITHUB_OUTPUT
-            echo "SSH_KEY=${{ secrets.SSH_KEY }}"            >> $GITHUB_OUTPUT
             echo "DEPLOY_PATH=${{ secrets.PROD_DEPLOY_PATH }}"    >> $GITHUB_OUTPUT
             echo "APP_PORT=3000"                                  >> $GITHUB_OUTPUT
             echo "PM2_APP=holodle-prod"                            >> $GITHUB_OUTPUT
+            {
+              echo "SSH_KEY<<EOF"
+              echo "${{ secrets.SSH_KEY }}"
+              echo "EOF"
+            } >> $GITHUB_OUTPUT
           else
             echo "ENV_NAME=staging"                               >> $GITHUB_OUTPUT
             echo "SSH_HOST=${{ secrets.HOST }}"           >> $GITHUB_OUTPUT
             echo "SSH_USER=${{ secrets.USER }}"           >> $GITHUB_OUTPUT
-            echo "SSH_KEY=${{ secrets.SSH_KEY }}"         >> $GITHUB_OUTPUT
             echo "DEPLOY_PATH=${{ secrets.STAGING_DEPLOY_PATH }}" >> $GITHUB_OUTPUT
             echo "APP_PORT=3001"                                  >> $GITHUB_OUTPUT
             echo "PM2_APP=holodle-staging"                         >> $GITHUB_OUTPUT
+            {
+              echo "SSH_KEY<<EOF"
+              echo "${{ secrets.SSH_KEY }}"
+              echo "EOF"
+            } >> $GITHUB_OUTPUT
           fi
 
       # ── 3. Setup Node.js ───────────────────────────────────────────────────
