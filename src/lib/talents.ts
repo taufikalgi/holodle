@@ -537,7 +537,7 @@ export const TALENTS: Talent[] = [
     hasSololive: false,
     zodiac: "Gemini",
     image:
-      "https://hololive.hololivepro.com/wp-content/uploads/2020/07/Sakamata-Chloe_list_thumb.png",
+      "https://hololive.hololivepro.com/wp-content/uploads/2020/07/Kazama-Iroha_list_thumb.png",
     altNames: ["iroha"],
   },
   // === HOLOLIVE ID Gen 1 ===
