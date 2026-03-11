@@ -13,7 +13,7 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 
 const MAX_GUESSES = 5;
-const STORAGE_KEY = "hololdle-state";
+const STORAGE_KEY = "holodle-classic-state";
 
 interface GameState {
   guesses: { talent: Talent; result: CompareResult }[];
@@ -118,11 +118,7 @@ function GuessRow({
         status={result.heightCategory}
         delay={base + 320}
       />
-      <Cell
-        label={guess.hasSololive ? "✓ Yes" : "✗ No"}
-        status={result.hasSololive}
-        delay={base + 400}
-      />
+      <Cell label={guess.zodiac} status={result.zodiac} delay={base + 400} />
     </div>
   );
 }
@@ -296,7 +292,7 @@ export default function Home() {
                 Year: 2020 ↑
               </div>
               <div className="tag-correct rounded-lg px-2 py-1.5 text-center font-semibold">
-                Sololive: Yes ✓
+                Zodiac: Libra ✓
               </div>
             </div>
           </div>
@@ -403,9 +399,9 @@ export default function Home() {
                       <div className="text-sm font-bold" style={{ color: "var(--holo-text)" }}>
                         {t.name}
                       </div>
-                      <div className="text-xs" style={{ color: "var(--holo-text-muted)" }}>
+                      {/* <div className="text-xs" style={{ color: "var(--holo-text-muted)" }}>
                         {t.branch} • {t.debutYear} • {t.loreArchetype}
-                      </div>
+                      </div> */}
                     </div>
                   </button>
                 ))}
@@ -430,7 +426,7 @@ export default function Home() {
         {/* Column headers */}
         {state.guesses.length > 0 && (
           <div className="grid grid-cols-6 gap-2 px-1 mb-2">
-            {["Talent", "Branch", "Debut Year", "Archetype", "Height", "Sololive"].map((h) => (
+            {["Talent", "Branch", "Debut Year", "Archetype", "Height", "Zodiac"].map((h) => (
               <div
                 key={h}
                 className="text-center text-xs uppercase tracking-wider font-bold py-1"
