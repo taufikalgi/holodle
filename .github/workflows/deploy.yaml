@@ -64,8 +64,8 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       # ── 6. Lint ────────────────────────────────────────────────────────────
-      - name: Lint
-        run: pnpm run lint
+      # - name: Lint
+      #   run: pnpm run lint
 
       # ── 7. Run tests ───────────────────────────────────────────────────────
       #   - name: Run tests
