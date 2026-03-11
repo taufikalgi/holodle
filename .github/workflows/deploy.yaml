@@ -1,0 +1,126 @@
+name: CI/CD Deploy
+
+on:
+  push:
+    branches:
+      - master
+      - dev
+
+jobs:
+  deploy:
+    name: Deploy (${{ github.ref_name == 'master' && 'production' || 'staging' }})
+    runs-on: ubuntu-latest
+
+    steps:
+      # ── 1. Checkout ────────────────────────────────────────────────────────
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # ── 2. Set environment config based on branch ──────────────────────────
+      - name: Set environment config
+        id: config
+        run: |
+          if [[ "${{ github.ref_name }}" == "master" ]]; then
+            echo "ENV_NAME=production"                             >> $GITHUB_OUTPUT
+            echo "SSH_HOST=${{ secrets.HOST }}"              >> $GITHUB_OUTPUT
+            echo "SSH_USER=${{ secrets.USER }}"              >> $GITHUB_OUTPUT
+            echo "SSH_KEY=${{ secrets.SSH_KEY }}"            >> $GITHUB_OUTPUT
+            echo "DEPLOY_PATH=${{ secrets.PROD_DEPLOY_PATH }}"    >> $GITHUB_OUTPUT
+            echo "APP_PORT=3000"                                  >> $GITHUB_OUTPUT
+            echo "PM2_APP=holodle-prod"                            >> $GITHUB_OUTPUT
+          else
+            echo "ENV_NAME=staging"                               >> $GITHUB_OUTPUT
+            echo "SSH_HOST=${{ secrets.HOST }}"           >> $GITHUB_OUTPUT
+            echo "SSH_USER=${{ secrets.USER }}"           >> $GITHUB_OUTPUT
+            echo "SSH_KEY=${{ secrets.SSH_KEY }}"         >> $GITHUB_OUTPUT
+            echo "DEPLOY_PATH=${{ secrets.STAGING_DEPLOY_PATH }}" >> $GITHUB_OUTPUT
+            echo "APP_PORT=3001"                                  >> $GITHUB_OUTPUT
+            echo "PM2_APP=holodle-staging"                         >> $GITHUB_OUTPUT
+          fi
+
+      # ── 3. Setup Node.js ───────────────────────────────────────────────────
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      # ── 4. Install dependencies ────────────────────────────────────────────
+      - name: Install dependencies
+        run: npm ci
+
+      # ── 5. Lint ────────────────────────────────────────────────────────────
+      - name: Lint
+        run: npm run lint
+
+      # ── 6. Run tests ───────────────────────────────────────────────────────
+      #   - name: Run tests
+      #     run: npm test -- --passWithNoTests
+
+      # ── 7. Build Next.js ───────────────────────────────────────────────────
+      - name: Build
+        run: npm run build
+        env:
+          NODE_ENV: production
+
+      # ── 8. Bundle build artifact ───────────────────────────────────────────
+      # Packages only what's needed to run on the server (no devDependencies)
+      - name: Package build artifact
+        run: |
+          tar -czf artifact.tar.gz \
+            .next \
+            public \
+            package.json \
+            package-lock.json \
+            next.config.* \
+            next-env.d.ts 2>/dev/null || true
+
+      # ── 9. Upload artifact to Droplet ─────────────────────────────────────
+      - name: Upload artifact
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ steps.config.outputs.SSH_HOST }}
+          username: ${{ steps.config.outputs.SSH_USER }}
+          key: ${{ steps.config.outputs.SSH_KEY }}
+          source: artifact.tar.gz
+          target: ${{ steps.config.outputs.DEPLOY_PATH }}
+
+      # ── 10. Deploy on Droplet ─────────────────────────────────────────────
+      - name: Deploy to ${{ steps.config.outputs.ENV_NAME }}
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ steps.config.outputs.SSH_HOST }}
+          username: ${{ steps.config.outputs.SSH_USER }}
+          key: ${{ steps.config.outputs.SSH_KEY }}
+          script: |
+            set -e
+
+            DEPLOY_PATH="${{ steps.config.outputs.DEPLOY_PATH }}"
+            PM2_APP="${{ steps.config.outputs.PM2_APP }}"
+            APP_PORT="${{ steps.config.outputs.APP_PORT }}"
+
+            cd $DEPLOY_PATH
+
+            # Extract new build
+            tar -xzf artifact.tar.gz
+            rm artifact.tar.gz
+
+            # Install production dependencies only
+            npm ci --omit=dev
+
+            # Copy environment file
+            # Expects .env.production or .env.staging to already exist on the server
+            cp .env.${{ steps.config.outputs.ENV_NAME }} .env.local 2>/dev/null || true
+
+            # Reload app with PM2 (zero-downtime reload)
+            if pm2 show $PM2_APP > /dev/null 2>&1; then
+              pm2 reload $PM2_APP --update-env
+            else
+              pm2 start npm \
+                --name $PM2_APP \
+                --update-env \
+                -- start -- -p $APP_PORT
+              pm2 save
+            fi
+
+            echo "✅ Deployed to ${{ steps.config.outputs.ENV_NAME }} on port $APP_PORT"
