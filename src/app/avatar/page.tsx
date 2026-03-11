@@ -6,7 +6,7 @@ import { ALL_TALENTS, Keypoint, searchTalents, type Talent } from "@/lib/talents
 import Footer from "@/components/Footer";
 
 const MAX_GUESSES = 5;
-const STORAGE_KEY = "hololive-photo-state";
+const STORAGE_KEY = "holodle-avatar-state";
 
 // Zoom levels per attempt: starts very zoomed in, progressively wider
 // const CROP_LEVELS = [
@@ -31,15 +31,16 @@ function getDateString() {
 
 function getTalentOfTheDay(): Talent {
   // Simple seeded random based on date
-  //   const today = getDateString();
-  //   let hash = 0;
-  //   for (let i = 0; i < today.length; i++) {
-  //     hash = (hash * 31 + today.charCodeAt(i)) >>> 0;
-  //   }
-  //   // Use a different offset than classic so they don't always match
-  //   const index = (hash + 42) % ALL_TALENTS.length;
-  //   return ALL_TALENTS[index];
-  return ALL_TALENTS[1];
+  const today = getDateString();
+  let hash = 0;
+  for (let i = 0; i < today.length; i++) {
+    hash = (hash * 31 + today.charCodeAt(i)) >>> 0;
+  }
+  // Use a different offset than classic so they don't always match
+  // const index = (hash + 42) % ALL_TALENTS.length;
+  const index = (hash + 42) % 5; // current data with keypoints
+  return ALL_TALENTS[index];
+  // return ALL_TALENTS[4];
 }
 
 function getInitialState(): PhotoState {
@@ -169,7 +170,7 @@ export default function PhotoGame() {
 
   return (
     <main className="min-h-screen" style={{ background: "var(--holo-bg)" }}>
-      <Navbar title="PHOTO" />
+      <Navbar title="AVATAR" />
 
       <div className="max-w-xl mx-auto px-4 py-8">
         <div className="text-center mb-6">
