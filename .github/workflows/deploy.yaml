@@ -25,7 +25,7 @@ jobs:
             echo "SSH_HOST=${{ secrets.HOST }}"              >> $GITHUB_OUTPUT
             echo "SSH_USER=${{ secrets.USER }}"              >> $GITHUB_OUTPUT
             echo "DEPLOY_PATH=${{ secrets.PROD_DEPLOY_PATH }}"    >> $GITHUB_OUTPUT
-            echo "APP_PORT=3000"                                  >> $GITHUB_OUTPUT
+            echo "APP_PORT=3001"                                  >> $GITHUB_OUTPUT
             echo "PM2_APP=holodle-prod"                            >> $GITHUB_OUTPUT
             {
               echo "SSH_KEY<<EOF"
@@ -37,7 +37,7 @@ jobs:
             echo "SSH_HOST=${{ secrets.HOST }}"           >> $GITHUB_OUTPUT
             echo "SSH_USER=${{ secrets.USER }}"           >> $GITHUB_OUTPUT
             echo "DEPLOY_PATH=${{ secrets.STAGING_DEPLOY_PATH }}" >> $GITHUB_OUTPUT
-            echo "APP_PORT=3001"                                  >> $GITHUB_OUTPUT
+            echo "APP_PORT=3002"                                  >> $GITHUB_OUTPUT
             echo "PM2_APP=holodle-staging"                         >> $GITHUB_OUTPUT
             {
               echo "SSH_KEY<<EOF"
