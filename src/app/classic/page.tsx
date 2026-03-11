@@ -357,7 +357,7 @@ export default function Home() {
                 value={input}
                 onChange={(e) => handleInput(e.target.value)}
                 onFocus={() => input && filteredSuggestions.length > 0 && setShowDropdown(true)}
-                placeholder="e.g. Gawr Gura, Pekora, Suisei…"
+                placeholder="e.g. Airani, Iofi…"
                 className="holo-input w-full rounded-xl px-4 py-3 text-sm"
                 autoComplete="off"
               />
