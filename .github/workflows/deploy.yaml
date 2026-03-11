@@ -120,7 +120,7 @@ jobs:
             rm artifact.tar.gz
 
             # Install production dependencies only
-            npm ci --omit=dev
+            pnpm install --prod
 
             # Copy environment file
             # Expects .env.production or .env.staging to already exist on the server
@@ -130,7 +130,7 @@ jobs:
             if pm2 show $PM2_APP > /dev/null 2>&1; then
               pm2 reload $PM2_APP --update-env
             else
-              pm2 start npm \
+              pm2 start pnpm \
                 --name $PM2_APP \
                 --update-env \
                 -- start -- -p $APP_PORT
