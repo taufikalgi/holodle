@@ -73,14 +73,14 @@ export const TALENTS: Talent[] = [
     zodiac: "Pisces",
     image: "https://hololive.hololivepro.com/wp-content/uploads/2020/06/AZKi_list_thumb.png",
     altNames: ["azki"],
-    // photoUrl:"",
-    // keypoints: [
-    //   { label: "", x: , y: , zoom:  },
-    //   { label: "", x: , y: , zoom:  },
-    //   { label: "", x: , y: , zoom:  },
-    //   { label: "", x: , y: , zoom:  },
-    //   { label: "", x: , y: , zoom:  },
-    // ],
+    photoUrl: "https://hololive.hololivepro.com/wp-content/uploads/2024/12/AZKi_pr-img_01.png",
+    keypoints: [
+      { label: "hair pin", x: 58, y: 10, zoom: 12 },
+      { label: "bracelet", x: 25, y: 28, zoom: 12 },
+      { label: "tie pin(?)", x: 49, y: 20.5, zoom: 15 },
+      { label: "shoes", x: 62, y: 81, zoom: 11 },
+      { label: "", x: 47.5, y: 40, zoom: 15 },
+    ],
   },
   {
     name: "Sakura Miko",
@@ -92,14 +92,15 @@ export const TALENTS: Talent[] = [
     zodiac: "Pisces",
     image: "https://hololive.hololivepro.com/wp-content/uploads/2020/06/Sakura-Miko_list_thumb.png",
     altNames: ["miko"],
-    // photoUrl:"",
-    // keypoints: [
-    //   { label: "", x: , y: , zoom:  },
-    //   { label: "", x: , y: , zoom:  },
-    //   { label: "", x: , y: , zoom:  },
-    //   { label: "", x: , y: , zoom:  },
-    //   { label: "", x: , y: , zoom:  },
-    // ],
+    photoUrl:
+      "https://hololive.hololivepro.com/wp-content/uploads/2020/06/Sakura-Miko_pr-img_01.png",
+    keypoints: [
+      { label: "hair pin", x: 66, y: 9.8, zoom: 15 },
+      { label: "thigh", x: 45, y: 60.6, zoom: 11 },
+      { label: "thigh", x: 57, y: 56.5, zoom: 13 },
+      { label: "belt", x: 50.5, y: 38, zoom: 12 },
+      { label: "slipper", x: 54, y: 96, zoom: 12 },
+    ],
   },
   {
     name: "Hoshimachi Suisei",
@@ -112,14 +113,15 @@ export const TALENTS: Talent[] = [
     image:
       "https://hololive.hololivepro.com/wp-content/uploads/2020/06/Hoshimachi-Suisei_list_thumb.png",
     altNames: ["suisei"],
-    // photoUrl:"",
-    // keypoints: [
-    //   { label: "", x: , y: , zoom:  },
-    //   { label: "", x: , y: , zoom:  },
-    //   { label: "", x: , y: , zoom:  },
-    //   { label: "", x: , y: , zoom:  },
-    //   { label: "", x: , y: , zoom:  },
-    // ],
+    photoUrl:
+      "https://hololive.hololivepro.com/wp-content/uploads/2020/06/Hoshimachi-Suisei_pr-img_01.png",
+    keypoints: [
+      { label: "hair tie", x: 42, y: 5.5, zoom: 25 },
+      { label: "mic", x: 61, y: 23.3, zoom: 20 },
+      { label: "thigh", x: 61.5, y: 56.5, zoom: 13 },
+      { label: "belt ribbon star", x: 49.6, y: 34.5, zoom: 12 },
+      { label: "shoe", x: 28, y: 89, zoom: 10 },
+    ],
   },
   // === HOLOLIVE JP Gen 1 ===
   {
@@ -676,6 +678,7 @@ export type CompareResult = {
   loreArchetype: "correct" | "wrong";
   heightCategory: "correct" | "wrong";
   hasSololive: "correct" | "wrong";
+  zodiac: "correct" | "wrong";
 };
 
 export function compareTalents(guess: Talent, answer: Talent): CompareResult {
@@ -690,5 +693,6 @@ export function compareTalents(guess: Talent, answer: Talent): CompareResult {
     loreArchetype: guess.loreArchetype === answer.loreArchetype ? "correct" : "wrong",
     heightCategory: guess.heightCategory === answer.heightCategory ? "correct" : "wrong",
     hasSololive: guess.hasSololive === answer.hasSololive ? "correct" : "wrong",
+    zodiac: guess.zodiac === answer.zodiac ? "correct" : "wrong",
   };
 }
