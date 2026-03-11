@@ -133,7 +133,7 @@ jobs:
               pm2 start pnpm \
                 --name $PM2_APP \
                 --update-env \
-                -- start -- -p $APP_PORT
+                -- start -- --port $APP_PORT
               pm2 save
             fi
 
