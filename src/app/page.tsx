@@ -5,7 +5,7 @@ import { GameMode, GAMES } from "@/lib/game-modes";
 export default function Home() {
   return (
     <main
-      className="min-h-screen flex flex-col items-center justify-center"
+      className="min-h-screen flex flex-col items-center justify-center mt-16"
       style={{ background: "var(--holo-bg)" }}
     >
       <h1
@@ -22,7 +22,7 @@ export default function Home() {
         Prove your LOVE to your OSHI
       </p>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 w-full max-w-2xl px-4">
+      <div className="grid grid-cols-1 md:grid-cols gap-6 w-full max-w-2xl px-4">
         {GAMES.map((game: GameMode) => (
           <GameCard key={game.href} {...game} />
         ))}
