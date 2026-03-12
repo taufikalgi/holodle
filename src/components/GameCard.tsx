@@ -24,6 +24,12 @@ export default function GameCard({ href, logo, alt, title, description }: GameCa
       </h2>
       <p className="text-sm text-center" style={{ color: "var(--holo-text-muted)" }}>
         {description}
+        {/* TODO: remove once photo mode is ready */}
+        {title === "Avatar" && (
+          <span className="block text-red-400 text-xs mt-1">
+            In development — Currently only gen 0 available
+          </span>
+        )}
       </p>
     </Link>
   );
