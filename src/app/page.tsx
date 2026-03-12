@@ -26,7 +26,12 @@ export default function Home() {
           href="/classic"
           className="holo-card p-8 flex flex-col items-center gap-3 hover:shadow-lg transition-shadow group"
         >
-          <span className="text-5xl">🎭</span>
+          {/* <span className="text-5xl">🎭</span> */}
+          <img
+            src="https://hololive.hololivepro.com/wp-content/uploads/2020/07/Airani-Iofifteen_list_thumb.png"
+            alt="classic"
+            className="w-20 h-20 rounded-full object-cover mr-1 flex-shrink-0"
+          />
           <h2 className="text-xl font-black" style={{ color: "var(--holo-text)" }}>
             Classic
           </h2>
@@ -39,13 +44,18 @@ export default function Home() {
           href="/endless-classic"
           className="holo-card p-8 flex flex-col items-center gap-3 hover:shadow-lg transition-shadow group"
         >
-          <span className="text-5xl">🎭</span>
+          {/* <span className="text-5xl">🎭</span> */}
+          <img
+            src="https://hololive.hololivepro.com/wp-content/uploads/2023/07/Cecilia-Immergreen_list_thumb.png"
+            alt="classic"
+            className="w-20 h-20 rounded-full object-cover mr-1 flex-shrink-0"
+          />
           <h2 className="text-xl font-black" style={{ color: "var(--holo-text)" }}>
             Endless Classic
           </h2>
           <p className="text-sm text-center" style={{ color: "var(--holo-text-muted)" }}>
             Guess the talent by their attributes — branch, debut year, lore archetype and more —
-            Keep guessing as long as you want. How long can you streak?.
+            Keep guessing as long as you want. How long can you streak?
           </p>
         </Link>
 
@@ -53,7 +63,12 @@ export default function Home() {
           href="/avatar"
           className="holo-card p-8 flex flex-col items-center gap-3 hover:shadow-lg transition-shadow group"
         >
-          <span className="text-5xl">📸</span>
+          {/* <span className="text-5xl">📸</span> */}
+          <img
+            src="https://hololive.hololivepro.com/wp-content/uploads/2023/09/Isaki-Riona_list_thumb.png"
+            alt="classic"
+            className="w-20 h-20 rounded-full object-cover mr-1 flex-shrink-0"
+          />
           <h2 className="text-xl font-black" style={{ color: "var(--holo-text)" }}>
             Avatar
           </h2>
