@@ -1,5 +1,5 @@
 export type HeightCategory = "smol" | "med" | "tall";
-export type Branch = "JP" | "EN" | "ID" | "DEV_IS" | "Stars JP" | "Stars EN" | "Stars ID";
+export type Branch = "JP" | "EN" | "ID" | "DEV_IS" | "Stars JP" | "Stars EN";
 
 export interface Keypoint {
   label: string;
