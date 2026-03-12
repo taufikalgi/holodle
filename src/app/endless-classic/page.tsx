@@ -144,6 +144,7 @@ export default function EndlessGame() {
   const [input, setInput] = useState("");
   const [suggestions, setSuggestions] = useState<Talent[]>([]);
   const [showDropdown, setShowDropdown] = useState(false);
+  const [showHowTo, setShowHowTo] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
@@ -236,18 +237,104 @@ export default function EndlessGame() {
       <div className="max-w-3xl mx-auto px-4 py-8">
         {/* Header */}
         <div className="text-center mb-6">
+          <div className="flex items-center justify-between mb-6">
+            <div className="w-8" />
+            <div className="flex flex-col items-center">
+              <div className="flex items-center gap-2 mb-1">
+                <div className="w-8 h-0.5 bg-gradient-to-r from-transparent to-[#00B4D8]" />
+                <span className="text-[#00B4D8] text-xs">✦</span>
+                <div className="w-8 h-0.5 bg-gradient-to-l from-transparent to-[#00B4D8]" />
+              </div>
+              <h1
+                className="text-5xl font-black tracking-widest"
+                style={{ fontFamily: "'Poppins', sans-serif" }}
+              >
+                <span className="shimmer-text">HOLO</span>
+                <span style={{ color: "var(--holo-text)" }}>DLE</span>
+              </h1>
+              <p
+                className="text-xs tracking-[0.25em] uppercase mt-1"
+                style={{ color: "var(--holo-text-muted)" }}
+              >
+                Hololive Talent Guessing Game — Endless Mode
+              </p>
+            </div>
+            <button
+              onClick={() => setShowHowTo(!showHowTo)}
+              title="How to play"
+              className="w-8 h-8 rounded-full border-2 flex items-center justify-center text-sm font-bold transition-colors"
+              style={{
+                borderColor: "var(--holo-blue)",
+                color: "var(--holo-blue)",
+                background: "white",
+              }}
+            >
+              ?
+            </button>
+          </div>
           <h1
             className="text-4xl font-black tracking-widest mb-1"
             style={{ fontFamily: "'Poppins', sans-serif", color: "var(--holo-text)" }}
           ></h1>
-          <p className="text-sm" style={{ color: "var(--holo-text-muted)" }}>
-            {current.gameOver
-              ? current.won
-                ? "Correct! Ready for the next one?"
-                : "Wrong — try the next one!"
-              : `${guessesLeft} guess${guessesLeft !== 1 ? "es" : ""} remaining`}
-          </p>
+          <div
+            className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-xs font-bold border"
+            style={{
+              background: "white",
+              borderColor: "var(--holo-border)",
+              color: "var(--holo-text-muted)",
+            }}
+          >
+            {current.gameOver ? (
+              current.won ? (
+                "Correct! Ready for the next one?"
+              ) : (
+                "Wrong — try the next one!"
+              )
+            ) : (
+              <>
+                <span style={{ color: "var(--holo-blue)" }}>●</span> {guessesLeft} guess
+                {guessesLeft !== 1 ? "es" : ""} remaining
+              </>
+            )}
+          </div>
         </div>
+
+        {/* How to play */}
+        {showHowTo && (
+          <div className="holo-card p-5 mb-5 animate-slide-down">
+            <h2
+              className="font-black text-sm tracking-widest uppercase mb-3"
+              style={{ color: "var(--holo-blue-dark)" }}
+            >
+              How to Play
+            </h2>
+            <ul className="text-sm space-y-2" style={{ color: "var(--holo-text-muted)" }}>
+              <li>
+                🎯 Guess the secret Hololive talent in{" "}
+                <strong style={{ color: "var(--holo-text)" }}>5 tries</strong>
+              </li>
+              <li>
+                🟢 <span className="text-green-600 font-semibold">Green</span> = correct attribute
+              </li>
+              <li>
+                🔴 <span className="text-red-500 font-semibold">Red</span> = wrong attribute
+              </li>
+              <li>↑↓ Arrows on Debut Year = the correct year is higher or lower</li>
+              <li>⏰ A new talent is chosen every day at midnight!</li>
+            </ul>
+            <div className="mt-4 grid grid-cols-3 gap-2 text-xs">
+              <div className="tag-correct rounded-lg px-2 py-1.5 text-center font-semibold">
+                Branch: JP ✓
+              </div>
+              <div className="tag-wrong rounded-lg px-2 py-1.5 text-center font-semibold">
+                Year: 2020 ↑
+              </div>
+              <div className="tag-correct rounded-lg px-2 py-1.5 text-center font-semibold">
+                Zodiac: Libra ✓
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Stats bar */}
         <div className="flex gap-3 justify-center mb-6">
