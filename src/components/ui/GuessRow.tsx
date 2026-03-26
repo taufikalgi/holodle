@@ -27,8 +27,8 @@ export default function GuessRow({
         label={
           <>
             {guess.debutYear}
-            {result.debutYear === "higher" && <span className="ml-1">↑</span>}
-            {result.debutYear === "lower" && <span className="ml-1">↓</span>}
+            {result.debutYear === "higher" && <span className="ml-1">↓</span>}
+            {result.debutYear === "lower" && <span className="ml-1">↑</span>}
           </>
         }
         status={result.debutYear === "correct" ? "correct" : "wrong"}
