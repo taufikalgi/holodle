@@ -1,5 +1,5 @@
-import Footer from "@/components/Footer";
-import GameCard from "@/components/GameCard";
+import Footer from "@/components/ui/Footer";
+import GameCard from "@/components/ui/GameCard";
 import { GameMode, GAMES } from "@/lib/game-modes";
 
 export default function Home() {

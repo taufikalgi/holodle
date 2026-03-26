@@ -1,9 +1,9 @@
 "use client";
 
 import { useState, useEffect, useRef, useCallback } from "react";
-import Navbar from "@/components/Navbar";
+import Navbar from "@/components/ui/Navbar";
 import { ALL_TALENTS, Keypoint, searchTalents, type Talent } from "@/lib/talents";
-import Footer from "@/components/Footer";
+import Footer from "@/components/ui/Footer";
 
 const MAX_GUESSES = 5;
 const STORAGE_KEY = "holodle-avatar-state";

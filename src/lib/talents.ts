@@ -1586,7 +1586,7 @@ export type CompareResult = {
   debutYear: "correct" | "higher" | "lower";
   loreArchetype: "correct" | "wrong";
   heightCategory: "correct" | "wrong";
-  zodiac: "correct" | "wrong";
+  birthMonth: "correct" | "wrong";
 };
 
 export function compareTalents(guess: Talent, answer: Talent): CompareResult {
@@ -1600,6 +1600,6 @@ export function compareTalents(guess: Talent, answer: Talent): CompareResult {
           : "lower",
     loreArchetype: guess.loreArchetype === answer.loreArchetype ? "correct" : "wrong",
     heightCategory: guess.heightCategory === answer.heightCategory ? "correct" : "wrong",
-    zodiac: guess.zodiac === answer.zodiac ? "correct" : "wrong",
+    birthMonth: guess.birthMonth === answer.birthMonth ? "correct" : "wrong",
   };
 }
