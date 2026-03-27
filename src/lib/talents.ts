@@ -1053,7 +1053,7 @@ export const TALENTS: Talent[] = [
     zodiac: "Aries",
     image:
       "https://hololive.hololivepro.com/wp-content/uploads/2021/07/Koseki-Bijou_list_thumb.png",
-    altNames: [],
+    altNames: ["biboo"],
     photoUrl:
       "https://hololive.hololivepro.com/wp-content/uploads/2021/07/Koseki-Bijou_pr-img_01.png",
   },
