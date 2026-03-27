@@ -16,11 +16,16 @@ export default function Navbar({ title }: { title: string }) {
       </Link>
       {GAMES.map((game: GameMode) => (
         <Link
+          key={game.title}
           href={game.href}
-          className="text-sm font-black tracking-widest"
+          className="text-sm font-black tracking-widest relative group"
           style={{ color: "var(--holo-text)" }}
         >
           {game.title.toUpperCase()}
+          <span
+            className="absolute bottom-0 left-0 h-0.5 w-0 group-hover:w-full transition-all duration-300 ease-in-out"
+            style={{ background: "var(--holo-blue)" }}
+          />
         </Link>
       ))}
     </nav>
