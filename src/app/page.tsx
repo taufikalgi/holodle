@@ -8,6 +8,11 @@ export default function Home() {
       className="min-h-screen flex flex-col items-center justify-center mt-16"
       style={{ background: "var(--holo-bg)" }}
     >
+      <div className="flex items-center gap-2 mb-1">
+        <div className="w-8 h-0.5 bg-gradient-to-r from-transparent to-[#00B4D8]" />
+        <span className="text-[#00B4D8] text-xs">✦</span>
+        <div className="w-8 h-0.5 bg-gradient-to-l from-transparent to-[#00B4D8]" />
+      </div>
       <h1
         className="text-5xl font-black tracking-widest mb-2"
         style={{ fontFamily: "'Poppins', sans-serif" }}
