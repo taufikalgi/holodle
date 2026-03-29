@@ -27,7 +27,7 @@ export default function PageHeader({
           className="text-xs tracking-[0.25em] uppercase mt-1"
           style={{ color: "var(--holo-text-muted)" }}
         >
-          Daily Hololive Talent Guessing Game
+          {subtitle}
         </p>
       </div>
       <button
