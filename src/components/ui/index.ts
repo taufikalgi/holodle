@@ -7,3 +7,4 @@ export { default as Navbar } from "./Navbar";
 export { default as PageHeader } from "./PageHeader";
 export { default as TalentSearchInput } from "./TalentSearchInput";
 export { default as ColumnHeaders } from "./ColumnHeaders";
+export { default as StatsBar } from "./StatsBar";

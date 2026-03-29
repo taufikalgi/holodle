@@ -15,6 +15,7 @@ import {
   HowToPlay,
   Navbar,
   PageHeader,
+  StatsBar,
   TalentSearchInput,
 } from "@/components/ui";
 
@@ -202,28 +203,12 @@ export default function EndlessGame() {
         {showHowTo && <HowToPlay maxGuesses={MAX_GUESSES} classic={false} />}
 
         {/* Stats bar */}
-        <div className="flex gap-3 justify-center mb-6">
-          {[
-            { value: stats.streak, label: "Streak" },
-            { value: stats.bestStreak, label: "Best" },
-            { value: stats.totalPlayed, label: "Played" },
-            {
-              value: stats.totalPlayed
-                ? Math.round((stats.totalWon / stats.totalPlayed) * 100) + "%"
-                : "0%",
-              label: "Win rate",
-            },
-          ].map(({ value, label }) => (
-            <div key={label} className="holo-card px-4 py-2 text-center flex-1">
-              <div className="text-xl font-black" style={{ color: "var(--holo-blue)" }}>
-                {value}
-              </div>
-              <div className="text-xs" style={{ color: "var(--holo-text-muted)" }}>
-                {label}
-              </div>
-            </div>
-          ))}
-        </div>
+        <StatsBar
+          streak={stats.streak}
+          bestStreak={stats.bestStreak}
+          totalPlayed={stats.totalPlayed}
+          totalWon={stats.totalWon}
+        />
 
         {/* Game over */}
         {current.gameOver && (

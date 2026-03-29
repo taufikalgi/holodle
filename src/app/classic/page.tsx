@@ -16,17 +16,26 @@ import {
   HowToPlay,
   Navbar,
   PageHeader,
+  StatsBar,
   TalentSearchInput,
 } from "@/components/ui";
 
 const MAX_GUESSES = 6;
 const STORAGE_KEY = "holodle-classic-state";
+const STATS_STORAGE_KEY = "holodle-classic-stats";
 
 interface GameState {
   guesses: { talent: Talent; result: CompareResult }[];
   gameOver: boolean;
   won: boolean;
   date: string;
+}
+
+interface GameStats {
+  streak: number;
+  bestStreak: number;
+  totalPlayed: number;
+  totalWon: number;
 }
 
 function getDateString() {
@@ -48,8 +57,21 @@ function getInitialState(): GameState {
   return empty;
 }
 
+function getStats(): GameStats {
+  const empty: GameStats = { streak: 0, bestStreak: 0, totalPlayed: 0, totalWon: 0 };
+  if (typeof window === "undefined") return empty;
+  try {
+    const saved = localStorage.getItem(STATS_STORAGE_KEY);
+    if (saved) {
+      return JSON.parse(saved) as GameStats;
+    }
+  } catch {}
+  return empty;
+}
+
 export default function Home() {
   const [state, setState] = useState<GameState>(getInitialState);
+  const [stats, setStats] = useState<GameStats>(getStats);
   const [input, setInput] = useState("");
   const [suggestions, setSuggestions] = useState<Talent[]>([]);
   const [showDropdown, setShowDropdown] = useState(false);
@@ -80,6 +102,9 @@ export default function Home() {
     }
   }, []);
 
+  const saveToStorage = <T,>(key: string, value: T) =>
+    localStorage.setItem(key, JSON.stringify(value));
+
   const makeGuess = useCallback(
     (talent: Talent) => {
       if (state.gameOver) return;
@@ -90,12 +115,22 @@ export default function Home() {
       const gameOver = won || newGuesses.length >= MAX_GUESSES;
       const newState: GameState = { guesses: newGuesses, gameOver, won, date: getDateString() };
       setState(newState);
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(newState));
+      saveToStorage(STORAGE_KEY, newState);
+      if (gameOver) {
+        const newStats: GameStats = {
+          streak: won ? stats.streak + 1 : 0,
+          bestStreak: won ? Math.max(stats.bestStreak, stats.streak + 1) : stats.bestStreak,
+          totalPlayed: stats.totalPlayed + 1,
+          totalWon: won ? stats.totalWon + 1 : stats.totalWon,
+        };
+        setStats(newStats);
+        saveToStorage(STATS_STORAGE_KEY, newStats);
+      }
       setInput("");
       setSuggestions([]);
       setShowDropdown(false);
     },
-    [state, todayAnswer]
+    [state, stats, todayAnswer]
   );
 
   const alreadyGuessed = state.guesses.map((g) => g.talent.name);
@@ -157,6 +192,14 @@ export default function Home() {
 
         {/* How to play */}
         {showHowTo && <HowToPlay maxGuesses={MAX_GUESSES} classic={true} />}
+
+        {/* Stats bar */}
+        <StatsBar
+          streak={stats.streak}
+          bestStreak={stats.bestStreak}
+          totalPlayed={stats.totalPlayed}
+          totalWon={stats.totalWon}
+        />
 
         {/* Game over banner */}
         {state.gameOver && (
