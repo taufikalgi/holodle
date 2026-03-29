@@ -69,7 +69,7 @@ function getStats(): GameStats {
   return empty;
 }
 
-export default function Home() {
+export default function ClassicGame() {
   const [state, setState] = useState<GameState>(getInitialState);
   const [stats, setStats] = useState<GameStats>(getStats);
   const [input, setInput] = useState("");
