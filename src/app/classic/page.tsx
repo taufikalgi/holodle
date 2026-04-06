@@ -153,7 +153,7 @@ export default function ClassicGame() {
   return (
     <main className="min-h-screen" style={{ background: "var(--holo-bg)" }}>
       <Navbar title="CLASSIC" />
-      <div className="max-w-3xl mx-auto px-4 py-8">
+      <div className="max-w-5xl mx-auto px-4 py-8">
         {/* Header */}
         <header className="text-center mb-8">
           <PageHeader
@@ -264,7 +264,15 @@ export default function ClassicGame() {
         {/* Column headers */}
         {state.guesses.length > 0 && (
           <ColumnHeaders
-            headers={["Talent", "Branch", "Debut Year", "Archetype", "Height", "Birth Month"]}
+            headers={[
+              "Talent",
+              "Name",
+              "Branch",
+              "Debut Year",
+              "Archetype",
+              "Height",
+              "Birth Month",
+            ]}
           />
         )}
 

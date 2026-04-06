@@ -163,7 +163,7 @@ export default function EndlessGame() {
     <main className="min-h-screen" style={{ background: "var(--holo-bg)" }}>
       <Navbar title="ENDLESS" />
 
-      <div className="max-w-3xl mx-auto px-4 py-8">
+      <div className="max-w-5xl mx-auto px-4 py-8">
         {/* Header */}
         <div className="text-center mb-6">
           <PageHeader
@@ -264,7 +264,15 @@ export default function EndlessGame() {
         {/* Column headers */}
         {current.guesses.length > 0 && (
           <ColumnHeaders
-            headers={["Talent", "Branch", "Debut Year", "Archetype", "Height", "Birth Month"]}
+            headers={[
+              "Talent",
+              "Name",
+              "Branch",
+              "Debut Year",
+              "Archetype",
+              "Height",
+              "Birth Month",
+            ]}
           />
         )}
 

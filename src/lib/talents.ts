@@ -1582,6 +1582,7 @@ export function searchTalents(query: string): Talent[] {
 }
 
 export type CompareResult = {
+  name: "correct" | "wrong";
   branch: "correct" | "wrong";
   debutYear: "correct" | "higher" | "lower";
   loreArchetype: "correct" | "wrong";
@@ -1591,6 +1592,7 @@ export type CompareResult = {
 
 export function compareTalents(guess: Talent, answer: Talent): CompareResult {
   return {
+    name: guess.name === answer.name ? "correct" : "wrong",
     branch: guess.branch === answer.branch ? "correct" : "wrong",
     debutYear:
       guess.debutYear === answer.debutYear
