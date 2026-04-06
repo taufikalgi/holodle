@@ -286,7 +286,6 @@ export default function ClassicGame() {
         {/* Empty state */}
         {!state.gameOver && state.guesses.length === 0 && (
           <div className="text-center py-14">
-            <div className="text-6xl mb-4 opacity-20">🎭</div>
             <p className="text-sm font-semibold" style={{ color: "var(--holo-text-muted)" }}>
               Start typing above to make your first guess!
             </p>
