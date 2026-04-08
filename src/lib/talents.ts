@@ -1652,10 +1652,10 @@ export function compareTalents(guess: Talent, answer: Talent): CompareResult {
       guess.birthMonth === answer.birthMonth
         ? "correct"
         : guessMonth > answerMonth
-          ? monthDiff <= 3
+          ? monthDiff <= 2
             ? "higher-close"
             : "higher"
-          : monthDiff <= 3
+          : monthDiff <= 2
             ? "lower-close"
             : "lower",
   };
