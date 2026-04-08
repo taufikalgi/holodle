@@ -24,6 +24,10 @@ export default function HowToPlay({
         <li>
           🔴 <span className="text-red-500 font-semibold">Red</span> = wrong attribute
         </li>
+        <li>
+          🟠 <span className="text-yellow-500 font-semibold">Yellow</span> = wrong attribute, but
+          close
+        </li>
         <li>↑↓ Arrows on Debut Year = the correct year is higher or lower</li>
         {classic && <li>⏰ A new talent is chosen every day at midnight!</li>}
       </ul>

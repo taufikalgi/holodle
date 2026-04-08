@@ -73,7 +73,7 @@ export const TALENTS: Talent[] = [
     loreArchetype: "Human",
     height: 158,
     heightCategory: "med",
-    birthMonth: "Jul",
+    birthMonth: "July",
     zodiac: "Cancer",
     image: "https://hololive.hololivepro.com/wp-content/uploads/2020/06/AZKi_list_thumb.png",
     altNames: [],
@@ -93,7 +93,7 @@ export const TALENTS: Talent[] = [
     loreArchetype: "Shrine Maiden",
     height: 152,
     heightCategory: "med",
-    birthMonth: "Mar",
+    birthMonth: "March",
     zodiac: "Pisces",
     image: "https://hololive.hololivepro.com/wp-content/uploads/2020/06/Sakura-Miko_list_thumb.png",
     altNames: [],
@@ -114,7 +114,7 @@ export const TALENTS: Talent[] = [
     loreArchetype: "Human",
     height: 160,
     heightCategory: "med",
-    birthMonth: "Mar",
+    birthMonth: "March",
     zodiac: "Aries",
     image:
       "https://hololive.hololivepro.com/wp-content/uploads/2020/06/Hoshimachi-Suisei_list_thumb.png",
@@ -1584,13 +1584,55 @@ export function searchTalents(query: string): Talent[] {
 export type CompareResult = {
   name: "correct" | "wrong";
   branch: "correct" | "wrong";
-  debutYear: "correct" | "higher" | "lower";
+  debutYear: "correct" | "higher" | "higher-close" | "lower" | "lower-close";
   loreArchetype: "correct" | "wrong";
   heightCategory: "correct" | "wrong";
-  birthMonth: "correct" | "wrong";
+  birthMonth: "correct" | "higher" | "higher-close" | "lower" | "lower-close";
 };
 
+export const MONTH_MAP = {
+  January: 1,
+  February: 2,
+  March: 3,
+  April: 4,
+  May: 5,
+  June: 6,
+  July: 7,
+  August: 8,
+  September: 9,
+  October: 10,
+  November: 11,
+  December: 12,
+};
+
+type MonthKey = keyof typeof MONTH_MAP;
+
+function isValidMonth(month: string): month is MonthKey {
+  return month in MONTH_MAP;
+}
+
+function getMonthNumber(month: string): number {
+  if (!isValidMonth(month)) throw new Error(`Invalid month: ${month}`);
+  return MONTH_MAP[month];
+}
+
+// circular month
+// function getMonthDiff(from: string, to: string): number {
+//   const fromNum = getMonthNumber(from);
+//   const toNum = getMonthNumber(to);
+
+//   const directDiff = Math.abs(fromNum - toNum);
+//   // December (12) to January (1): direct = 11, wraparound = 1
+//   const wraparoundDiff = 12 - directDiff;
+
+//   return Math.min(directDiff, wraparoundDiff);
+// }
+
 export function compareTalents(guess: Talent, answer: Talent): CompareResult {
+  const guessMonth = getMonthNumber(guess.birthMonth);
+  const answerMonth = getMonthNumber(answer.birthMonth);
+  const monthDiff = Math.abs(guessMonth - answerMonth);
+  // const monthDiff = getMonthDiff(guess.birthMonth, answer.birthMonth);
   return {
     name: guess.name === answer.name ? "correct" : "wrong",
     branch: guess.branch === answer.branch ? "correct" : "wrong",
@@ -1598,10 +1640,23 @@ export function compareTalents(guess: Talent, answer: Talent): CompareResult {
       guess.debutYear === answer.debutYear
         ? "correct"
         : guess.debutYear > answer.debutYear
-          ? "higher"
-          : "lower",
+          ? Math.abs(guess.debutYear - answer.debutYear) <= 1
+            ? "higher-close"
+            : "higher"
+          : Math.abs(guess.debutYear - answer.debutYear) <= 1
+            ? "lower-close"
+            : "lower",
     loreArchetype: guess.loreArchetype === answer.loreArchetype ? "correct" : "wrong",
     heightCategory: guess.heightCategory === answer.heightCategory ? "correct" : "wrong",
-    birthMonth: guess.birthMonth === answer.birthMonth ? "correct" : "wrong",
+    birthMonth:
+      guess.birthMonth === answer.birthMonth
+        ? "correct"
+        : guessMonth > answerMonth
+          ? monthDiff <= 3
+            ? "higher-close"
+            : "higher"
+          : monthDiff <= 3
+            ? "lower-close"
+            : "lower",
   };
 }

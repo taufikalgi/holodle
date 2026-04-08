@@ -12,6 +12,7 @@ export default function GuessRow({
   index: number;
 }) {
   const base = index * 80;
+  console.log("guess row " + result.debutYear);
   return (
     <div className="grid grid-cols-7 gap-2 row-reveal" style={{ animationDelay: `${base}ms` }}>
       <div className="flex justify-center px-2 py-3 rounded-xl min-h-[54px] bg-white border-2 border-[#00B4D8]/30 text-[#0077A3]">
@@ -29,10 +30,18 @@ export default function GuessRow({
           <>
             {guess.debutYear}
             {result.debutYear === "higher" && <span className="ml-1">↓</span>}
+            {result.debutYear === "higher-close" && <span className="ml-1">↓</span>}
             {result.debutYear === "lower" && <span className="ml-1">↑</span>}
+            {result.debutYear === "lower-close" && <span className="ml-1">↑</span>}
           </>
         }
-        status={result.debutYear === "correct" ? "correct" : "wrong"}
+        status={
+          result.debutYear === "correct"
+            ? "correct"
+            : result.debutYear === "higher-close" || result.debutYear === "lower-close"
+              ? "wrong-close"
+              : "wrong"
+        }
         delay={base + 240}
       />
       <Cell label={guess.loreArchetype} status={result.loreArchetype} delay={base + 320} />
@@ -41,7 +50,25 @@ export default function GuessRow({
         status={result.heightCategory}
         delay={base + 400}
       />
-      <Cell label={guess.birthMonth} status={result.birthMonth} delay={base + 480} />
+      <Cell
+        label={
+          <>
+            {guess.birthMonth}
+            {result.birthMonth === "higher" && <span className="ml-1">↓</span>}
+            {result.birthMonth === "higher-close" && <span className="ml-1">↓</span>}
+            {result.birthMonth === "lower" && <span className="ml-1">↑</span>}
+            {result.birthMonth === "lower-close" && <span className="ml-1">↑</span>}
+          </>
+        }
+        status={
+          result.birthMonth === "correct"
+            ? "correct"
+            : result.birthMonth === "higher-close" || result.birthMonth === "lower-close"
+              ? "wrong-close"
+              : "wrong"
+        }
+        delay={base + 480}
+      />
     </div>
   );
 }
