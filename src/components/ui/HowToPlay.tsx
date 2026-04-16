@@ -28,18 +28,22 @@ export default function HowToPlay({
           🟠 <span className="text-yellow-500 font-semibold">Yellow</span> = wrong attribute, but
           close
         </li>
+        <li>📝 Archetypes are divided into 3 categories: Human, Animal, and Unique.</li>
         <li>↑↓ Arrows on Debut Year = the correct year is higher or lower</li>
         {classic && <li>⏰ A new talent is chosen every day at midnight!</li>}
       </ul>
-      <div className="mt-4 grid grid-cols-3 gap-2 text-xs">
+      <div className="mt-4 grid grid-cols-4 gap-2 text-xs">
         <div className="tag-correct rounded-lg px-2 py-1.5 text-center font-semibold">
           Branch: JP ✓
         </div>
         <div className="tag-wrong rounded-lg px-2 py-1.5 text-center font-semibold">
           Year: 2020 ↑
         </div>
+        <div className="tag-wrong-close rounded-lg px-2 py-1.5 text-center font-semibold">
+          Height: 150 ↑
+        </div>
         <div className="tag-correct rounded-lg px-2 py-1.5 text-center font-semibold">
-          Zodiac: Libra ✓
+          Birth Month: July ✓
         </div>
       </div>
     </div>

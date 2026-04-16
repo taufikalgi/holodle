@@ -1587,6 +1587,7 @@ export type CompareResult = {
   debutYear: "correct" | "higher" | "higher-close" | "lower" | "lower-close";
   loreArchetype: "correct" | "wrong";
   heightCategory: "correct" | "wrong";
+  height: "correct" | "higher" | "higher-close" | "lower" | "lower-close";
   birthMonth: "correct" | "higher" | "higher-close" | "lower" | "lower-close";
 };
 
@@ -1628,11 +1629,20 @@ function getMonthNumber(month: string): number {
 //   return Math.min(directDiff, wraparoundDiff);
 // }
 
+export function getLoreArchetypeCategory(loreArchetype: string): string {
+  if (loreArchetype.toLocaleLowerCase() === "human") {
+    return "Human";
+  } else if (loreArchetype.toLocaleLowerCase() === "animal") {
+    return "Animal";
+  } else {
+    return "Unique (" + loreArchetype + ")";
+  }
+}
+
 export function compareTalents(guess: Talent, answer: Talent): CompareResult {
   const guessMonth = getMonthNumber(guess.birthMonth);
   const answerMonth = getMonthNumber(answer.birthMonth);
   const monthDiff = Math.abs(guessMonth - answerMonth);
-  // const monthDiff = getMonthDiff(guess.birthMonth, answer.birthMonth);
   return {
     name: guess.name === answer.name ? "correct" : "wrong",
     branch: guess.branch === answer.branch ? "correct" : "wrong",
@@ -1646,8 +1656,22 @@ export function compareTalents(guess: Talent, answer: Talent): CompareResult {
           : Math.abs(guess.debutYear - answer.debutYear) <= 1
             ? "lower-close"
             : "lower",
-    loreArchetype: guess.loreArchetype === answer.loreArchetype ? "correct" : "wrong",
+    loreArchetype:
+      getLoreArchetypeCategory(guess.loreArchetype).split(" ")[0] ===
+      getLoreArchetypeCategory(answer.loreArchetype).split(" ")[0]
+        ? "correct"
+        : "wrong",
     heightCategory: guess.heightCategory === answer.heightCategory ? "correct" : "wrong",
+    height:
+      guess.height === answer.height
+        ? "correct"
+        : guess.height > answer.height
+          ? Math.abs(guess.height - answer.height) <= 5
+            ? "higher-close"
+            : "higher"
+          : Math.abs(guess.height - answer.height) <= 5
+            ? "lower-close"
+            : "lower",
     birthMonth:
       guess.birthMonth === answer.birthMonth
         ? "correct"
