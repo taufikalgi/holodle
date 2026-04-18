@@ -26,10 +26,7 @@ export default function AuthCallbackContent() {
       return;
     }
 
-    // Store the JWT — use httpOnly cookie in production via an API route
-    // for now localStorage is fine for development
     localStorage.setItem("token", token);
-
     setStatus("success");
     setMessage("Signed in successfully!");
     setTimeout(() => router.replace("/giveaway-vsi"), 1500);
@@ -37,6 +34,12 @@ export default function AuthCallbackContent() {
 
   return (
     <div className="callback-root">
+      {/* Logo */}
+      <div className="logo">
+        <span className="logo-holo">HOLO</span>
+        <span className="logo-dle">DLE</span>
+      </div>
+
       <div className="card">
         <div className={`icon-ring ${status}`}>
           {status === "loading" && <Spinner />}
@@ -46,7 +49,7 @@ export default function AuthCallbackContent() {
 
         <p className={`status-label ${status}`}>
           {status === "loading" && "Authenticating"}
-          {status === "success" && "Welcome back"}
+          {status === "success" && "Welcome back!"}
           {status === "error" && "Access denied"}
         </p>
 
@@ -54,52 +57,62 @@ export default function AuthCallbackContent() {
 
         {status === "error" && (
           <button className="retry-btn" onClick={() => router.replace("/login")}>
-            Back to login
+            ← Back to login
           </button>
         )}
       </div>
 
+      <p className="footer">Holodle — Fan-made game. Not affiliated with Cover Corp.</p>
+
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=DM+Mono:ital,wght@0,300;0,400;0,500;1,300&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700;900&display=swap');
 
         *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
         .callback-root {
           min-height: 100vh;
           display: flex;
+          flex-direction: column;
           align-items: center;
           justify-content: center;
-          background: #0a0a0a;
-          background-image:
-            radial-gradient(ellipse 80% 50% at 50% -10%, rgba(255,255,255,0.06) 0%, transparent 70%),
-            repeating-linear-gradient(
-              0deg,
-              transparent,
-              transparent 39px,
-              rgba(255,255,255,0.025) 39px,
-              rgba(255,255,255,0.025) 40px
-            ),
-            repeating-linear-gradient(
-              90deg,
-              transparent,
-              transparent 39px,
-              rgba(255,255,255,0.025) 39px,
-              rgba(255,255,255,0.025) 40px
-            );
-          font-family: 'DM Sans', sans-serif;
+          gap: 24px;
+          background: linear-gradient(160deg, #dbeafe 0%, #e0f2fe 50%, #f0f9ff 100%);
+          font-family: 'Poppins', sans-serif;
+          padding: 24px;
         }
 
+        /* ── Logo ── */
+        .logo {
+          display: flex;
+          align-items: baseline;
+          line-height: 1;
+          user-select: none;
+        }
+        .logo-holo {
+          font-size: 36px;
+          font-weight: 900;
+          color: #0891b2;
+          letter-spacing: -1px;
+        }
+        .logo-dle {
+          font-size: 36px;
+          font-weight: 900;
+          color: #1e293b;
+          letter-spacing: -1px;
+        }
+
+        /* ── Card ── */
         .card {
           display: flex;
           flex-direction: column;
           align-items: center;
-          gap: 20px;
-          padding: 52px 48px;
-          background: rgba(255,255,255,0.03);
-          border: 1px solid rgba(255,255,255,0.08);
-          border-radius: 4px;
-          backdrop-filter: blur(12px);
-          min-width: 320px;
+          gap: 16px;
+          padding: 48px 44px;
+          background: white;
+          border: 1px solid #e2e8f0;
+          border-radius: 20px;
+          box-shadow: 0 8px 40px rgba(0, 0, 0, 0.08);
+          min-width: 300px;
           animation: fadeUp 0.4s cubic-bezier(0.16, 1, 0.3, 1) both;
         }
 
@@ -116,17 +129,22 @@ export default function AuthCallbackContent() {
           display: flex;
           align-items: center;
           justify-content: center;
-          border: 1.5px solid rgba(255,255,255,0.12);
+          border: 1.5px solid #e2e8f0;
+          background: #f8fafc;
           transition: border-color 0.4s ease, background 0.4s ease;
         }
+        .icon-ring.loading {
+          border-color: #bae6fd;
+          background: #f0f9ff;
+        }
         .icon-ring.success {
-          border-color: rgba(134, 239, 172, 0.5);
-          background: rgba(134, 239, 172, 0.06);
+          border-color: #bbf7d0;
+          background: #f0fdf4;
           animation: popIn 0.35s cubic-bezier(0.34, 1.56, 0.64, 1) both;
         }
         .icon-ring.error {
-          border-color: rgba(252, 165, 165, 0.5);
-          background: rgba(252, 165, 165, 0.06);
+          border-color: #fecaca;
+          background: #fef2f2;
           animation: popIn 0.35s cubic-bezier(0.34, 1.56, 0.64, 1) both;
         }
 
@@ -139,58 +157,55 @@ export default function AuthCallbackContent() {
         .spinner {
           width: 24px;
           height: 24px;
-          border: 1.5px solid rgba(255,255,255,0.1);
-          border-top-color: rgba(255,255,255,0.6);
+          border: 2px solid #bae6fd;
+          border-top-color: #0891b2;
           border-radius: 50%;
           animation: spin 0.75s linear infinite;
         }
         @keyframes spin { to { transform: rotate(360deg); } }
 
-        /* ── Check / Cross SVGs ── */
-        .check-svg { stroke: #86efac; }
-        .cross-svg  { stroke: #fca5a5; }
-
-        /* ── Labels ── */
+        /* ── Status label ── */
         .status-label {
-          font-family: 'DM Mono', monospace;
-          font-size: 11px;
-          font-weight: 500;
-          letter-spacing: 0.12em;
-          text-transform: uppercase;
-          color: rgba(255,255,255,0.25);
-          transition: color 0.4s ease;
+          font-size: 18px;
+          font-weight: 700;
+          color: #1e293b;
+          letter-spacing: -0.01em;
         }
-        .status-label.success { color: rgba(134, 239, 172, 0.7); }
-        .status-label.error   { color: rgba(252, 165, 165, 0.7); }
+        .status-label.loading { color: #0891b2; }
+        .status-label.success { color: #16a34a; }
+        .status-label.error   { color: #dc2626; }
 
+        /* ── Message ── */
         .message {
-          font-size: 14px;
-          font-weight: 300;
-          color: rgba(255,255,255,0.45);
+          font-size: 13px;
+          font-weight: 400;
+          color: #64748b;
           text-align: center;
           line-height: 1.6;
-          max-width: 240px;
-          font-family: 'DM Mono', monospace;
+          max-width: 220px;
         }
 
         /* ── Retry button ── */
         .retry-btn {
           margin-top: 4px;
-          padding: 9px 22px;
-          background: transparent;
-          border: 1px solid rgba(255,255,255,0.12);
-          border-radius: 2px;
-          color: rgba(255,255,255,0.5);
-          font-family: 'DM Mono', monospace;
-          font-size: 11px;
-          letter-spacing: 0.08em;
-          text-transform: uppercase;
+          padding: 10px 24px;
+          background: #0891b2;
+          border: none;
+          border-radius: 99px;
+          color: white;
+          font-family: 'Poppins', sans-serif;
+          font-size: 13px;
+          font-weight: 600;
           cursor: pointer;
-          transition: border-color 0.2s, color 0.2s;
+          transition: opacity 0.2s;
         }
-        .retry-btn:hover {
-          border-color: rgba(255,255,255,0.35);
-          color: rgba(255,255,255,0.85);
+        .retry-btn:hover { opacity: 0.8; }
+
+        /* ── Footer ── */
+        .footer {
+          font-size: 11px;
+          color: #94a3b8;
+          text-align: center;
         }
       `}</style>
     </div>
@@ -204,12 +219,12 @@ function Spinner() {
 function CheckIcon() {
   return (
     <svg
-      className="check-svg"
-      width="22"
-      height="22"
+      width="24"
+      height="24"
       viewBox="0 0 24 24"
       fill="none"
-      strokeWidth="1.8"
+      stroke="#16a34a"
+      strokeWidth="2"
       strokeLinecap="round"
       strokeLinejoin="round"
     >
@@ -221,12 +236,12 @@ function CheckIcon() {
 function CrossIcon() {
   return (
     <svg
-      className="cross-svg"
-      width="22"
-      height="22"
+      width="24"
+      height="24"
       viewBox="0 0 24 24"
       fill="none"
-      strokeWidth="1.8"
+      stroke="#dc2626"
+      strokeWidth="2"
       strokeLinecap="round"
       strokeLinejoin="round"
     >
