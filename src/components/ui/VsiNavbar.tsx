@@ -60,8 +60,8 @@ export default function VsiNavbar({
           {onLogout && (
             <button
               onClick={onLogout}
-              className="text-xs font-semibold px-3 py-1 rounded-full border transition-opacity hover:opacity-70"
-              style={{ borderColor: "var(--holo-border)", color: "var(--holo-text-muted)" }}
+              className="text-xs font-semibold px-3 py-1 rounded-full transition-opacity hover:opacity-70"
+              style={{ background: "#ef4444", color: "white", border: "none" }}
             >
               Sign out
             </button>
