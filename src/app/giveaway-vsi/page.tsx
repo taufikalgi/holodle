@@ -130,16 +130,41 @@ function useAuth() {
 
     const token = getToken();
     if (token) {
-      const parsed = parseJwt(token);
-      // Check token hasn't expired
-      if (parsed && Date.now() / 1000 < (JSON.parse(atob(token.split(".")[1])).exp ?? Infinity)) {
-        setUser(parsed);
-      } else {
-        localStorage.removeItem(TOKEN_KEY);
-      }
-    }
+      const payload = JSON.parse(atob(token.split(".")[1]));
+      const isExpired = Date.now() / 1000 > (payload.exp ?? 0);
 
-    setLoading(false);
+      if (isExpired) {
+        localStorage.removeItem(TOKEN_KEY);
+        setLoading(false);
+        return;
+      }
+
+      // Fetch profile picture
+      fetch(`http://localhost:8080/api/v1/user/${payload.user_id}/picture`, {
+        headers: { Authorization: `Bearer ${token}` },
+      })
+        .then((r) => (r.ok ? r.json() : null))
+        .then((data) => {
+          console.log("Fetched user picture data:", data);
+          setUser({
+            id: payload.user_id,
+            email: payload.email,
+            name: payload.email.split("@")[0],
+            picture: data?.data?.picture_url,
+          });
+        })
+        .catch(() => {
+          // Picture fetch failed — still log in, just without avatar
+          setUser({
+            id: payload.user_id,
+            email: payload.email,
+            name: payload.email.split("@")[0],
+          });
+        })
+        .finally(() => setLoading(false));
+    } else {
+      setLoading(false);
+    }
   }, []);
 
   const login = () => {
@@ -292,6 +317,24 @@ function EndlessGame({ user, onLogout }: { user: User; onLogout: () => void }) {
     document.addEventListener("mousedown", handler);
     return () => document.removeEventListener("mousedown", handler);
   }, []);
+
+  function UserAvatar({ userId }: { userId: string }) {
+    const [pictureUrl, setPictureUrl] = useState(null);
+
+    useEffect(() => {
+      const token = localStorage.getItem("token"); // or from cookies/context
+
+      fetch(`http://localhost:8080/api/v1/user/${userId}/picture`, {
+        headers: { Authorization: `Bearer ${token}` },
+      })
+        .then((res) => res.json())
+        .then((data) => setPictureUrl(data.pictureUrl));
+    }, [userId]);
+
+    if (!pictureUrl) return <div>Loading...</div>;
+
+    return <img src={pictureUrl} alt="User avatar" width={100} height={100} />;
+  }
 
   return (
     <main className="min-h-screen" style={{ background: "var(--holo-bg)" }}>

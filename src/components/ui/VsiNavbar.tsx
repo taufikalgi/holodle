@@ -15,6 +15,7 @@ export default function VsiNavbar({
   user?: User;
   onLogout?: () => void;
 }) {
+  console.log("Rendering VsiNavbar with user:", user);
   return (
     <nav
       className="w-full px-4 py-3 flex items-center gap-4 border-b"
