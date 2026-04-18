@@ -3,3 +3,7 @@ pnpm-workspace.yaml
 node_modules/
 
 talents.json
+
+.env.local
+.env.staging
+.env.production
