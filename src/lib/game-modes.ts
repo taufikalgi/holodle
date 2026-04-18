@@ -30,4 +30,11 @@ export const GAMES = [
     title: "Avatar",
     description: "Guess the talent from a cropped zoomed avatar — hints reveal more each try.",
   },
+  {
+    href: "/giveaway-vsi",
+    logo: "https://hololive.hololivepro.com/wp-content/uploads/2020/07/Anya-Melfissa_list_thumb.png",
+    alt: "giveaway vsi logo",
+    title: "Giveaway VSI",
+    description: "Participate in exclusive giveaways and challenges.",
+  },
 ];
