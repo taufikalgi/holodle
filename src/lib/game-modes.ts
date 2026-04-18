@@ -35,6 +35,6 @@ export const GAMES = [
     logo: "https://hololive.hololivepro.com/wp-content/uploads/2020/07/Anya-Melfissa_list_thumb.png",
     alt: "giveaway vsi logo",
     title: "Giveaway VSI",
-    description: "Participate in exclusive giveaways and challenges.",
+    description: "Mau merch gratis? Sini ikut giveaway VSI.",
   },
 ];
