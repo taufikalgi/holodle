@@ -33,6 +33,7 @@ jobs:
               echo "EOF"
             } >> $GITHUB_OUTPUT
             echo "NEXT_PUBLIC_GOOGLE_AUTH_URL=${{ secrets.NEXT_PUBLIC_GOOGLE_AUTH_URL_PROD }}" >> $GITHUB_OUTPUT
+            echo "NEXT_PUBLIC_API_URL=${{ secrets.NEXT_PUBLIC_API_URL_PROD }}" >> $GITHUB_OUTPUT
           else
             echo "ENV_NAME=staging"                               >> $GITHUB_OUTPUT
             echo "SSH_HOST=${{ secrets.HOST }}"           >> $GITHUB_OUTPUT
@@ -46,6 +47,7 @@ jobs:
               echo "EOF"
             } >> $GITHUB_OUTPUT
             echo "NEXT_PUBLIC_GOOGLE_AUTH_URL=${{ secrets.NEXT_PUBLIC_GOOGLE_AUTH_URL_STAGING }}" >> $GITHUB_OUTPUT
+            echo "NEXT_PUBLIC_API_URL=${{ secrets.NEXT_PUBLIC_API_URL_STAGING }}" >> $GITHUB_OUTPUT
           fi
 
       # ── 3. Setup pnpm ───────────────────────────────────────────────────
