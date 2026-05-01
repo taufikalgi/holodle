@@ -19,10 +19,8 @@ import {
   TalentSearchInput,
 } from "@/components/ui";
 import VsiNavbar from "@/components/ui/VsiNavbar";
-import { config } from "@/lib/config";
+import { API_ENDPOINTS } from "./apiEndpoints";
 
-const GOOGLE_AUTH_URL = config.googleAuthUrl; // redirects user to Google OAuth
-const VERIFY_TOKEN_URL = "/api/auth/me"; // GET with Bearer token → { id, name, email, picture }
 const TOKEN_KEY = "token";
 
 interface User {
@@ -46,10 +44,18 @@ function AuthGate({ onLogin }: { onLogin: () => void }) {
         className="bg-white rounded-3xl shadow-xl p-10 flex flex-col items-center gap-5 text-center justify-center"
         style={{ maxWidth: 400, width: "100%", border: "1px solid var(--holo-border)" }}
       >
+        <a
+          href="/"
+          className="text-sm font-bold transition-colors hover:opacity-70"
+          style={{ color: "var(--holo-blue)" }}
+        >
+          ← Back to Home
+        </a>
         <PageHeader
           subtitle="Daily Hololive Talent Guessing Game"
           onHowTo={() => {}}
           showHowTo={false}
+          showButton={false}
         />
 
         <hr className="w-full" style={{ borderColor: "var(--holo-border)" }} />
@@ -140,7 +146,7 @@ function useAuth() {
       }
 
       // Fetch profile picture
-      fetch(`http://localhost:8080/api/v1/user/${payload.user_id}/picture`, {
+      fetch(`${API_ENDPOINTS.apiUrl}/api/v1/user/${payload.user_id}/picture`, {
         headers: { Authorization: `Bearer ${token}` },
       })
         .then((r) => (r.ok ? r.json() : null))
@@ -168,7 +174,7 @@ function useAuth() {
   }, []);
 
   const login = () => {
-    window.location.href = GOOGLE_AUTH_URL;
+    window.location.href = API_ENDPOINTS.googleAuthUrl;
   };
   const logout = () => {
     localStorage.removeItem(TOKEN_KEY);
@@ -324,7 +330,7 @@ function EndlessGame({ user, onLogout }: { user: User; onLogout: () => void }) {
     useEffect(() => {
       const token = localStorage.getItem("token"); // or from cookies/context
 
-      fetch(`http://localhost:8080/api/v1/user/${userId}/picture`, {
+      fetch(`${API_ENDPOINTS.apiUrl}/api/v1/user/${userId}/picture`, {
         headers: { Authorization: `Bearer ${token}` },
       })
         .then((res) => res.json())
@@ -480,7 +486,7 @@ function EndlessGame({ user, onLogout }: { user: User; onLogout: () => void }) {
   );
 }
 
-export default function EndlessClassicPlusPage() {
+export default function VsiGiveawayPage() {
   const { user, loading, login, logout } = useAuth();
 
   if (loading) {

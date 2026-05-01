@@ -2,10 +2,12 @@ export default function PageHeader({
   subtitle,
   onHowTo,
   showHowTo,
+  showButton = true,
 }: {
   subtitle: string;
   onHowTo: () => void;
   showHowTo: boolean;
+  showButton?: boolean;
 }) {
   return (
     <div className="flex items-center justify-between mb-6">
@@ -30,18 +32,20 @@ export default function PageHeader({
           {subtitle}
         </p>
       </div>
-      <button
-        onClick={onHowTo}
-        title="How to play"
-        className="w-8 h-8 rounded-full border-2 flex items-center justify-center text-sm font-bold transition-colors"
-        style={{
-          borderColor: "var(--holo-blue)",
-          color: "var(--holo-blue)",
-          background: "white",
-        }}
-      >
-        {showHowTo ? "x" : "?"}
-      </button>
+      {showButton && (
+        <button
+          onClick={onHowTo}
+          title="How to play"
+          className="w-8 h-8 rounded-full border-2 flex items-center justify-center text-sm font-bold transition-colors"
+          style={{
+            borderColor: "var(--holo-blue)",
+            color: "var(--holo-blue)",
+            background: "white",
+          }}
+        >
+          {showHowTo ? "x" : "?"}
+        </button>
+      )}
     </div>
   );
 }
