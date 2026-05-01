@@ -1,3 +1,4 @@
+import Image from "next/image";
 import Link from "next/link";
 import { GameMode, GAMES } from "@/lib/game-modes";
 
@@ -48,10 +49,12 @@ export default function VsiNavbar({
       {user && (
         <div className="ml-auto flex items-center gap-3">
           {user.picture && (
-            <img
+            <Image
               src={user.picture}
               alt={user.name}
-              className="w-7 h-7 rounded-full"
+              width={28}
+              height={28}
+              className="rounded-full"
               style={{ border: "2px solid var(--holo-border)" }}
             />
           )}
