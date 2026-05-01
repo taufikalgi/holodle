@@ -81,6 +81,7 @@ jobs:
         env:
           NODE_ENV: production
           NEXT_PUBLIC_GOOGLE_AUTH_URL: ${{ steps.config.outputs.NEXT_PUBLIC_GOOGLE_AUTH_URL }}
+          NEXT_PUBLIC_API_URL: ${{ steps.config.outputs.NEXT_PUBLIC_API_URL }}
 
       # ── 9. Bundle build artifact ───────────────────────────────────────────
       # Packages only what's needed to run on the server (no devDependencies)
