@@ -1,0 +1,168 @@
+"use client";
+
+import { useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { useAdminAuth } from "@/hooks/useAdminAuth";
+
+function GoogleIcon() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 48 48" aria-hidden="true">
+      <path
+        fill="#EA4335"
+        d="M24 9.5c3.14 0 5.95 1.08 8.17 2.86l6.09-6.09C34.46 3.19 29.53 1 24 1 14.82 1 7.07 6.48 3.64 14.22l7.09 5.51C12.4 13.67 17.72 9.5 24 9.5z"
+      />
+      <path
+        fill="#4285F4"
+        d="M46.1 24.5c0-1.64-.15-3.22-.42-4.75H24v9h12.42c-.54 2.9-2.18 5.36-4.64 7.01l7.19 5.59C43.09 37.01 46.1 31.22 46.1 24.5z"
+      />
+      <path
+        fill="#FBBC05"
+        d="M10.73 28.27A14.5 14.5 0 0 1 9.5 24c0-1.49.26-2.93.73-4.27L3.14 14.22A22.94 22.94 0 0 0 1 24c0 3.61.87 7.02 2.64 10l7.09-5.73z"
+      />
+      <path
+        fill="#34A853"
+        d="M24 47c5.52 0 10.15-1.83 13.54-4.97l-7.19-5.59c-1.83 1.23-4.17 1.96-6.35 1.96-6.28 0-11.6-4.17-13.27-9.73l-7.09 5.73C7.07 41.52 14.82 47 24 47z"
+      />
+    </svg>
+  );
+}
+
+export default function AdminLoginPage() {
+  const { user, loading, unauthorized, login } = useAdminAuth();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (!loading && user) router.replace("/admin");
+  }, [loading, user, router]);
+
+  if (loading) {
+    return (
+      <main
+        className="min-h-screen flex items-center justify-center"
+        style={{ background: "var(--holo-bg)" }}
+      >
+        <span
+          className="text-sm font-semibold animate-pulse"
+          style={{ color: "var(--holo-text-muted)" }}
+        >
+          Loading…
+        </span>
+      </main>
+    );
+  }
+
+  return (
+    <main
+      className="min-h-screen flex flex-col items-center justify-center"
+      style={{
+        background: "var(--holo-bg)",
+        fontFamily: '"Nunito", sans-serif',
+        padding: "1.5rem",
+      }}
+    >
+      <div
+        className="holo-card animate-bounce-in"
+        style={{
+          maxWidth: 400,
+          width: "100%",
+          padding: "2.5rem 2rem",
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          gap: "1.25rem",
+          textAlign: "center",
+        }}
+      >
+        {/* Logo */}
+        <div
+          style={{
+            width: 64,
+            height: 64,
+            borderRadius: "50%",
+            background: "linear-gradient(135deg, var(--holo-blue-light), var(--holo-blue))",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            fontSize: 28,
+            boxShadow: "0 4px 20px rgba(0,180,216,0.3)",
+          }}
+        >
+          🎨
+        </div>
+
+        <div>
+          <h1
+            className="shimmer-text"
+            style={{
+              fontFamily: '"Poppins", sans-serif',
+              fontSize: 26,
+              fontWeight: 800,
+              margin: "0 0 4px",
+            }}
+          >
+            Holodle Admin
+          </h1>
+          <p style={{ fontSize: 14, color: "var(--holo-text-muted)", margin: 0 }}>
+            Talent Management Portal
+          </p>
+        </div>
+
+        <hr
+          style={{ width: "100%", border: "none", borderTop: "1.5px solid var(--holo-border)" }}
+        />
+
+        {unauthorized ? (
+          <div
+            className="cell-wrong"
+            style={{
+              width: "100%",
+              padding: "12px 16px",
+              borderRadius: 12,
+              fontSize: 14,
+              textAlign: "left",
+            }}
+          >
+            <strong>Access denied.</strong>
+            <br />
+            <span style={{ fontSize: 13 }}>This account does not have admin privileges.</span>
+          </div>
+        ) : (
+          <p style={{ fontSize: 14, color: "var(--holo-text-muted)", lineHeight: 1.6, margin: 0 }}>
+            Sign in with your admin Google account to access the talent management portal.
+          </p>
+        )}
+
+        <button
+          onClick={login}
+          style={{
+            width: "100%",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            gap: 12,
+            padding: "12px 20px",
+            borderRadius: 12,
+            border: "1.5px solid var(--holo-border)",
+            background: "white",
+            color: "var(--holo-text)",
+            fontFamily: '"Nunito", sans-serif',
+            fontWeight: 700,
+            fontSize: 14,
+            cursor: "pointer",
+            transition: "opacity 0.2s ease",
+            boxShadow: "0 1px 4px rgba(0,0,0,0.06)",
+          }}
+          onMouseEnter={(e) => ((e.currentTarget as HTMLButtonElement).style.opacity = "0.75")}
+          onMouseLeave={(e) => ((e.currentTarget as HTMLButtonElement).style.opacity = "1")}
+        >
+          <GoogleIcon />
+          Continue with Google
+        </button>
+
+        <p style={{ fontSize: 11, color: "var(--holo-text-muted)", opacity: 0.5, margin: 0 }}>
+          Admin access only — Holodle fan-made project
+        </p>
+      </div>
+    </main>
+  );
+}

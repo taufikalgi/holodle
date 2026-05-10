@@ -19,7 +19,7 @@ import {
   TalentSearchInput,
 } from "@/components/ui";
 import VsiNavbar from "@/components/ui/VsiNavbar";
-import { API_ENDPOINTS } from "./apiEndpoints";
+import { API_ENDPOINTS } from "../api/apiEndpoints";
 
 const TOKEN_KEY = "token";
 
