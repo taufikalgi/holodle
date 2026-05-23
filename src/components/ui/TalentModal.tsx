@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import type { Talent, TalentFormData } from "@/lib/talent-api";
+import { getToken } from "@/hooks/useAdminAuth";
 
 interface Props {
   mode: "create" | "edit";
@@ -78,9 +79,13 @@ export default function TalentModal({ mode, initial, onClose, onSaved, apiBase }
 
     try {
       const url = mode === "create" ? `${apiBase}/talent/create` : `${apiBase}/talent/update`;
+      const token = getToken();
       const res = await fetch(url, {
         method: mode === "create" ? "POST" : "PUT",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
         body: JSON.stringify(payload),
         credentials: "include",
       });
