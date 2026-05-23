@@ -17,6 +17,54 @@ const BRANCH_COLORS: Record<string, { bg: string; color: string; border: string 
   STARS: { bg: "#fef9c3", color: "#854d0e", border: "#fde047" },
 };
 
+type SortKey = "name" | "branch" | "lore_archetype" | "debut_year" | "height" | "birth_month";
+type SortDirection = "asc" | "desc";
+
+const MONTH_ORDER: Record<string, number> = {
+  January: 1,
+  February: 2,
+  March: 3,
+  April: 4,
+  May: 5,
+  June: 6,
+  July: 7,
+  August: 8,
+  September: 9,
+  October: 10,
+  November: 11,
+  December: 12,
+};
+
+const SORTABLE_HEADERS: Array<{ key: SortKey; label: string }> = [
+  { key: "name", label: "Talent" },
+  { key: "branch", label: "Branch" },
+  { key: "lore_archetype", label: "Archetype" },
+  { key: "debut_year", label: "Debut" },
+  { key: "height", label: "Height" },
+  { key: "birth_month", label: "Birthday" },
+];
+
+function compareTalentsByKey(a: Talent, b: Talent, key: SortKey) {
+  const aValue = a[key];
+  const bValue = b[key];
+
+  if (aValue == null && bValue == null) return 0;
+  if (aValue == null) return 1;
+  if (bValue == null) return -1;
+
+  if (key === "debut_year" || key === "height") {
+    return Number(aValue) - Number(bValue);
+  }
+
+  if (key === "birth_month") {
+    const aMonth = MONTH_ORDER[String(aValue)] ?? Number.MAX_SAFE_INTEGER;
+    const bMonth = MONTH_ORDER[String(bValue)] ?? Number.MAX_SAFE_INTEGER;
+    return aMonth - bMonth;
+  }
+
+  return String(aValue).localeCompare(String(bValue));
+}
+
 function getBranchStyle(branch: string) {
   return (
     BRANCH_COLORS[branch] ?? {
@@ -36,6 +84,8 @@ export default function AdminPage() {
   const [search, setSearch] = useState("");
   const [branchFilter, setBranchFilter] = useState("");
   const [archetypeFilter, setArchetypeFilter] = useState("");
+  const [sortKey, setSortKey] = useState<SortKey | null>(null);
+  const [sortDirection, setSortDirection] = useState<SortDirection>("asc");
   const [modal, setModal] = useState<{ mode: "create" | "edit"; talent?: Talent } | null>(null);
   const [toast, setToast] = useState<{ msg: string; type: "ok" | "err" } | null>(null);
 
@@ -87,7 +137,7 @@ export default function AdminPage() {
 
   const filtered = useMemo(() => {
     const q = search.toLowerCase();
-    return talents.filter(
+    const results = talents.filter(
       (t) =>
         (!q ||
           t.name.toLowerCase().includes(q) ||
@@ -95,13 +145,35 @@ export default function AdminPage() {
         (!branchFilter || t.branch === branchFilter) &&
         (!archetypeFilter || t.lore_archetype === archetypeFilter)
     );
-  }, [talents, search, branchFilter, archetypeFilter]);
+
+    if (!sortKey) return results;
+
+    return [...results].sort((a, b) => {
+      const diff = compareTalentsByKey(a, b, sortKey);
+      return sortDirection === "asc" ? diff : -diff;
+    });
+  }, [talents, search, branchFilter, archetypeFilter, sortKey, sortDirection]);
 
   const branches = useMemo(() => [...new Set(talents.map((t) => t.branch))].sort(), [talents]);
 
   const onSaved = () => {
     fetchTalents();
     showToast(modal?.mode === "create" ? "Talent created! 🎨" : "Talent updated! ✨");
+  };
+
+  const toggleSort = (key: SortKey) => {
+    if (sortKey !== key) {
+      setSortKey(key);
+      setSortDirection("asc");
+      return;
+    }
+
+    if (sortDirection === "asc") {
+      setSortDirection("desc");
+      return;
+    }
+
+    setSortKey(null);
   };
 
   // ── Auth guard ───────────────────────────────────────────────────────────────
@@ -419,16 +491,54 @@ export default function AdminPage() {
             <table style={{ width: "100%", borderCollapse: "collapse", minWidth: 720 }}>
               <thead>
                 <tr style={{ background: "var(--holo-off-white)" }}>
-                  {[
-                    "Talent",
-                    "Branch",
-                    "Archetype",
-                    "Debut",
-                    "Height",
-                    "Birthday",
-                    "Alt names",
-                    "",
-                  ].map((h) => (
+                  {SORTABLE_HEADERS.map(({ key, label }) => {
+                    const active = sortKey === key;
+                    const indicator = active
+                      ? sortDirection === "asc"
+                        ? "↑"
+                        : "↓"
+                      : "↕";
+
+                    return (
+                      <th
+                        key={key}
+                        style={{
+                          padding: "11px 16px",
+                          textAlign: "left",
+                          fontSize: 11,
+                          fontWeight: 800,
+                          color: active ? "var(--holo-blue-dark)" : "var(--holo-text-muted)",
+                          textTransform: "uppercase",
+                          letterSpacing: "0.06em",
+                          borderBottom: "1.5px solid var(--holo-border)",
+                          whiteSpace: "nowrap",
+                        }}
+                      >
+                        <button
+                          type="button"
+                          onClick={() => toggleSort(key)}
+                          style={{
+                            display: "inline-flex",
+                            alignItems: "center",
+                            gap: 6,
+                            background: "none",
+                            border: "none",
+                            padding: 0,
+                            cursor: "pointer",
+                            font: "inherit",
+                            color: "inherit",
+                          }}
+                          aria-label={`Sort by ${label}`}
+                        >
+                          {label}
+                          <span aria-hidden="true" style={{ fontSize: 10 }}>
+                            {indicator}
+                          </span>
+                        </button>
+                      </th>
+                    );
+                  })}
+                  {["Alt names", ""].map((h) => (
                     <th
                       key={h}
                       style={{
