@@ -49,7 +49,7 @@ export default function AdminPage() {
     setError("");
     try {
       const token = getToken();
-      const res = await fetch(`${API_BASE}/talent`, {
+      const res = await fetch(`${API_BASE}/talent/`, {
         headers: token ? { Authorization: `Bearer ${token}` } : {},
       });
       if (res.status === 401) {
