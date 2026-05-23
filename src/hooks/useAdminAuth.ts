@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { API_ENDPOINTS } from "@/app/api/apiEndpoints";
 
 const TOKEN_KEY = "token";
+const AUTH_REDIRECT_KEY = "auth_redirect_to";
 
 export interface AdminUser {
   id: string;
@@ -93,6 +94,7 @@ export function useAdminAuth() {
   }, []);
 
   const login = () => {
+    sessionStorage.setItem(AUTH_REDIRECT_KEY, "/admin");
     window.location.href = API_ENDPOINTS.googleAuthUrl;
   };
 

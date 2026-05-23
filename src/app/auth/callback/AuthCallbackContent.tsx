@@ -5,6 +5,16 @@ import { useRouter, useSearchParams } from "next/navigation";
 
 type Status = "loading" | "success" | "error";
 
+const AUTH_REDIRECT_KEY = "auth_redirect_to";
+const AUTH_REDIRECT_PATHS = new Set(["/giveaway-vsi", "/admin"]);
+
+function getRedirectTarget(): string {
+  const target = sessionStorage.getItem(AUTH_REDIRECT_KEY);
+  sessionStorage.removeItem(AUTH_REDIRECT_KEY);
+
+  return target && AUTH_REDIRECT_PATHS.has(target) ? target : "/giveaway-vsi";
+}
+
 export default function AuthCallbackContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -29,7 +39,9 @@ export default function AuthCallbackContent() {
     localStorage.setItem("token", token);
     setStatus("success");
     setMessage("Signed in successfully!");
-    setTimeout(() => router.replace("/giveaway-vsi"), 1500);
+
+    const redirectTo = getRedirectTarget();
+    setTimeout(() => router.replace(redirectTo), 1500);
   }, [searchParams, router]);
 
   return (

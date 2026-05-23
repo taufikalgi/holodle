@@ -22,6 +22,7 @@ import VsiNavbar from "@/components/ui/VsiNavbar";
 import { API_ENDPOINTS } from "../api/apiEndpoints";
 
 const TOKEN_KEY = "token";
+const AUTH_REDIRECT_KEY = "auth_redirect_to";
 
 interface User {
   id: string;
@@ -174,6 +175,7 @@ function useAuth() {
   }, []);
 
   const login = () => {
+    sessionStorage.setItem(AUTH_REDIRECT_KEY, "/giveaway-vsi");
     window.location.href = API_ENDPOINTS.googleAuthUrl;
   };
   const logout = () => {

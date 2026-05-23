@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8080";
+const AUTH_REDIRECT_KEY = "auth_redirect_to";
 
 export interface User {
   id: string;
@@ -47,6 +48,7 @@ export function useAuth() {
   };
 
   const login = () => {
+    sessionStorage.setItem(AUTH_REDIRECT_KEY, "/giveaway-vsi");
     window.location.href = `${API_BASE}/api/v1/auth/google/login`;
   };
 
