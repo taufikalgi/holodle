@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import type { Talent } from "@/lib/talent-api";
 import TalentModal from "@/components/ui/TalentModal";
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8080/api/v1";
+const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8080" + "/api/v1";
 
 const BRANCH_COLORS: Record<string, { bg: string; color: string; border: string }> = {
   JP: { bg: "#ede0f5", color: "#6a2485", border: "#d4a8e8" },
@@ -49,7 +49,7 @@ export default function AdminPage() {
     setError("");
     try {
       const token = getToken();
-      const res = await fetch(`${API_BASE}/talent/`, {
+      const res = await fetch(`${API_BASE}/talent`, {
         headers: token ? { Authorization: `Bearer ${token}` } : {},
       });
       if (res.status === 401) {
