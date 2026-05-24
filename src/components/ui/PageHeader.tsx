@@ -1,7 +1,7 @@
 export default function PageHeader({
   subtitle,
   onHowTo,
-  onLeaderboard,
+  onLeaderboard = () => {},
   showHowTo,
   showButton = true,
   showLeaderboard,
@@ -10,7 +10,7 @@ export default function PageHeader({
 }: {
   subtitle: string;
   onHowTo: () => void;
-  onLeaderboard: () => void;
+  onLeaderboard?: () => void;
   showHowTo: boolean;
   showButton?: boolean;
   showLeaderboard?: boolean;

@@ -516,92 +516,153 @@ function TalentSearch({
 
 function LeaderboardCard({ entries, loading }: { entries: LeaderboardEntry[]; loading: boolean }) {
   return (
-    <div className="holo-card p-4 md:p-5">
-      <div className="flex items-center justify-between">
-        <div>
-          <p
-            className="text-xs font-black uppercase tracking-[0.24em]"
-            style={{ color: "var(--holo-text-muted)" }}
-          >
-            Leaderboard
-          </p>
-          <p className="mt-1 text-sm" style={{ color: "var(--holo-text-muted)" }}>
-            Sorted by score, correct guesses, then fewer mistakes.
-          </p>
-        </div>
-        <span
-          className="rounded-full border px-3 py-1 text-xs font-bold"
+    <div className="space-y-2">
+      {loading ? (
+        <div
+          className="rounded-2xl border border-dashed px-4 py-8 text-center text-sm"
           style={{ borderColor: "var(--holo-border)", color: "var(--holo-text-muted)" }}
         >
-          Top {entries.length || 0}
-        </span>
-      </div>
-
-      <div className="mt-4 space-y-2">
-        {loading ? (
+          Loading leaderboard...
+        </div>
+      ) : entries.length > 0 ? (
+        entries.map((entry) => (
           <div
-            className="rounded-2xl border border-dashed px-4 py-8 text-center text-sm"
-            style={{ borderColor: "var(--holo-border)", color: "var(--holo-text-muted)" }}
+            key={entry.session_id}
+            className="rounded-2xl border bg-white px-4 py-3 shadow-sm"
+            style={{ borderColor: "var(--holo-border)" }}
           >
-            Loading leaderboard...
-          </div>
-        ) : entries.length > 0 ? (
-          entries.map((entry) => (
-            <div
-              key={entry.session_id}
-              className="rounded-2xl border bg-white px-4 py-3 shadow-sm"
-              style={{ borderColor: "var(--holo-border)" }}
-            >
-              <div className="flex items-start gap-3">
+            <div className="flex items-start gap-3">
+              <div
+                className="flex h-10 w-10 items-center justify-center rounded-xl border text-sm font-black"
+                style={{
+                  borderColor: "var(--holo-border)",
+                  background: "var(--holo-off-white)",
+                  color: "var(--holo-text)",
+                }}
+              >
+                #{entry.rank}
+              </div>
+              <div className="flex h-10 w-10 items-center justify-center">
+                <Image
+                  src={entry.user_picture}
+                  alt={entry.user_name}
+                  width={36}
+                  height={36}
+                  className="rounded-full"
+                  style={{ border: "2px solid var(--holo-border)" }}
+                />
+              </div>
+              <div className="min-w-0 flex-1">
+                <div className="truncate text-sm font-black" style={{ color: "var(--holo-text)" }}>
+                  {entry.user_name}
+                </div>
                 <div
-                  className="flex h-10 w-10 items-center justify-center rounded-xl border text-sm font-black"
-                  style={{
-                    borderColor: "var(--holo-border)",
-                    background: "var(--holo-off-white)",
-                    color: "var(--holo-text)",
-                  }}
+                  className="mt-1 flex flex-wrap gap-2 text-[11px] font-bold uppercase tracking-[0.16em]"
+                  style={{ color: "var(--holo-text-muted)" }}
                 >
-                  #{entry.rank}
-                </div>
-                <div className="flex h-10 w-10 items-center justify-center">
-                  <Image
-                    src={entry.user_picture}
-                    alt={entry.user_name}
-                    width={36}
-                    height={36}
-                    className="rounded-full"
-                    style={{ border: "2px solid var(--holo-border)" }}
-                  />
-                </div>
-                <div className="min-w-0 flex-1">
-                  <div
-                    className="truncate text-sm font-black"
-                    style={{ color: "var(--holo-text)" }}
-                  >
-                    {entry.user_name}
-                  </div>
-                  <div
-                    className="mt-1 flex flex-wrap gap-2 text-[11px] font-bold uppercase tracking-[0.16em]"
-                    style={{ color: "var(--holo-text-muted)" }}
-                  >
-                    <span>{entry.score} pts</span>
-                    <span>•</span>
-                    <span>{entry.correct_guesses} correct</span>
-                    <span>•</span>
-                    <span>{entry.wrong_answers} wrong</span>
-                  </div>
+                  <span>{entry.score} pts</span>
+                  <span>•</span>
+                  <span>{entry.correct_guesses} correct</span>
+                  <span>•</span>
+                  <span>{entry.wrong_answers} wrong</span>
                 </div>
               </div>
             </div>
-          ))
-        ) : (
-          <div
-            className="rounded-2xl border border-dashed px-4 py-8 text-center text-sm"
-            style={{ borderColor: "var(--holo-border)", color: "var(--holo-text-muted)" }}
-          >
-            No leaderboard data yet.
           </div>
-        )}
+        ))
+      ) : (
+        <div
+          className="rounded-2xl border border-dashed px-4 py-8 text-center text-sm"
+          style={{ borderColor: "var(--holo-border)", color: "var(--holo-text-muted)" }}
+        >
+          No leaderboard data yet.
+        </div>
+      )}
+    </div>
+  );
+}
+
+function LeaderboardModal({
+  open,
+  entries,
+  loading,
+  onClose,
+}: {
+  open: boolean;
+  entries: LeaderboardEntry[];
+  loading: boolean;
+  onClose: () => void;
+}) {
+  useEffect(() => {
+    if (!open) return;
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") onClose();
+    };
+
+    document.addEventListener("keydown", handleKeyDown);
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+
+    return () => {
+      document.removeEventListener("keydown", handleKeyDown);
+      document.body.style.overflow = previousOverflow;
+    };
+  }, [open, onClose]);
+
+  if (!open) return null;
+
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center px-4 py-6"
+      role="dialog"
+      aria-modal="true"
+      aria-label="Leaderboard"
+    >
+      <button
+        type="button"
+        className="absolute inset-0 cursor-default bg-black/50 backdrop-blur-sm"
+        aria-label="Close leaderboard"
+        onClick={onClose}
+      />
+      <div className="relative z-10 w-full max-w-4xl">
+        <div className="overflow-hidden rounded-[28px] border bg-[var(--holo-bg)] shadow-2xl">
+          <div className="flex items-center justify-between border-b px-5 py-4 md:px-6">
+            <div>
+              <p
+                className="text-xs font-black uppercase tracking-[0.24em]"
+                style={{ color: "var(--holo-text-muted)" }}
+              >
+                Leaderboard
+              </p>
+              <p className="mt-1 text-sm" style={{ color: "var(--holo-text-muted)" }}>
+                Sorted by score, correct guesses, then fewer mistakes.
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={onClose}
+              className="rounded-full border px-3 py-2 text-sm font-bold transition-colors hover:bg-[var(--holo-off-white)]"
+              style={{ borderColor: "var(--holo-border)", color: "var(--holo-text)" }}
+            >
+              Close
+            </button>
+          </div>
+
+          <div className="p-4 md:p-6">
+            <div className="mb-4 flex items-center justify-between gap-3">
+              <span
+                className="rounded-full border px-3 py-1 text-xs font-bold"
+                style={{ borderColor: "var(--holo-border)", color: "var(--holo-text-muted)" }}
+              >
+                Top {entries.length || 0}
+              </span>
+            </div>
+            <div className="max-h-[75vh] overflow-y-auto pr-1">
+              <LeaderboardCard entries={entries} loading={loading} />
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   );
@@ -643,6 +704,32 @@ function FinalResultCard({
         style={{ background: "var(--holo-blue)" }}
       >
         Start a new session
+      </button>
+    </div>
+  );
+}
+
+function StartSessionCard({ onStart, loading }: { onStart: () => void; loading: boolean }) {
+  return (
+    <div className="win-banner rounded-3xl p-6 md:p-8 text-center">
+      <div className="text-4xl">▶</div>
+      <h2 className="mt-3 text-2xl font-black" style={{ color: "var(--holo-text)" }}>
+        Start a session to play
+      </h2>
+      <p
+        className="mx-auto mt-2 max-w-2xl text-sm leading-6"
+        style={{ color: "var(--holo-text-muted)" }}
+      >
+        A round is only created when you start it. Open a session first, then submit guesses.
+      </p>
+
+      <button
+        onClick={onStart}
+        disabled={loading}
+        className="mt-6 inline-flex items-center justify-center rounded-xl px-5 py-3 text-sm font-bold text-white transition-opacity hover:opacity-80 disabled:cursor-not-allowed disabled:opacity-60"
+        style={{ background: "var(--holo-blue)" }}
+      >
+        {loading ? "Starting..." : "Start session"}
       </button>
     </div>
   );
@@ -718,11 +805,19 @@ function GiveawayVsiGame({ user, onLogout }: { user: AuthUser; onLogout: () => v
     }
   }, []);
 
-  const bootstrapSession = useCallback(async () => {
+  const loadSession = useCallback(async () => {
     setSessionLoading(true);
     setSessionError("");
     setSessionEnded(false);
     const storedSessionId = localStorage.getItem(SESSION_KEY);
+
+    if (!storedSessionId) {
+      setSession(null);
+      setCurrentRoundHistory([]);
+      setPreviousRounds([]);
+      setSessionLoading(false);
+      return;
+    }
 
     if (storedSessionId) {
       try {
@@ -753,8 +848,11 @@ function GiveawayVsiGame({ user, onLogout }: { user: AuthUser; onLogout: () => v
           return;
         }
         if (err instanceof ApiError && (err.status === 404 || err.status === 410)) {
-          setSessionEnded(true);
-          setSessionError("Game session expired.");
+          localStorage.removeItem(SESSION_KEY);
+          clearStoredHistory(storedSessionId);
+          setSession(null);
+          setSessionEnded(false);
+          setSessionError("");
           setSessionLoading(false);
           return;
         }
@@ -763,7 +861,12 @@ function GiveawayVsiGame({ user, onLogout }: { user: AuthUser; onLogout: () => v
         clearStoredHistory(storedSessionId);
       }
     }
+  }, []);
 
+  const createSession = useCallback(async () => {
+    setSessionLoading(true);
+    setSessionError("");
+    setSessionEnded(false);
     try {
       const created = await authedJson<GameSession>("/api/v1/game-session/create", {
         method: "POST",
@@ -773,6 +876,7 @@ function GiveawayVsiGame({ user, onLogout }: { user: AuthUser; onLogout: () => v
       setSession(created);
       setCurrentRoundHistory([]);
       setPreviousRounds([]);
+      setHistoryTab("current");
     } catch (err) {
       setSessionError(err instanceof Error ? err.message : "Failed to create session");
     } finally {
@@ -785,14 +889,13 @@ function GiveawayVsiGame({ user, onLogout }: { user: AuthUser; onLogout: () => v
       localStorage.removeItem(SESSION_KEY);
       clearStoredHistory(session.id);
     }
+    setSession(null);
     setCurrentRoundHistory([]);
     setPreviousRounds([]);
-    setSession(null);
-    setSessionEnded(false);
     setSearch("");
     setHistoryTab("current");
-    await bootstrapSession();
-  }, [bootstrapSession, session?.id]);
+    await createSession();
+  }, [createSession, session?.id]);
 
   const submitGuess = useCallback(
     async (talent: TalentChoice) => {
@@ -885,9 +988,8 @@ function GiveawayVsiGame({ user, onLogout }: { user: AuthUser; onLogout: () => v
 
   useEffect(() => {
     if (!user || talentsLoading) return;
-    void bootstrapSession();
-    void syncLeaderboard();
-  }, [bootstrapSession, syncLeaderboard, talentsLoading, user]);
+    void loadSession();
+  }, [loadSession, talentsLoading, user]);
 
   useEffect(() => {
     const timer = window.setInterval(() => setNow(Date.now()), 1000);
@@ -937,6 +1039,11 @@ function GiveawayVsiGame({ user, onLogout }: { user: AuthUser; onLogout: () => v
     return () => window.clearTimeout(timer);
   }, [toast]);
 
+  useEffect(() => {
+    if (!showLeaderboard) return;
+    void syncLeaderboard();
+  }, [showLeaderboard, syncLeaderboard]);
+
   const totalGuessCount =
     currentRoundHistory.length + previousRounds.reduce((count, round) => count + round.length, 0);
   const latestGuess = currentRoundHistory[currentRoundHistory.length - 1] ?? null;
@@ -979,28 +1086,31 @@ function GiveawayVsiGame({ user, onLogout }: { user: AuthUser; onLogout: () => v
           <PageHeader
             subtitle="Daily Hololive Talent Guessing Game"
             onHowTo={() => setShowHowTo(!showHowTo)}
-            onLeaderboard={() => setShowLeaderboard(!showLeaderboard)}
+            onLeaderboard={() => setShowLeaderboard((prev) => !prev)}
             showHowTo={showHowTo}
             showLeaderboard={showLeaderboard}
             showLeaderboardButton={true}
+            vsiHeader={true}
           />
         </div>
-        <div className="flex gap-3 justify-center mb-6">
-          <HeaderStat label="Time left" value={sessionEnded ? "Expired" : timeLeftText} />
-          <HeaderStat label="Score" value={session?.score ?? 0} />
-          <HeaderStat label="Round" value={session?.round_number ?? 1} />
-          <HeaderStat label="Wrong" value={session?.wrong_answers ?? 0} />
-        </div>
+        {session ? (
+          <div className="flex gap-3 justify-center mb-6">
+            <HeaderStat label="Time left" value={sessionEnded ? "Expired" : timeLeftText} />
+            <HeaderStat label="Score" value={session.score} />
+            <HeaderStat label="Round" value={session.round_number} />
+            <HeaderStat label="Wrong" value={session.wrong_answers} />
+          </div>
+        ) : (
+          <div
+            className="mb-6 rounded-2xl border border-dashed px-4 py-3 text-center text-sm font-semibold"
+            style={{ borderColor: "var(--holo-border)", color: "var(--holo-text-muted)" }}
+          >
+            No active session. Start one to begin playing.
+          </div>
+        )}
 
         {/* How to play */}
         {showHowTo && <HowToPlay maxGuesses={999} classic={false} />}
-
-        {/* Leaderboard */}
-        {showLeaderboard && (
-          <div className="mb-6">
-            <LeaderboardCard entries={leaderboard} loading={leaderboardLoading} />
-          </div>
-        )}
 
         {toast && (
           <div
@@ -1021,6 +1131,13 @@ function GiveawayVsiGame({ user, onLogout }: { user: AuthUser; onLogout: () => v
           </div>
         )}
 
+        <LeaderboardModal
+          open={showLeaderboard}
+          entries={leaderboard}
+          loading={leaderboardLoading}
+          onClose={() => setShowLeaderboard(false)}
+        />
+
         {sessionError && !sessionEnded && (
           <div className="mx-auto mt-5 max-w-3xl rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm font-semibold text-amber-800">
             {sessionError}
@@ -1033,6 +1150,8 @@ function GiveawayVsiGame({ user, onLogout }: { user: AuthUser; onLogout: () => v
             historyCount={totalGuessCount}
             onNewSession={startNewSession}
           />
+        ) : !session ? (
+          <StartSessionCard onStart={startNewSession} loading={sessionLoading} />
         ) : (
           <>
             <TalentSearch
