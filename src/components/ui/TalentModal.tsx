@@ -218,7 +218,7 @@ export default function TalentModal({ mode, initial, onClose, onSaved, apiBase }
                 required
               >
                 <option value="">Select branch</option>
-                {["JP", "EN", "ID", "DEV_IS", "ReGLOSS", "STARS"].map((b) => (
+                {["JP", "EN", "ID", "DEV_IS", "ReGLOSS", "Stars JP", "Stars EN"].map((b) => (
                   <option key={b} value={b}>
                     {b}
                   </option>
