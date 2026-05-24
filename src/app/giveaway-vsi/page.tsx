@@ -497,9 +497,6 @@ function TalentSearch({
                   <div className="truncate text-sm font-bold" style={{ color: "var(--holo-text)" }}>
                     {talent.name}
                   </div>
-                  <div className="text-xs" style={{ color: "var(--holo-text-muted)" }}>
-                    {talent.branch} • {talent.debutYear ?? "?"} • {talent.birthMonth}
-                  </div>
                 </div>
               </button>
             ))
