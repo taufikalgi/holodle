@@ -1,16 +1,24 @@
 export default function PageHeader({
   subtitle,
   onHowTo,
+  onLeaderboard,
   showHowTo,
   showButton = true,
+  showLeaderboard,
+  showLeaderboardButton,
+  vsiHeader = false,
 }: {
   subtitle: string;
   onHowTo: () => void;
+  onLeaderboard: () => void;
   showHowTo: boolean;
   showButton?: boolean;
+  showLeaderboard?: boolean;
+  showLeaderboardButton?: boolean;
+  vsiHeader?: boolean;
 }) {
   return (
-    <div className="flex items-center justify-between mb-6">
+    <div className={`flex items-center justify-between ${vsiHeader ? "pl-12" : "pl-0"} mb-6`}>
       <div className="w-8" />
       <div className="flex flex-col items-center">
         <div className="flex items-center gap-2 mb-1">
@@ -32,20 +40,36 @@ export default function PageHeader({
           {subtitle}
         </p>
       </div>
-      {showButton && (
-        <button
-          onClick={onHowTo}
-          title="How to play"
-          className="w-8 h-8 rounded-full border-2 flex items-center justify-center text-sm font-bold transition-colors"
-          style={{
-            borderColor: "var(--holo-blue)",
-            color: "var(--holo-blue)",
-            background: "white",
-          }}
-        >
-          {showHowTo ? "x" : "?"}
-        </button>
-      )}
+      <div className="flex items-center gap-2">
+        {showLeaderboardButton && (
+          <button
+            onClick={onLeaderboard}
+            title="Leaderboard"
+            className="w-8 h-8 rounded-full border-2 flex items-center justify-center text-sm font-bold transition-colors"
+            style={{
+              borderColor: "var(--holo-blue)",
+              color: "var(--holo-blue)",
+              background: "white",
+            }}
+          >
+            {showLeaderboard ? "x" : "🏆"}
+          </button>
+        )}
+        {showButton && (
+          <button
+            onClick={onHowTo}
+            title="How to play"
+            className="w-8 h-8 rounded-full border-2 flex items-center justify-center text-sm font-bold transition-colors"
+            style={{
+              borderColor: "var(--holo-blue)",
+              color: "var(--holo-blue)",
+              background: "white",
+            }}
+          >
+            {showHowTo ? "x" : "?"}
+          </button>
+        )}
+      </div>
     </div>
   );
 }

@@ -169,7 +169,10 @@ export default function EndlessGame() {
           <PageHeader
             subtitle="Daily Hololive Talent Guessing Game"
             onHowTo={() => setShowHowTo(!showHowTo)}
+            onLeaderboard={() => {}}
             showHowTo={showHowTo}
+            showLeaderboard={false}
+            showLeaderboardButton={false}
           />
 
           <h1

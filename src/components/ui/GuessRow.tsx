@@ -1,14 +1,32 @@
-import { type Talent, type CompareResult, getLoreArchetypeCategory } from "@/lib/talents";
+import { getLoreArchetypeCategory } from "@/lib/talents";
 import Cell from "./Cell";
-import HeightLabel from "./HeightLabel";
+
+type GuessRowTalent = {
+  name: string;
+  branch: string;
+  debutYear: number | null;
+  loreArchetype: string;
+  height: number | null;
+  birthMonth: string;
+  image: string;
+};
+
+type GuessRowResult = {
+  name: "correct" | "wrong";
+  branch: "correct" | "wrong";
+  debutYear: "correct" | "wrong" | "higher" | "higher-close" | "lower" | "lower-close";
+  loreArchetype: "correct" | "wrong";
+  height: "correct" | "wrong" | "higher" | "higher-close" | "lower" | "lower-close";
+  birthMonth: "correct" | "wrong" | "higher" | "higher-close" | "lower" | "lower-close";
+};
 
 export default function GuessRow({
   guess,
   result,
   index,
 }: {
-  guess: Talent;
-  result: CompareResult;
+  guess: GuessRowTalent;
+  result: GuessRowResult;
   index: number;
 }) {
   const base = index * 80;
@@ -27,7 +45,7 @@ export default function GuessRow({
       <Cell
         label={
           <>
-            {guess.debutYear}
+            {guess.debutYear ?? "—"}
             {result.debutYear === "higher" && <span className="ml-1">↓</span>}
             {result.debutYear === "higher-close" && <span className="ml-1">↓</span>}
             {result.debutYear === "lower" && <span className="ml-1">↑</span>}
@@ -48,15 +66,10 @@ export default function GuessRow({
         status={result.loreArchetype}
         delay={base + 320}
       />
-      {/* <Cell
-        label={<HeightLabel cat={guess.heightCategory} />}
-        status={result.heightCategory}
-        delay={base + 400}
-      /> */}
       <Cell
         label={
           <>
-            {guess.height}
+            {guess.height ?? "—"}
             {result.height === "higher" && <span className="ml-1">↓</span>}
             {result.height === "higher-close" && <span className="ml-1">↓</span>}
             {result.height === "lower" && <span className="ml-1">↑</span>}
