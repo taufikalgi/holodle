@@ -196,7 +196,7 @@ export default function PhotoGame() {
           className="holo-card mb-6 overflow-hidden flex items-center justify-center"
           style={{ height: 280 }}
         >
-          {todayAnswer.photoUrl ? (
+          {/* {todayAnswer.photoUrl ? (
             // <PhotoCrop
             //   src={todayAnswer.photoUrl}
             //   keypoint={
@@ -217,7 +217,7 @@ export default function PhotoGame() {
                 Add photoUrl + keypoints to talent data
               </p>
             </div>
-          )}
+          )} */}
         </div>
 
         {/* Hint list */}
