@@ -8,7 +8,7 @@ import VsiNavbar from "@/components/ui/VsiNavbar";
 import Image from "next/image";
 import { API_ENDPOINTS } from "../api/apiEndpoints";
 import { getToken } from "@/hooks/useAdminAuth";
-import { TalentSearchInput, HowToPlay } from "@/components/ui";
+import { TalentSearchInput, HowToPlay, ColumnHeaders } from "@/components/ui";
 import { ALL_TALENTS, searchTalents } from "@/lib/talents";
 
 const TOKEN_KEY = "token";
@@ -375,23 +375,12 @@ function GoogleIcon() {
 
 function HeaderStat({ label, value }: { label: string; value: string | number }) {
   return (
-    <div className="flex gap-3 justify-center mb-6">
-      {/* <div
-        className="text-[11px] font-bold uppercase tracking-[0.24em]"
-        style={{ color: "var(--holo-text-muted)" }}
-      >
-        {label}
-      </div>
-      <div className="mt-1 text-lg font-black" style={{ color: "var(--holo-text)" }}>
+    <div key={label} className="holo-card px-4 py-2 text-center flex-1">
+      <div className="text-xl font-black" style={{ color: "var(--holo-blue)" }}>
         {value}
-      </div> */}
-      <div key={label} className="holo-card px-4 py-2 text-center flex-1">
-        <div className="text-xl font-black" style={{ color: "var(--holo-blue)" }}>
-          {value}
-        </div>
-        <div className="text-xs" style={{ color: "var(--holo-text-muted)" }}>
-          {label}
-        </div>
+      </div>
+      <div className="text-xs" style={{ color: "var(--holo-text-muted)" }}>
+        {label}
       </div>
     </div>
   );
@@ -677,7 +666,7 @@ function FinalResultCard({
   return (
     <div className="win-banner rounded-3xl p-6 md:p-8 text-center animate-bounce-in">
       <div className="text-4xl">⏰</div>
-      <h2 className="mt-3 text-2xl font-black" style={{ color: "var(--holo-text)" }}>
+      <h2 className="mt-3 text-2xl font-black" style={{ color: "var(--holo-blue)" }}>
         Session expired
       </h2>
       <p
@@ -709,8 +698,10 @@ function FinalResultCard({
 function StartSessionCard({ onStart, loading }: { onStart: () => void; loading: boolean }) {
   return (
     <div className="win-banner rounded-3xl p-6 md:p-8 text-center">
-      <div className="text-4xl">▶</div>
-      <h2 className="mt-3 text-2xl font-black" style={{ color: "var(--holo-text)" }}>
+      <div className="text-4xl" style={{ color: "var(--holo-blue)" }}>
+        ▶
+      </div>
+      <h2 className="mt-3 text-2xl font-black" style={{ color: "var(--holo-blue)" }}>
         Start a session to play
       </h2>
       <p
@@ -939,7 +930,7 @@ function GiveawayVsiGame({ user, onLogout }: { user: AuthUser; onLogout: () => v
               }
             : prev
         );
-        setToast(data.correct ? "Correct guess. The backend advanced the round." : "Wrong answer.");
+        setToast(data.correct ? "Correct guess." : "Wrong answer.");
       } catch (err) {
         if (err instanceof ApiError && err.status === 401) return;
         if (err instanceof ApiError && /expired/i.test(err.message)) {
@@ -1081,7 +1072,7 @@ function GiveawayVsiGame({ user, onLogout }: { user: AuthUser; onLogout: () => v
       <div className="max-w-5xl mx-auto px-4 py-8">
         <div className="text-center mb-6">
           <PageHeader
-            subtitle="Daily Hololive Talent Guessing Game"
+            subtitle="Giveaway VSI - Guess the Hololive talent!"
             onHowTo={() => setShowHowTo(!showHowTo)}
             onLeaderboard={() => setShowLeaderboard((prev) => !prev)}
             showHowTo={showHowTo}
@@ -1111,7 +1102,7 @@ function GiveawayVsiGame({ user, onLogout }: { user: AuthUser; onLogout: () => v
 
         {toast && (
           <div
-            className="mx-auto mt-5 max-w-3xl rounded-2xl border px-4 py-3 text-sm font-bold animate-slide-down"
+            className="fixed bottom-6 left-1/2 -translate-x-1/2 w-max max-w-sm rounded-2xl border px-4 py-3 text-sm font-bold animate-slide-up z-50"
             style={{
               borderColor: "var(--holo-border)",
               background: "white",
@@ -1223,24 +1214,18 @@ function GiveawayVsiGame({ user, onLogout }: { user: AuthUser; onLogout: () => v
                   </div>
 
                   {historyTab === "current" && currentRoundHistory.length > 0 ? (
-                    <div className="min-w-[1030px] space-y-2">
-                      <div className="grid grid-cols-7 gap-2">
-                        {["Talent", "Name", "Branch", "Debut", "Archetype", "Height", "Month"].map(
-                          (label) => (
-                            <div
-                              key={label}
-                              className="rounded-xl border px-3 py-2 text-center text-[10px] font-black uppercase tracking-[0.24em]"
-                              style={{
-                                borderColor: "var(--holo-border)",
-                                background: "var(--holo-off-white)",
-                                color: "var(--holo-text-muted)",
-                              }}
-                            >
-                              {label}
-                            </div>
-                          )
-                        )}
-                      </div>
+                    <div className="space-y-2">
+                      <ColumnHeaders
+                        headers={[
+                          "Talent",
+                          "Name",
+                          "Branch",
+                          "Debut Year",
+                          "Archetype",
+                          "Height",
+                          "Birth Month",
+                        ]}
+                      />
 
                       {displayCurrentHistory.map((guess, index) => (
                         <GuessRow
@@ -1297,30 +1282,19 @@ function GiveawayVsiGame({ user, onLogout }: { user: AuthUser; onLogout: () => v
                             </div>
 
                             <div className="mt-4 overflow-x-auto pb-2">
-                              <div className="min-w-[1030px] space-y-2">
-                                <div className="grid grid-cols-7 gap-2">
-                                  {[
+                              <div className="space-y-2">
+                                <ColumnHeaders
+                                  headers={[
                                     "Talent",
                                     "Name",
                                     "Branch",
-                                    "Debut",
+                                    "Debut Year",
                                     "Archetype",
                                     "Height",
-                                    "Month",
-                                  ].map((label) => (
-                                    <div
-                                      key={label}
-                                      className="rounded-xl border px-3 py-2 text-center text-[10px] font-black uppercase tracking-[0.24em]"
-                                      style={{
-                                        borderColor: "var(--holo-border)",
-                                        background: "var(--holo-off-white)",
-                                        color: "var(--holo-text-muted)",
-                                      }}
-                                    >
-                                      {label}
-                                    </div>
-                                  ))}
-                                </div>
+                                    "Birth Month",
+                                  ]}
+                                  giveawayVsi={true}
+                                />
 
                                 {[...round].reverse().map((guess, index) => (
                                   <GuessRow

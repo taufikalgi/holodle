@@ -17,9 +17,10 @@ export default function PageHeader({
   showLeaderboardButton?: boolean;
   vsiHeader?: boolean;
 }) {
+  let buttonShown = (showButton ? 1 : 0) + (showLeaderboardButton ? 1 : 0);
   return (
-    <div className={`flex items-center justify-between ${vsiHeader ? "pl-12" : "pl-0"} mb-6`}>
-      <div className="w-8" />
+    <div className={`flex items-center justify-between ${vsiHeader ? "pl-12" : ""} `}>
+      <div className={`w-${buttonShown * 8}`} />
       <div className="flex flex-col items-center">
         <div className="flex items-center gap-2 mb-1">
           <div className="w-8 h-0.5 bg-gradient-to-r from-transparent to-[#00B4D8]" />
