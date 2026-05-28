@@ -27,7 +27,7 @@ export default function GameCard({ href, logo, alt, title, description }: GameCa
         {/* TODO: remove once photo mode is ready */}
         {title === "Avatar" && (
           <span className="block text-red-400 text-xs mt-1">
-            In development — Currently only gen 0 available
+            In development — Please wait for the next update! 🙏
           </span>
         )}
       </p>

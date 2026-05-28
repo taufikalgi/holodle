@@ -38,7 +38,8 @@ function getTalentOfTheDay(): Talent {
   }
   // Use a different offset than classic so they don't always match
   // const index = (hash + 42) % ALL_TALENTS.length;
-  const index = (hash + 42) % 5; // current data with keypoints
+  // const index = (hash + 42) % 5; // current data with keypoints
+  const index = 0;
   return ALL_TALENTS[index];
   // return ALL_TALENTS[4];
 }
@@ -112,7 +113,7 @@ export default function PhotoGame() {
   const todayAnswer = getTalentOfTheDay();
   const guessCount = state.guesses.length;
   //   const cropLevel = CROP_LEVELS[Math.min(guessCount, CROP_LEVELS.length - 1)];
-  const currentKeypoint = todayAnswer.keypoints?.[guessCount] ?? null;
+  // const currentKeypoint = todayAnswer.keypoints?.[guessCount] ?? null;
   const alreadyGuessed = state.guesses.map((g) => g.talent.name);
 
   useEffect(() => {
@@ -185,7 +186,8 @@ export default function PhotoGame() {
               ? state.won
                 ? "You got it! 🎉"
                 : "Better luck tomorrow!"
-              : `Hint ${guessCount + 1} of ${Math.min(MAX_GUESSES, todayAnswer.keypoints?.length ?? MAX_GUESSES)}`}
+              : // : `Hint ${guessCount + 1} of ${Math.min(MAX_GUESSES, todayAnswer.keypoints?.length ?? MAX_GUESSES)}`}
+                `Underdevelopment - add keypoints to talent data for hints!`}
           </p>
         </div>
 
@@ -195,15 +197,16 @@ export default function PhotoGame() {
           style={{ height: 280 }}
         >
           {todayAnswer.photoUrl ? (
-            <PhotoCrop
-              src={todayAnswer.photoUrl}
-              keypoint={
-                state.gameOver
-                  ? null
-                  : (todayAnswer.keypoints?.[guessCount] ?? todayAnswer.keypoints?.[0] ?? null)
-              }
-              revealed={state.gameOver}
-            />
+            // <PhotoCrop
+            //   src={todayAnswer.photoUrl}
+            //   keypoint={
+            //     state.gameOver
+            //       ? null
+            //       : (todayAnswer.keypoints?.[guessCount] ?? todayAnswer.keypoints?.[0] ?? null)
+            //   }
+            //   revealed={state.gameOver}
+            // />
+            <></>
           ) : (
             <div
               className="w-full h-72 rounded-2xl flex flex-col items-center justify-center gap-2 opacity-40"
