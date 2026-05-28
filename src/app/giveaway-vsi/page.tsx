@@ -43,7 +43,7 @@ type TalentChoice = {
   loreArchetype: string;
   height: number | null;
   birthMonth: string;
-  image: string;
+  photoUrl: string;
   altNames: string[];
 };
 
@@ -137,7 +137,7 @@ function normalizeTalent(talent: ApiTalent): TalentChoice {
     loreArchetype: talent.lore_archetype,
     height: talent.height,
     birthMonth: talent.birth_month,
-    image: talent.image_url,
+    photoUrl: talent.image_url,
     altNames: talent.alt_names ?? [],
   };
 }
@@ -489,7 +489,7 @@ function TalentSearch({
                 style={{ borderColor: "var(--holo-border)" }}
               >
                 <img
-                  src={talent.image}
+                  src={talent.photoUrl}
                   alt={talent.name}
                   className="h-10 w-10 rounded-full object-cover"
                 />

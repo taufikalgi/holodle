@@ -24,7 +24,7 @@ export default function Cell({
         : "cell-wrong";
   return (
     <div
-      className={`flex items-center justify-center text-center px-2 py-3 rounded-xl text-sm min-h-[54px] border transition-all duration-500 ${visible ? cls : "opacity-0 scale-90 bg-gray-100 border-gray-200"}`}
+      className={`flex items-center justify-center text-center px-1 py-2 md:px-2 md:py-3 rounded-xl text-[10px] md:text-sm min-h-[44px] md:min-h-[54px] border transition-all duration-500 ${visible ? cls : "opacity-0 scale-90 bg-gray-100 border-gray-200"}`}
       style={{ transitionDelay: `${delay}ms` }}
     >
       {label}

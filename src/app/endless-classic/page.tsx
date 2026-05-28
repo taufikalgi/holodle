@@ -80,6 +80,12 @@ export default function EndlessGame() {
   const { current, stats } = state;
   const guessesLeft = MAX_GUESSES - current.guesses.length;
   const alreadyGuessed = current.guesses.map((g) => g.talent.name);
+  const displayCurrentHistory = current.guesses
+    .map((g) => ({
+      talent: g.talent,
+      result: g.result,
+    }))
+    .reverse();
 
   useEffect(() => {
     localStorage.setItem(
@@ -281,7 +287,7 @@ export default function EndlessGame() {
 
         {/* Guess rows */}
         <div className="space-y-2">
-          {current.guesses.map(({ talent, result }, i) => (
+          {displayCurrentHistory.map(({ talent, result }, i) => (
             <GuessRow key={talent.name} guess={talent} result={result} index={i} />
           ))}
         </div>

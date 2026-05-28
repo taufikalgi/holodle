@@ -81,6 +81,12 @@ export default function ClassicGame() {
   const dropdownRef = useRef<HTMLDivElement>(null);
   const todayAnswer = getTalentOfTheDay();
   const guessesLeft = MAX_GUESSES - state.guesses.length;
+  const displayCurrentHistory = state.guesses
+    .map((g) => ({
+      talent: g.talent,
+      result: g.result,
+    }))
+    .reverse();
 
   const isFirstRender = useRef(true);
   useEffect(() => {
@@ -278,7 +284,7 @@ export default function ClassicGame() {
 
         {/* Rows */}
         <div className="space-y-2">
-          {state.guesses.map(({ talent, result }, i) => (
+          {displayCurrentHistory.map(({ talent, result }, i) => (
             <GuessRow key={talent.name} guess={talent} result={result} index={i} />
           ))}
         </div>
