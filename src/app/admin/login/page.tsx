@@ -56,7 +56,7 @@ export default function AdminLoginPage() {
       className="min-h-screen flex flex-col items-center justify-center"
       style={{
         background: "var(--holo-bg)",
-        fontFamily: '"Nunito", sans-serif',
+        fontFamily: '"Baloo 2", sans-serif',
         padding: "1.5rem",
       }}
     >
@@ -145,7 +145,7 @@ export default function AdminLoginPage() {
             border: "1.5px solid var(--holo-border)",
             background: "white",
             color: "var(--holo-text)",
-            fontFamily: '"Nunito", sans-serif',
+            fontFamily: '"Baloo 2", sans-serif',
             fontWeight: 700,
             fontSize: 14,
             cursor: "pointer",

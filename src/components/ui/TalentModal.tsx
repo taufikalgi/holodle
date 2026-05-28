@@ -382,7 +382,7 @@ export default function TalentModal({ mode, initial, onClose, onSaved, apiBase }
                 border: "1.5px solid var(--holo-border)",
                 background: "var(--holo-off-white)",
                 color: "var(--holo-text-muted)",
-                fontFamily: '"Nunito", sans-serif',
+                fontFamily: '"Baloo 2", sans-serif',
                 fontWeight: 700,
                 fontSize: 14,
                 cursor: "pointer",
@@ -401,7 +401,7 @@ export default function TalentModal({ mode, initial, onClose, onSaved, apiBase }
                   ? "var(--holo-border)"
                   : "linear-gradient(135deg, var(--holo-blue), var(--holo-blue-dark))",
                 color: "#fff",
-                fontFamily: '"Nunito", sans-serif',
+                fontFamily: '"Baloo 2", sans-serif',
                 fontWeight: 800,
                 fontSize: 14,
                 cursor: loading ? "not-allowed" : "pointer",

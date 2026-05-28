@@ -200,7 +200,7 @@ export default function AdminPage() {
     border: "2px solid var(--holo-border)",
     background: "var(--holo-off-white)",
     color: "var(--holo-text)",
-    fontFamily: '"Nunito", sans-serif',
+    fontFamily: '"Baloo 2", sans-serif',
     fontWeight: 600,
     fontSize: 13,
     cursor: "pointer",
@@ -211,7 +211,7 @@ export default function AdminPage() {
       style={{
         minHeight: "100vh",
         background: "var(--holo-bg)",
-        fontFamily: '"Nunito", sans-serif',
+        fontFamily: '"Baloo 2", sans-serif',
       }}
     >
       {/* ── Navbar ───────────────────────────────────────────────────────────── */}
@@ -307,7 +307,7 @@ export default function AdminPage() {
               border: "1.5px solid var(--holo-border)",
               background: "var(--holo-off-white)",
               color: "var(--holo-text-muted)",
-              fontFamily: '"Nunito", sans-serif',
+              fontFamily: '"Baloo 2", sans-serif',
               fontWeight: 700,
               fontSize: 13,
               cursor: "pointer",
@@ -395,7 +395,7 @@ export default function AdminPage() {
               border: "1.5px solid var(--holo-border)",
               background: "var(--holo-off-white)",
               color: "var(--holo-text-muted)",
-              fontFamily: '"Nunito", sans-serif',
+              fontFamily: '"Baloo 2", sans-serif',
               fontWeight: 700,
               fontSize: 13,
               cursor: "pointer",
@@ -413,7 +413,7 @@ export default function AdminPage() {
               border: "none",
               background: "linear-gradient(135deg, var(--holo-blue), var(--holo-blue-dark))",
               color: "#fff",
-              fontFamily: '"Nunito", sans-serif',
+              fontFamily: '"Baloo 2", sans-serif',
               fontWeight: 800,
               fontSize: 14,
               cursor: "pointer",
@@ -493,11 +493,7 @@ export default function AdminPage() {
                 <tr style={{ background: "var(--holo-off-white)" }}>
                   {SORTABLE_HEADERS.map(({ key, label }) => {
                     const active = sortKey === key;
-                    const indicator = active
-                      ? sortDirection === "asc"
-                        ? "↑"
-                        : "↓"
-                      : "↕";
+                    const indicator = active ? (sortDirection === "asc" ? "↑" : "↓") : "↕";
 
                     return (
                       <th
@@ -765,7 +761,7 @@ export default function AdminPage() {
                               border: "1.5px solid var(--holo-border)",
                               background: "var(--holo-off-white)",
                               color: "var(--holo-blue-dark)",
-                              fontFamily: '"Nunito", sans-serif',
+                              fontFamily: '"Baloo 2", sans-serif',
                               fontWeight: 700,
                               fontSize: 12,
                               cursor: "pointer",
