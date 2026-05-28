@@ -67,7 +67,7 @@ export default function TalentSearchInput({
               style={{ borderColor: "var(--holo-border)" }}
             >
               <img
-                src={t.image}
+                src={t.photoUrl}
                 alt={t.name}
                 className="w-10 h-10 rounded-full object-cover flex-shrink-0"
               />

@@ -8,7 +8,7 @@ type GuessRowTalent = {
   loreArchetype: string;
   height: number | null;
   birthMonth: string;
-  image: string;
+  photoUrl: string;
 };
 
 type GuessRowResult = {
@@ -34,7 +34,7 @@ export default function GuessRow({
     <div className="grid grid-cols-7 gap-2 row-reveal" style={{ animationDelay: `${base}ms` }}>
       <div className="flex justify-center px-2 py-3 rounded-xl min-h-[54px] bg-white border-2 border-[#00B4D8]/30 text-[#0077A3]">
         <img
-          src={guess.image}
+          src={guess.photoUrl}
           alt={guess.name}
           className="w-8 h-8 rounded-full object-cover mr-1 flex-shrink-0"
         />
