@@ -1,3 +1,13 @@
+export const DEFAULT_COLUMN_HEADERS = [
+  "Talent",
+  "Name",
+  "Branch",
+  "Debut Year",
+  "Archetype",
+  "Height",
+  "Birth Month",
+];
+
 export default function ColumnHeaders({
   headers,
   giveawayVsi,

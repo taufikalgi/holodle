@@ -1646,7 +1646,7 @@ export type CompareResult = {
   birthMonth: "correct" | "higher" | "higher-close" | "lower" | "lower-close";
 };
 
-export const MONTH_MAP = {
+export const MONTH_ORDER: Record<string, number> = {
   January: 1,
   February: 2,
   March: 3,
@@ -1660,6 +1660,8 @@ export const MONTH_MAP = {
   November: 11,
   December: 12,
 };
+
+export const MONTH_MAP = MONTH_ORDER;
 
 type MonthKey = keyof typeof MONTH_MAP;
 
