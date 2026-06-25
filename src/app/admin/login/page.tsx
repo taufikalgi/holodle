@@ -2,11 +2,11 @@
 
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { useAdminAuth } from "@/hooks/useAdminAuth";
+import { useAuth } from "@/hooks/useAuth";
 import { GoogleIcon } from "@/components/ui";
 
 export default function AdminLoginPage() {
-  const { user, loading, unauthorized, login } = useAdminAuth();
+  const { user, loading, unauthorized, login } = useAuth({ requireAdmin: true });
   const router = useRouter();
 
   useEffect(() => {

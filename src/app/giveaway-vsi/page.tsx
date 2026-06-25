@@ -1,11 +1,11 @@
 "use client";
 
-import { useGiveawayAuth } from "@/components/giveaway-vsi/useGiveawayAuth";
+import { useAuth } from "@/hooks/useAuth";
 import AuthGate from "@/components/giveaway-vsi/AuthGate";
 import GiveawayVsiGame from "@/components/giveaway-vsi/GiveawayVsiGame";
 
 export default function GiveawayVsiPage() {
-  const { user, loading, login, logout } = useGiveawayAuth();
+  const { user, loading, login, logout } = useAuth();
 
   if (loading) {
     return (

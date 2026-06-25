@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import type { Talent, TalentFormData } from "@/lib/talent-api";
-import { getToken } from "@/hooks/useAdminAuth";
+import { getToken } from "@/hooks/useAuth";
 
 interface Props {
   mode: "create" | "edit";

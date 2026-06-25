@@ -1,5 +1,5 @@
 import { ApiError } from "@/lib/errors";
-import { getToken } from "@/hooks/useAdminAuth";
+import { getToken } from "@/hooks/useAuth";
 import { API_ENDPOINTS } from "@/app/api/apiEndpoints";
 import type { ApiTalent, TalentChoice, SessionHistoryState, GuessEntry, ApiResponse } from "./types";
 

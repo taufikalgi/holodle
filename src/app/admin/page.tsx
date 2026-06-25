@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { useAdminAuth, getToken } from "@/hooks/useAdminAuth";
+import { useAuth, getToken } from "@/hooks/useAuth";
 import { useRouter } from "next/navigation";
 import type { Talent } from "@/lib/talent-api";
 import { MONTH_ORDER } from "@/lib/talents";
@@ -62,7 +62,7 @@ function getBranchStyle(branch: string) {
 }
 
 export default function AdminPage() {
-  const { user, loading: authLoading, login, logout } = useAdminAuth();
+  const { user, loading: authLoading, login, logout } = useAuth({ requireAdmin: true });
   const router = useRouter();
   const [talents, setTalents] = useState<Talent[]>([]);
   const [loading, setLoading] = useState(true);
