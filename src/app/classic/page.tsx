@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useRef, useCallback } from "react";
 import {
   ALL_TALENTS,
   getTalentOfTheDay,
@@ -11,7 +11,9 @@ import {
 } from "@/lib/talents";
 import {
   ColumnHeaders,
+  DEFAULT_COLUMN_HEADERS,
   Footer,
+  GameOverBanner,
   GuessRow,
   HowToPlay,
   Navbar,
@@ -19,6 +21,8 @@ import {
   StatsBar,
   TalentSearchInput,
 } from "@/components/ui";
+import { useLocalStorageState } from "@/hooks/useLocalStorageState";
+import { useOutsideClick } from "@/hooks/useOutsideClick";
 
 const MAX_GUESSES = 6;
 const STORAGE_KEY = "holodle-classic-state";
@@ -43,35 +47,24 @@ function getDateString() {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
 }
 
-function getInitialState(): GameState {
-  const today = getDateString();
-  const empty: GameState = { guesses: [], gameOver: false, won: false, date: today };
-  if (typeof window === "undefined") return empty;
-  try {
-    const saved = localStorage.getItem(STORAGE_KEY);
-    if (saved) {
-      const parsed = JSON.parse(saved) as GameState;
-      if (parsed.date === today) return parsed;
-    }
-  } catch {}
-  return empty;
+function isValidGameState(data: unknown): data is GameState {
+  if (typeof data !== "object" || data === null) return false;
+  const c = data as Record<string, unknown>;
+  return (
+    Array.isArray(c.guesses) &&
+    typeof c.gameOver === "boolean" &&
+    typeof c.won === "boolean" &&
+    typeof c.date === "string" &&
+    c.date === getDateString()
+  );
 }
 
-function getStats(): GameStats {
-  const empty: GameStats = { streak: 0, bestStreak: 0, totalPlayed: 0, totalWon: 0 };
-  if (typeof window === "undefined") return empty;
-  try {
-    const saved = localStorage.getItem(STATS_STORAGE_KEY);
-    if (saved) {
-      return JSON.parse(saved) as GameStats;
-    }
-  } catch {}
-  return empty;
-}
+const emptyState: GameState = { guesses: [], gameOver: false, won: false, date: getDateString() };
+const emptyStats: GameStats = { streak: 0, bestStreak: 0, totalPlayed: 0, totalWon: 0 };
 
 export default function ClassicGame() {
-  const [state, setState] = useState<GameState>(getInitialState);
-  const [stats, setStats] = useState<GameStats>(getStats);
+  const [state, setState] = useLocalStorageState<GameState>(STORAGE_KEY, emptyState, isValidGameState);
+  const [stats, setStats] = useLocalStorageState<GameStats>(STATS_STORAGE_KEY, emptyStats);
   const [input, setInput] = useState("");
   const [suggestions, setSuggestions] = useState<Talent[]>([]);
   const [showDropdown, setShowDropdown] = useState(false);
@@ -81,21 +74,11 @@ export default function ClassicGame() {
   const dropdownRef = useRef<HTMLDivElement>(null);
   const todayAnswer = getTalentOfTheDay();
   const guessesLeft = MAX_GUESSES - state.guesses.length;
-  const displayCurrentHistory = state.guesses
-    .map((g) => ({
-      talent: g.talent,
-      result: g.result,
-    }))
-    .reverse();
 
-  const isFirstRender = useRef(true);
-  useEffect(() => {
-    if (isFirstRender.current) {
-      isFirstRender.current = false;
-      return;
-    }
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
-  }, [state]);
+  const alreadyGuessed = state.guesses.map((g) => g.talent.name);
+  const filteredSuggestions = suggestions.filter((t) => !alreadyGuessed.includes(t.name));
+
+  useOutsideClick(dropdownRef, () => setShowDropdown(false), inputRef);
 
   const handleInput = useCallback((val: string) => {
     setInput(val);
@@ -108,9 +91,6 @@ export default function ClassicGame() {
     }
   }, []);
 
-  const saveToStorage = <T,>(key: string, value: T) =>
-    localStorage.setItem(key, JSON.stringify(value));
-
   const makeGuess = useCallback(
     (talent: Talent) => {
       if (state.gameOver) return;
@@ -121,46 +101,29 @@ export default function ClassicGame() {
       const gameOver = won || newGuesses.length >= MAX_GUESSES;
       const newState: GameState = { guesses: newGuesses, gameOver, won, date: getDateString() };
       setState(newState);
-      saveToStorage(STORAGE_KEY, newState);
       if (gameOver) {
-        const newStats: GameStats = {
+        setStats({
           streak: won ? stats.streak + 1 : 0,
           bestStreak: won ? Math.max(stats.bestStreak, stats.streak + 1) : stats.bestStreak,
           totalPlayed: stats.totalPlayed + 1,
           totalWon: won ? stats.totalWon + 1 : stats.totalWon,
-        };
-        setStats(newStats);
-        saveToStorage(STATS_STORAGE_KEY, newStats);
+        });
       }
       setInput("");
       setSuggestions([]);
       setShowDropdown(false);
     },
-    [state, stats, todayAnswer]
+    [state, stats, todayAnswer, setState, setStats]
   );
 
-  const alreadyGuessed = state.guesses.map((g) => g.talent.name);
-  const filteredSuggestions = suggestions.filter((t) => !alreadyGuessed.includes(t.name));
-
-  useEffect(() => {
-    const handler = (e: MouseEvent) => {
-      if (
-        dropdownRef.current &&
-        !dropdownRef.current.contains(e.target as Node) &&
-        inputRef.current &&
-        !inputRef.current.contains(e.target as Node)
-      )
-        setShowDropdown(false);
-    };
-    document.addEventListener("mousedown", handler);
-    return () => document.removeEventListener("mousedown", handler);
-  }, []);
+  const displayCurrentHistory = state.guesses
+    .map((g) => ({ talent: g.talent, result: g.result }))
+    .reverse();
 
   return (
     <main className="min-h-screen" style={{ background: "var(--holo-bg)" }}>
       <Navbar title="CLASSIC" />
       <div className="max-w-5xl mx-auto px-4 py-8">
-        {/* Header */}
         <header className="text-center mb-8">
           <PageHeader
             subtitle="Daily Hololive Talent Guessing Game"
@@ -168,7 +131,6 @@ export default function ClassicGame() {
             showHowTo={showHowTo}
           />
 
-          {/* Status pill */}
           <div
             className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-xs font-bold border"
             style={{
@@ -196,10 +158,8 @@ export default function ClassicGame() {
           </div>
         </header>
 
-        {/* How to play */}
         {showHowTo && <HowToPlay maxGuesses={MAX_GUESSES} classic={true} />}
 
-        {/* Stats bar */}
         <StatsBar
           streak={stats.streak}
           bestStreak={stats.bestStreak}
@@ -207,47 +167,25 @@ export default function ClassicGame() {
           totalWon={stats.totalWon}
         />
 
-        {/* Game over banner */}
         {state.gameOver && (
-          <div
-            className={`${state.won ? "win-banner" : "lose-banner"} rounded-2xl p-5 mb-5 text-center animate-bounce-in`}
-          >
-            {state.won ? (
-              <>
-                <div className="text-3xl mb-2">🎊</div>
-                <h2 className="text-xl font-black text-green-600 mb-1">Yatta! ✨</h2>
-                <p className="text-sm text-green-700">
-                  You found <strong>{todayAnswer.name}</strong> in {state.guesses.length} guess
-                  {state.guesses.length !== 1 ? "es" : ""}!
-                </p>
-              </>
-            ) : (
-              <>
-                <div className="text-3xl mb-2">😔</div>
-                <h2 className="text-xl font-black text-red-500 mb-1">Dame datta...</h2>
-                <p className="text-sm text-red-600">
-                  The answer was{" "}
-                  <button
-                    onClick={() => setRevealAnswer(true)}
-                    className="font-black underline hover:no-underline"
-                  >
-                    {revealAnswer ? todayAnswer.name : "click to reveal"}
-                  </button>
-                </p>
-                {revealAnswer && (
-                  <p className="text-xs text-red-400 mt-1">
-                    <img
-                      src={todayAnswer.image}
-                      alt={todayAnswer.name}
-                      className="w-16 h-16 center mx-auto my-2 rounded-full object-cover flex-shrink-0"
-                    />{" "}
-                    {todayAnswer.branch} • {todayAnswer.debutYear} • {todayAnswer.loreArchetype}
-                  </p>
-                )}
-              </>
-            )}
-            <p className="text-xs mt-3 opacity-60">Come back tomorrow for a new talent!</p>
-          </div>
+          <GameOverBanner
+            won={state.won}
+            answerName={todayAnswer.name}
+            guessCount={state.guesses.length}
+            revealed={revealAnswer}
+            onReveal={state.won ? undefined : () => setRevealAnswer(true)}
+            answerDetails={
+              revealAnswer
+                ? {
+                    image: todayAnswer.image,
+                    branch: todayAnswer.branch,
+                    debutYear: todayAnswer.debutYear,
+                    loreArchetype: todayAnswer.loreArchetype,
+                  }
+                : undefined
+            }
+            message="Come back tomorrow for a new talent!"
+          />
         )}
 
         {!state.gameOver && (
@@ -267,29 +205,16 @@ export default function ClassicGame() {
           />
         )}
 
-        {/* Column headers */}
         {state.guesses.length > 0 && (
-          <ColumnHeaders
-            headers={[
-              "Talent",
-              "Name",
-              "Branch",
-              "Debut Year",
-              "Archetype",
-              "Height",
-              "Birth Month",
-            ]}
-          />
+          <ColumnHeaders headers={DEFAULT_COLUMN_HEADERS} />
         )}
 
-        {/* Rows */}
         <div className="space-y-2">
           {displayCurrentHistory.map(({ talent, result }, i) => (
             <GuessRow key={talent.name} guess={talent} result={result} index={i} />
           ))}
         </div>
 
-        {/* Empty state */}
         {!state.gameOver && state.guesses.length === 0 && (
           <div className="text-center py-14">
             <p className="text-sm font-semibold" style={{ color: "var(--holo-text-muted)" }}>
@@ -301,7 +226,6 @@ export default function ClassicGame() {
           </div>
         )}
 
-        {/* Footer */}
         <Footer />
       </div>
     </main>

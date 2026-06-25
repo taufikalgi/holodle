@@ -3,29 +3,7 @@
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAdminAuth } from "@/hooks/useAdminAuth";
-
-function GoogleIcon() {
-  return (
-    <svg width="18" height="18" viewBox="0 0 48 48" aria-hidden="true">
-      <path
-        fill="#EA4335"
-        d="M24 9.5c3.14 0 5.95 1.08 8.17 2.86l6.09-6.09C34.46 3.19 29.53 1 24 1 14.82 1 7.07 6.48 3.64 14.22l7.09 5.51C12.4 13.67 17.72 9.5 24 9.5z"
-      />
-      <path
-        fill="#4285F4"
-        d="M46.1 24.5c0-1.64-.15-3.22-.42-4.75H24v9h12.42c-.54 2.9-2.18 5.36-4.64 7.01l7.19 5.59C43.09 37.01 46.1 31.22 46.1 24.5z"
-      />
-      <path
-        fill="#FBBC05"
-        d="M10.73 28.27A14.5 14.5 0 0 1 9.5 24c0-1.49.26-2.93.73-4.27L3.14 14.22A22.94 22.94 0 0 0 1 24c0 3.61.87 7.02 2.64 10l7.09-5.73z"
-      />
-      <path
-        fill="#34A853"
-        d="M24 47c5.52 0 10.15-1.83 13.54-4.97l-7.19-5.59c-1.83 1.23-4.17 1.96-6.35 1.96-6.28 0-11.6-4.17-13.27-9.73l-7.09 5.73C7.07 41.52 14.82 47 24 47z"
-      />
-    </svg>
-  );
-}
+import { GoogleIcon } from "@/components/ui";
 
 export default function AdminLoginPage() {
   const { user, loading, unauthorized, login } = useAdminAuth();
@@ -73,7 +51,6 @@ export default function AdminLoginPage() {
           textAlign: "center",
         }}
       >
-        {/* Logo */}
         <div
           style={{
             width: 64,

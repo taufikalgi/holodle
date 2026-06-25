@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { useAdminAuth, getToken } from "@/hooks/useAdminAuth";
 import { useRouter } from "next/navigation";
 import type { Talent } from "@/lib/talent-api";
+import { MONTH_ORDER } from "@/lib/talents";
 import TalentModal from "@/components/ui/TalentModal";
 
 const API_BASE = `${process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8080"}/api/v1`;
@@ -19,21 +20,6 @@ const BRANCH_COLORS: Record<string, { bg: string; color: string; border: string 
 
 type SortKey = "name" | "branch" | "lore_archetype" | "debut_year" | "height" | "birth_month";
 type SortDirection = "asc" | "desc";
-
-const MONTH_ORDER: Record<string, number> = {
-  January: 1,
-  February: 2,
-  March: 3,
-  April: 4,
-  May: 5,
-  June: 6,
-  July: 7,
-  August: 8,
-  September: 9,
-  October: 10,
-  November: 11,
-  December: 12,
-};
 
 const SORTABLE_HEADERS: Array<{ key: SortKey; label: string }> = [
   { key: "name", label: "Talent" },

@@ -1,12 +1,12 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, type Dispatch, type SetStateAction } from "react";
 
 export function useLocalStorageState<T>(
   key: string,
   defaultValue: T,
   validate?: (data: unknown) => data is T
-): [T, (value: T) => void] {
+): [T, Dispatch<SetStateAction<T>>] {
   const [state, setState] = useState<T>(() => {
     if (typeof window === "undefined") return defaultValue;
     try {

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useRef, useCallback } from "react";
 import {
   ALL_TALENTS,
   searchTalents,
@@ -10,7 +10,9 @@ import {
 } from "@/lib/talents";
 import {
   ColumnHeaders,
+  DEFAULT_COLUMN_HEADERS,
   Footer,
+  GameOverBanner,
   GuessRow,
   HowToPlay,
   Navbar,
@@ -18,6 +20,8 @@ import {
   StatsBar,
   TalentSearchInput,
 } from "@/components/ui";
+import { useLocalStorageState } from "@/hooks/useLocalStorageState";
+import { useOutsideClick } from "@/hooks/useOutsideClick";
 
 const MAX_GUESSES = 6;
 const STATS_KEY = "holodle-endless-stats";
@@ -69,7 +73,7 @@ function getInitialState(): EndlessState {
 }
 
 export default function EndlessGame() {
-  const [state, setState] = useState<EndlessState>(getInitialState);
+  const [state, setState] = useLocalStorageState<EndlessState>(STATS_KEY, getInitialState());
   const [input, setInput] = useState("");
   const [suggestions, setSuggestions] = useState<Talent[]>([]);
   const [showDropdown, setShowDropdown] = useState(false);
@@ -80,22 +84,8 @@ export default function EndlessGame() {
   const { current, stats } = state;
   const guessesLeft = MAX_GUESSES - current.guesses.length;
   const alreadyGuessed = current.guesses.map((g) => g.talent.name);
-  const displayCurrentHistory = current.guesses
-    .map((g) => ({
-      talent: g.talent,
-      result: g.result,
-    }))
-    .reverse();
 
-  useEffect(() => {
-    localStorage.setItem(
-      STATS_KEY,
-      JSON.stringify({
-        stats: state.stats,
-        recentTalents: state.recentTalents,
-      })
-    );
-  }, [state.stats, state.recentTalents]);
+  useOutsideClick(dropdownRef, () => setShowDropdown(false), inputRef);
 
   const handleInput = useCallback(
     (val: string) => {
@@ -138,7 +128,7 @@ export default function EndlessGame() {
       setSuggestions([]);
       setShowDropdown(false);
     },
-    [current]
+    [current, setState]
   );
 
   function nextRound() {
@@ -151,26 +141,15 @@ export default function EndlessGame() {
     setInput("");
   }
 
-  useEffect(() => {
-    const handler = (e: MouseEvent) => {
-      if (
-        dropdownRef.current &&
-        !dropdownRef.current.contains(e.target as Node) &&
-        inputRef.current &&
-        !inputRef.current.contains(e.target as Node)
-      )
-        setShowDropdown(false);
-    };
-    document.addEventListener("mousedown", handler);
-    return () => document.removeEventListener("mousedown", handler);
-  }, []);
+  const displayCurrentHistory = current.guesses
+    .map((g) => ({ talent: g.talent, result: g.result }))
+    .reverse();
 
   return (
     <main className="min-h-screen" style={{ background: "var(--holo-bg)" }}>
       <Navbar title="ENDLESS" />
 
       <div className="max-w-5xl mx-auto px-4 py-8">
-        {/* Header */}
         <div className="text-center mb-6">
           <PageHeader
             subtitle="Daily Hololive Talent Guessing Game"
@@ -181,10 +160,6 @@ export default function EndlessGame() {
             showLeaderboardButton={false}
           />
 
-          <h1
-            className="text-4xl font-black tracking-widest mb-1"
-            style={{ fontFamily: "'Poppins', sans-serif", color: "var(--holo-text)" }}
-          ></h1>
           <div
             className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-xs font-bold border"
             style={{
@@ -208,10 +183,8 @@ export default function EndlessGame() {
           </div>
         </div>
 
-        {/* How to play */}
         {showHowTo && <HowToPlay maxGuesses={MAX_GUESSES} classic={false} />}
 
-        {/* Stats bar */}
         <StatsBar
           streak={stats.streak}
           bestStreak={stats.bestStreak}
@@ -219,29 +192,12 @@ export default function EndlessGame() {
           totalWon={stats.totalWon}
         />
 
-        {/* Game over */}
         {current.gameOver && (
-          <div
-            className={`${current.won ? "win-banner" : "lose-banner"} rounded-2xl p-5 mb-5 text-center animate-bounce-in`}
+          <GameOverBanner
+            won={current.won}
+            answerName={current.answer.name}
+            guessCount={current.guesses.length}
           >
-            {current.won ? (
-              <>
-                <div className="text-3xl mb-1">🎊</div>
-                <h2 className="text-xl font-black text-green-600">Correct!</h2>
-                <p className="text-sm text-green-700 mt-1">
-                  It was <strong>{current.answer.name}</strong> — {current.guesses.length} guess
-                  {current.guesses.length !== 1 ? "es" : ""}
-                </p>
-              </>
-            ) : (
-              <>
-                <div className="text-3xl mb-1">😔</div>
-                <h2 className="text-xl font-black text-red-500">Not quite!</h2>
-                <p className="text-sm text-red-600 mt-1">
-                  It was <strong>{current.answer.name}</strong>
-                </p>
-              </>
-            )}
             <button
               onClick={nextRound}
               className="mt-4 px-6 py-2 rounded-full text-sm font-bold text-white transition-opacity hover:opacity-80"
@@ -249,10 +205,9 @@ export default function EndlessGame() {
             >
               Next talent →
             </button>
-          </div>
+          </GameOverBanner>
         )}
 
-        {/* Input */}
         {!current.gameOver && (
           <TalentSearchInput
             input={input}
@@ -270,29 +225,16 @@ export default function EndlessGame() {
           />
         )}
 
-        {/* Column headers */}
         {current.guesses.length > 0 && (
-          <ColumnHeaders
-            headers={[
-              "Talent",
-              "Name",
-              "Branch",
-              "Debut Year",
-              "Archetype",
-              "Height",
-              "Birth Month",
-            ]}
-          />
+          <ColumnHeaders headers={DEFAULT_COLUMN_HEADERS} />
         )}
 
-        {/* Guess rows */}
         <div className="space-y-2">
           {displayCurrentHistory.map(({ talent, result }, i) => (
             <GuessRow key={talent.name} guess={talent} result={result} index={i} />
           ))}
         </div>
 
-        {/* Empty state */}
         {!current.gameOver && current.guesses.length === 0 && (
           <div className="text-center py-14">
             <p className="text-sm font-semibold" style={{ color: "var(--holo-text-muted)" }}>
@@ -304,7 +246,6 @@ export default function EndlessGame() {
           </div>
         )}
 
-        {/* Footer */}
         <Footer />
       </div>
     </main>
