@@ -4,7 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Footer from "@/components/ui/Footer";
 import GuessRow from "@/components/ui/GuessRow";
 import PageHeader from "@/components/ui/PageHeader";
-import VsiNavbar from "@/components/ui/VsiNavbar";
+import { Navbar } from "@/components/ui";
 import Image from "next/image";
 import { API_ENDPOINTS } from "../api/apiEndpoints";
 import { getToken } from "@/hooks/useAdminAuth";
@@ -1067,7 +1067,7 @@ function GiveawayVsiGame({ user, onLogout }: { user: AuthUser; onLogout: () => v
         />
       </div> */}
 
-      <VsiNavbar title="GIVEAWAY VSI" user={user} onLogout={onLogout} />
+      <Navbar title="GIVEAWAY VSI" user={user} onLogout={onLogout} />
 
       <div className="max-w-5xl mx-auto px-4 py-8">
         <div className="text-center mb-6">

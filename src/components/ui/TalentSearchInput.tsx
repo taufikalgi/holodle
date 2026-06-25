@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef } from "react";
+import { useRef, type ReactNode } from "react";
 import { type Talent } from "@/lib/talents";
 
 export default function TalentSearchInput({
@@ -12,6 +12,7 @@ export default function TalentSearchInput({
   onClear,
   onFocus,
   dropdownRef,
+  renderSuggestion,
 }: {
   input: string;
   suggestions: Talent[];
@@ -21,8 +22,21 @@ export default function TalentSearchInput({
   onClear: () => void;
   onFocus: () => void;
   dropdownRef: React.RefObject<HTMLDivElement>;
+  renderSuggestion?: (talent: Talent) => ReactNode;
 }) {
   const inputRef = useRef<HTMLInputElement>(null);
+  const defaultSuggestion = (t: Talent) => (
+    <>
+      <img
+        src={t.photoUrl}
+        alt={t.name}
+        className="w-10 h-10 rounded-full object-cover flex-shrink-0"
+      />
+      <div className="text-sm font-bold" style={{ color: "var(--holo-text)" }}>
+        {t.name}
+      </div>
+    </>
+  );
 
   return (
     <div className="holo-card p-4 mb-5">
@@ -34,6 +48,7 @@ export default function TalentSearchInput({
       </p>
       <div className="relative">
         <input
+          ref={inputRef}
           type="text"
           value={input}
           onChange={(e) => onInput(e.target.value)}
@@ -66,14 +81,7 @@ export default function TalentSearchInput({
               className="dropdown-item w-full text-left px-4 py-3 flex items-center gap-3 border-b last:border-0 transition-colors"
               style={{ borderColor: "var(--holo-border)" }}
             >
-              <img
-                src={t.photoUrl}
-                alt={t.name}
-                className="w-10 h-10 rounded-full object-cover flex-shrink-0"
-              />
-              <div className="text-sm font-bold" style={{ color: "var(--holo-text)" }}>
-                {t.name}
-              </div>
+              {renderSuggestion ? renderSuggestion(t) : defaultSuggestion(t)}
             </button>
           ))}
         </div>

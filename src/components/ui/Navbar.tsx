@@ -1,10 +1,24 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { useState } from "react";
 import { GameMode, GAMES } from "@/lib/game-modes";
 
-export default function Navbar({ title }: { title: string }) {
+interface User {
+  name: string;
+  picture?: string;
+}
+
+export default function Navbar({
+  title,
+  user,
+  onLogout,
+}: {
+  title: string;
+  user?: User;
+  onLogout?: () => void;
+}) {
   const [isOpen, setIsOpen] = useState(false);
 
   return (
@@ -38,6 +52,34 @@ export default function Navbar({ title }: { title: string }) {
             </Link>
           ))}
         </div>
+
+        {/* Desktop user info */}
+        {user && (
+          <div className="hidden md:flex ml-auto items-center gap-3">
+            {user.picture && (
+              <Image
+                src={user.picture}
+                alt={user.name}
+                width={28}
+                height={28}
+                className="rounded-full"
+                style={{ border: "2px solid var(--holo-border)" }}
+              />
+            )}
+            <span className="text-xs font-semibold" style={{ color: "var(--holo-text)" }}>
+              {user.name}
+            </span>
+            {onLogout && (
+              <button
+                onClick={onLogout}
+                className="text-xs font-semibold px-3 py-1 rounded-full transition-opacity hover:opacity-70"
+                style={{ background: "#ef4444", color: "white", border: "none" }}
+              >
+                Sign out
+              </button>
+            )}
+          </div>
+        )}
 
         {/* Hamburger button */}
         <button
@@ -88,6 +130,40 @@ export default function Navbar({ title }: { title: string }) {
               {game.title.toUpperCase()}
             </Link>
           ))}
+
+          {/* Mobile user info */}
+          {user && (
+            <div
+              className="flex items-center gap-3 pt-2 border-t"
+              style={{ borderColor: "var(--holo-border)" }}
+            >
+              {user.picture && (
+                <Image
+                  src={user.picture}
+                  alt={user.name}
+                  width={28}
+                  height={28}
+                  className="rounded-full"
+                  style={{ border: "2px solid var(--holo-border)" }}
+                />
+              )}
+              <span className="text-xs font-semibold" style={{ color: "var(--holo-text)" }}>
+                {user.name}
+              </span>
+              {onLogout && (
+                <button
+                  onClick={() => {
+                    onLogout();
+                    setIsOpen(false);
+                  }}
+                  className="ml-auto text-xs font-semibold px-3 py-1 rounded-full transition-opacity hover:opacity-70"
+                  style={{ background: "#ef4444", color: "white", border: "none" }}
+                >
+                  Sign out
+                </button>
+              )}
+            </div>
+          )}
         </div>
       </div>
     </nav>

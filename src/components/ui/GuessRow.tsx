@@ -1,5 +1,6 @@
 import { getLoreArchetypeCategory } from "@/lib/talents";
 import Cell from "./Cell";
+import type { ReactNode } from "react";
 
 type GuessRowTalent = {
   name: string;
@@ -20,6 +21,45 @@ type GuessRowResult = {
   birthMonth: "correct" | "wrong" | "higher" | "higher-close" | "lower" | "lower-close";
 };
 
+function arrow(value: ReactNode, result: string, arrowClass: string): ReactNode {
+  return (
+    <>
+      {value}
+      {(result === "higher" || result === "higher-close") && <span className={arrowClass}>↓</span>}
+      {(result === "lower" || result === "lower-close") && <span className={arrowClass}>↑</span>}
+    </>
+  );
+}
+
+function cellStatus(result: string): "correct" | "wrong" | "wrong-close" {
+  if (result === "correct") return "correct";
+  if (result === "higher-close" || result === "lower-close") return "wrong-close";
+  return "wrong";
+}
+
+type AttrKey = "branch" | "debutYear" | "loreArchetype" | "height" | "birthMonth";
+
+function attrCell(guess: GuessRowTalent, result: GuessRowResult, key: AttrKey, delay: number, arrowClass: string) {
+  if (key === "branch") {
+    return <Cell label={guess.branch} status={result.branch} delay={delay} />;
+  }
+  if (key === "loreArchetype") {
+    return <Cell label={getLoreArchetypeCategory(guess.loreArchetype)} status={result.loreArchetype} delay={delay} />;
+  }
+  const fieldValue = guess[key];
+  const resultValue = result[key];
+  const display = fieldValue ?? "—";
+  return <Cell label={arrow(display, resultValue, arrowClass)} status={cellStatus(resultValue)} delay={delay} />;
+}
+
+const ATTRIBUTES: { key: AttrKey; delay: number }[] = [
+  { key: "branch", delay: 160 },
+  { key: "debutYear", delay: 240 },
+  { key: "loreArchetype", delay: 320 },
+  { key: "height", delay: 400 },
+  { key: "birthMonth", delay: 480 },
+];
+
 export default function GuessRow({
   guess,
   result,
@@ -32,7 +72,6 @@ export default function GuessRow({
   const base = index * 80;
   return (
     <>
-      {/* ── Desktop layout (md+): unchanged 7-column grid ── */}
       <div
         className="hidden md:grid grid-cols-7 gap-2 row-reveal"
         style={{ animationDelay: `${base}ms` }}
@@ -45,77 +84,13 @@ export default function GuessRow({
           />
         </div>
         <Cell label={guess.name} status={result.name} delay={base + 80} />
-        <Cell label={guess.branch} status={result.branch} delay={base + 160} />
-        <Cell
-          label={
-            <>
-              {guess.debutYear ?? "—"}
-              {result.debutYear === "higher" && <span className="ml-1">↓</span>}
-              {result.debutYear === "higher-close" && <span className="ml-1">↓</span>}
-              {result.debutYear === "lower" && <span className="ml-1">↑</span>}
-              {result.debutYear === "lower-close" && <span className="ml-1">↑</span>}
-            </>
-          }
-          status={
-            result.debutYear === "correct"
-              ? "correct"
-              : result.debutYear === "higher-close" || result.debutYear === "lower-close"
-                ? "wrong-close"
-                : "wrong"
-          }
-          delay={base + 240}
-        />
-        <Cell
-          label={getLoreArchetypeCategory(guess.loreArchetype)}
-          status={result.loreArchetype}
-          delay={base + 320}
-        />
-        <Cell
-          label={
-            <>
-              {guess.height ?? "—"}
-              {result.height === "higher" && <span className="ml-1">↓</span>}
-              {result.height === "higher-close" && <span className="ml-1">↓</span>}
-              {result.height === "lower" && <span className="ml-1">↑</span>}
-              {result.height === "lower-close" && <span className="ml-1">↑</span>}
-            </>
-          }
-          status={
-            result.height === "correct"
-              ? "correct"
-              : result.height === "higher-close" || result.height === "lower-close"
-                ? "wrong-close"
-                : "wrong"
-          }
-          delay={base + 400}
-        />
-        <Cell
-          label={
-            <>
-              {guess.birthMonth}
-              {result.birthMonth === "higher" && <span className="ml-1">↓</span>}
-              {result.birthMonth === "higher-close" && <span className="ml-1">↓</span>}
-              {result.birthMonth === "lower" && <span className="ml-1">↑</span>}
-              {result.birthMonth === "lower-close" && <span className="ml-1">↑</span>}
-            </>
-          }
-          status={
-            result.birthMonth === "correct"
-              ? "correct"
-              : result.birthMonth === "higher-close" || result.birthMonth === "lower-close"
-                ? "wrong-close"
-                : "wrong"
-          }
-          delay={base + 480}
-        />
+        {ATTRIBUTES.map(({ key, delay }) => attrCell(guess, result, key, base + delay, "ml-1"))}
       </div>
 
-      {/* ── Mobile layout (<md): photo+name row, then 5-cell grid ── */}
       <div
         className="flex flex-col gap-1.5 row-reveal md:hidden"
         style={{ animationDelay: `${base}ms` }}
       >
-        {/* Top row: avatar + name */}
         <div className="flex justify-center items-center gap-2 px-3 py-2 rounded-xl bg-white border-2 border-[#00B4D8]/30 text-[#0077A3]">
           <img
             src={guess.photoUrl}
@@ -125,71 +100,8 @@ export default function GuessRow({
           <Cell label={guess.name} status={result.name} delay={base + 80} />
         </div>
 
-        {/* Bottom row: 5 attribute cells in a 5-column grid */}
         <div className="grid grid-cols-5 gap-1.5">
-          <Cell label={guess.branch} status={result.branch} delay={base + 160} />
-          <Cell
-            label={
-              <>
-                {guess.debutYear ?? "—"}
-                {result.debutYear === "higher" && <span className="ml-0.5">↓</span>}
-                {result.debutYear === "higher-close" && <span className="ml-0.5">↓</span>}
-                {result.debutYear === "lower" && <span className="ml-0.5">↑</span>}
-                {result.debutYear === "lower-close" && <span className="ml-0.5">↑</span>}
-              </>
-            }
-            status={
-              result.debutYear === "correct"
-                ? "correct"
-                : result.debutYear === "higher-close" || result.debutYear === "lower-close"
-                  ? "wrong-close"
-                  : "wrong"
-            }
-            delay={base + 240}
-          />
-          <Cell
-            label={getLoreArchetypeCategory(guess.loreArchetype)}
-            status={result.loreArchetype}
-            delay={base + 320}
-          />
-          <Cell
-            label={
-              <>
-                {guess.height ?? "—"}
-                {result.height === "higher" && <span className="ml-0.5">↓</span>}
-                {result.height === "higher-close" && <span className="ml-0.5">↓</span>}
-                {result.height === "lower" && <span className="ml-0.5">↑</span>}
-                {result.height === "lower-close" && <span className="ml-0.5">↑</span>}
-              </>
-            }
-            status={
-              result.height === "correct"
-                ? "correct"
-                : result.height === "higher-close" || result.height === "lower-close"
-                  ? "wrong-close"
-                  : "wrong"
-            }
-            delay={base + 400}
-          />
-          <Cell
-            label={
-              <>
-                {guess.birthMonth}
-                {result.birthMonth === "higher" && <span className="ml-0.5">↓</span>}
-                {result.birthMonth === "higher-close" && <span className="ml-0.5">↓</span>}
-                {result.birthMonth === "lower" && <span className="ml-0.5">↑</span>}
-                {result.birthMonth === "lower-close" && <span className="ml-0.5">↑</span>}
-              </>
-            }
-            status={
-              result.birthMonth === "correct"
-                ? "correct"
-                : result.birthMonth === "higher-close" || result.birthMonth === "lower-close"
-                  ? "wrong-close"
-                  : "wrong"
-            }
-            delay={base + 480}
-          />
+          {ATTRIBUTES.map(({ key, delay }) => attrCell(guess, result, key, base + delay, "ml-0.5"))}
         </div>
       </div>
     </>

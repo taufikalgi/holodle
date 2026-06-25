@@ -8,4 +8,5 @@ export { default as TalentSearchInput } from "./TalentSearchInput";
 export { default as ColumnHeaders } from "./ColumnHeaders";
 export { default as StatsBar } from "./StatsBar";
 export { default as GoogleIcon } from "./GoogleIcon";
+export { default as GameOverBanner } from "./GameOverBanner";
 export { DEFAULT_COLUMN_HEADERS } from "./ColumnHeaders";
