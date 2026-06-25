@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { API_ENDPOINTS } from "@/app/api/apiEndpoints";
+import { parseJwt } from "@/lib/jwt";
 
 const TOKEN_KEY = "token";
 const AUTH_REDIRECT_KEY = "auth_redirect_to";
@@ -13,14 +14,6 @@ export interface AdminUser {
 
 export function getToken(): string | null {
   return typeof window !== "undefined" ? localStorage.getItem(TOKEN_KEY) : null;
-}
-
-function parseJwt(token: string): Record<string, unknown> | null {
-  try {
-    return JSON.parse(atob(token.split(".")[1]));
-  } catch {
-    return null;
-  }
 }
 
 export function useAdminAuth() {
