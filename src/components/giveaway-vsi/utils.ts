@@ -1,24 +1,12 @@
 import { ApiError } from "@/lib/errors";
 import { getToken } from "@/hooks/useAuth";
 import { API_ENDPOINTS } from "@/app/api/apiEndpoints";
-import type { ApiTalent, TalentChoice, SessionHistoryState, GuessEntry, ApiResponse } from "./types";
+import type { SessionHistoryState, GuessEntry, ApiResponse } from "./types";
 
 const AUTH_REDIRECT_KEY = "auth_redirect_to";
 const HISTORY_KEY_PREFIX = "giveaway-vsi-history:";
 
-export function normalizeTalent(talent: ApiTalent): TalentChoice {
-  return {
-    id: talent.id,
-    name: talent.name,
-    branch: talent.branch,
-    debutYear: talent.debut_year,
-    loreArchetype: talent.lore_archetype,
-    height: talent.height,
-    birthMonth: talent.birth_month,
-    photoUrl: talent.image_url,
-    altNames: talent.alt_names ?? [],
-  };
-}
+export { normalizeTalent } from "@/lib/talents";
 
 export function getEmptySessionHistoryState(): SessionHistoryState {
   return {

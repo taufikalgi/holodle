@@ -25,26 +25,26 @@ export interface Talent {
 }
 
 
-type ApiTalent = {
+export type ApiTalent = {
   id: string;
   name: string;
   branch: Branch;
-  debut_year: number;
+  debut_year: number | null;
   lore_archetype: string;
-  height: number;
+  height: number | null;
   birth_month: string;
   image_url: string;
   alt_names: string[];
 };
 
-function normalizeTalent(talent: ApiTalent): Talent {
+export function normalizeTalent(talent: ApiTalent): Talent {
   return {
     id: talent.id,
     name: talent.name,
     branch: talent.branch,
-    debutYear: talent.debut_year,
+    debutYear: talent.debut_year ?? 0,
     loreArchetype: talent.lore_archetype,
-    height: talent.height,
+    height: talent.height ?? 0,
     birthMonth: talent.birth_month,
     photoUrl: talent.image_url,
     image: "",

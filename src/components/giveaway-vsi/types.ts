@@ -1,3 +1,5 @@
+import type { Talent, CompareResult } from "@/lib/talents";
+
 export type AuthUser = {
   id: string;
   name: string;
@@ -5,29 +7,8 @@ export type AuthUser = {
   picture?: string;
 };
 
-export type ApiTalent = {
-  id: string;
-  name: string;
-  branch: string;
-  debut_year: number | null;
-  lore_archetype: string;
-  height: number | null;
-  birth_month: string;
-  image_url: string;
-  alt_names: string[];
-};
-
-export type TalentChoice = {
-  id: string;
-  name: string;
-  branch: string;
-  debutYear: number | null;
-  loreArchetype: string;
-  height: number | null;
-  birthMonth: string;
-  photoUrl: string;
-  altNames: string[];
-};
+export type TalentChoice = Talent;
+export type Comparison = CompareResult;
 
 export type SessionSummary = {
   score: number;
@@ -46,17 +27,6 @@ export type GameSession = {
   created_at: string;
   updated_at: string;
   expires_at: string;
-};
-
-export type ComparisonStatus = "correct" | "wrong" | "higher" | "higher-close" | "lower" | "lower-close";
-
-export type Comparison = {
-  name: "correct" | "wrong";
-  branch: "correct" | "wrong";
-  debutYear: ComparisonStatus;
-  loreArchetype: "correct" | "wrong";
-  height: ComparisonStatus;
-  birthMonth: ComparisonStatus;
 };
 
 export type GuessEntry = {

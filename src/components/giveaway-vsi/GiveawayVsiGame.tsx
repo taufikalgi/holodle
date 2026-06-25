@@ -19,7 +19,8 @@ import HeaderStat from "./HeaderStat";
 import LeaderboardModal from "./LeaderboardModal";
 import FinalResultCard from "./FinalResultCard";
 import StartSessionCard from "./StartSessionCard";
-import type { AuthUser, ApiTalent, TalentChoice, GameSession, LeaderboardEntry, Comparison, GuessEntry } from "./types";
+import type { ApiTalent } from "@/lib/talents";
+import type { AuthUser, TalentChoice, GameSession, LeaderboardEntry, Comparison, GuessEntry } from "./types";
 
 const SESSION_KEY = "giveaway-vsi-session-id";
 
