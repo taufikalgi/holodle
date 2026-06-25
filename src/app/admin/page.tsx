@@ -4,62 +4,11 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { useAuth, getToken } from "@/hooks/useAuth";
 import { useRouter } from "next/navigation";
 import type { Talent } from "@/lib/talent-api";
-import { MONTH_ORDER } from "@/lib/talents";
 import TalentModal from "@/components/ui/TalentModal";
+import { AdminToolbar, AdminTable, compareTalentsByKey, AdminToast } from "@/components/admin";
+import type { SortKey, SortDirection } from "@/components/admin";
 
 const API_BASE = `${process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8080"}/api/v1`;
-
-const BRANCH_COLORS: Record<string, { bg: string; color: string; border: string }> = {
-  JP: { bg: "#ede0f5", color: "#6a2485", border: "#d4a8e8" },
-  EN: { bg: "#dff0e8", color: "#185a32", border: "#86efac" },
-  ID: { bg: "#faeedd", color: "#7a4a0a", border: "#fbbf6d" },
-  DEV_IS: { bg: "#e0eeff", color: "#1a4a8a", border: "#93c5fd" },
-  ReGLOSS: { bg: "#fce7f3", color: "#9d174d", border: "#f9a8d4" },
-  STARS: { bg: "#fef9c3", color: "#854d0e", border: "#fde047" },
-};
-
-type SortKey = "name" | "branch" | "lore_archetype" | "debut_year" | "height" | "birth_month";
-type SortDirection = "asc" | "desc";
-
-const SORTABLE_HEADERS: Array<{ key: SortKey; label: string }> = [
-  { key: "name", label: "Talent" },
-  { key: "branch", label: "Branch" },
-  { key: "lore_archetype", label: "Archetype" },
-  { key: "debut_year", label: "Debut" },
-  { key: "height", label: "Height" },
-  { key: "birth_month", label: "Birthday" },
-];
-
-function compareTalentsByKey(a: Talent, b: Talent, key: SortKey) {
-  const aValue = a[key];
-  const bValue = b[key];
-
-  if (aValue == null && bValue == null) return 0;
-  if (aValue == null) return 1;
-  if (bValue == null) return -1;
-
-  if (key === "debut_year" || key === "height") {
-    return Number(aValue) - Number(bValue);
-  }
-
-  if (key === "birth_month") {
-    const aMonth = MONTH_ORDER[String(aValue)] ?? Number.MAX_SAFE_INTEGER;
-    const bMonth = MONTH_ORDER[String(bValue)] ?? Number.MAX_SAFE_INTEGER;
-    return aMonth - bMonth;
-  }
-
-  return String(aValue).localeCompare(String(bValue));
-}
-
-function getBranchStyle(branch: string) {
-  return (
-    BRANCH_COLORS[branch] ?? {
-      bg: "var(--holo-off-white)",
-      color: "var(--holo-text-muted)",
-      border: "var(--holo-border)",
-    }
-  );
-}
 
 export default function AdminPage() {
   const { user, loading: authLoading, login, logout } = useAuth({ requireAdmin: true });
@@ -102,7 +51,6 @@ export default function AdminPage() {
     }
   }, [router]);
 
-  // Redirect to login if not authed
   useEffect(() => {
     if (!authLoading && !user) router.replace("/admin/login");
   }, [authLoading, user, router]);
@@ -162,7 +110,6 @@ export default function AdminPage() {
     setSortKey(null);
   };
 
-  // ── Auth guard ───────────────────────────────────────────────────────────────
   if (authLoading || !user) {
     return (
       <main
@@ -179,19 +126,6 @@ export default function AdminPage() {
     );
   }
 
-  // ── Styles ──────────────────────────────────────────────────────────────────
-  const selectStyle: React.CSSProperties = {
-    padding: "9px 13px",
-    borderRadius: 10,
-    border: "2px solid var(--holo-border)",
-    background: "var(--holo-off-white)",
-    color: "var(--holo-text)",
-    fontFamily: '"Baloo 2", sans-serif',
-    fontWeight: 600,
-    fontSize: 13,
-    cursor: "pointer",
-  };
-
   return (
     <div
       style={{
@@ -200,7 +134,6 @@ export default function AdminPage() {
         fontFamily: '"Baloo 2", sans-serif',
       }}
     >
-      {/* ── Navbar ───────────────────────────────────────────────────────────── */}
       <nav
         style={{
           background: "var(--holo-bg-card)",
@@ -247,7 +180,6 @@ export default function AdminPage() {
             {talents.length} talents
           </span>
 
-          {/* User avatar + name */}
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
             {user.picture ? (
               // eslint-disable-next-line @next/next/no-img-element
@@ -304,114 +236,21 @@ export default function AdminPage() {
         </div>
       </nav>
 
-      {/* ── Main ─────────────────────────────────────────────────────────────── */}
       <main style={{ maxWidth: 1200, margin: "0 auto", padding: "2rem 1.5rem" }}>
-        {/* ── Toolbar ──────────────────────────────────────────────────────── */}
-        <div
-          style={{
-            display: "flex",
-            gap: "0.75rem",
-            marginBottom: "1.5rem",
-            flexWrap: "wrap",
-            alignItems: "center",
-          }}
-        >
-          {/* Search */}
-          <div style={{ position: "relative", flex: 1, minWidth: 200 }}>
-            <span
-              style={{
-                position: "absolute",
-                left: 12,
-                top: "50%",
-                transform: "translateY(-50%)",
-                fontSize: 16,
-                pointerEvents: "none",
-              }}
-            >
-              🔍
-            </span>
-            <input
-              className="holo-input"
-              style={{
-                width: "100%",
-                padding: "9px 13px 9px 36px",
-                borderRadius: 10,
-                fontSize: 14,
-              }}
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              placeholder="Search by name or alt name..."
-            />
-          </div>
+        <AdminToolbar
+          search={search}
+          onSearchChange={setSearch}
+          branchFilter={branchFilter}
+          onBranchFilterChange={setBranchFilter}
+          archetypeFilter={archetypeFilter}
+          onArchetypeFilterChange={setArchetypeFilter}
+          branches={branches}
+          archetypes={archetypes}
+          talentCount={talents.length}
+          onRefresh={fetchTalents}
+          onAdd={() => setModal({ mode: "create" })}
+        />
 
-          {/* Branch filter */}
-          <select
-            style={selectStyle}
-            value={branchFilter}
-            onChange={(e) => setBranchFilter(e.target.value)}
-          >
-            <option value="">All branches</option>
-            {branches.map((b) => (
-              <option key={b} value={b}>
-                {b}
-              </option>
-            ))}
-          </select>
-
-          {/* Archetype filter */}
-          <select
-            style={selectStyle}
-            value={archetypeFilter}
-            onChange={(e) => setArchetypeFilter(e.target.value)}
-          >
-            <option value="">All archetypes</option>
-            {archetypes.map((a) => (
-              <option key={a} value={a}>
-                {a}
-              </option>
-            ))}
-          </select>
-
-          {/* Refresh */}
-          <button
-            onClick={fetchTalents}
-            style={{
-              padding: "9px 16px",
-              borderRadius: 10,
-              border: "1.5px solid var(--holo-border)",
-              background: "var(--holo-off-white)",
-              color: "var(--holo-text-muted)",
-              fontFamily: '"Baloo 2", sans-serif',
-              fontWeight: 700,
-              fontSize: 13,
-              cursor: "pointer",
-            }}
-          >
-            ↺ Refresh
-          </button>
-
-          {/* Add */}
-          <button
-            onClick={() => setModal({ mode: "create" })}
-            style={{
-              padding: "9px 20px",
-              borderRadius: 10,
-              border: "none",
-              background: "linear-gradient(135deg, var(--holo-blue), var(--holo-blue-dark))",
-              color: "#fff",
-              fontFamily: '"Baloo 2", sans-serif',
-              fontWeight: 800,
-              fontSize: 14,
-              cursor: "pointer",
-              boxShadow: "0 4px 14px rgba(0,119,163,0.25)",
-              whiteSpace: "nowrap",
-            }}
-          >
-            ✨ Add talent
-          </button>
-        </div>
-
-        {/* ── Error ────────────────────────────────────────────────────────── */}
         {error && (
           <div
             className="cell-wrong"
@@ -435,352 +274,25 @@ export default function AdminPage() {
           </div>
         )}
 
-        {/* ── Table card ───────────────────────────────────────────────────── */}
-        <div className="holo-card" style={{ overflow: "hidden" }}>
-          {/* Count strip */}
-          <div
-            style={{
-              padding: "12px 20px",
-              borderBottom: "1.5px solid var(--holo-border)",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "space-between",
-            }}
-          >
-            <span style={{ fontSize: 13, fontWeight: 700, color: "var(--holo-text-muted)" }}>
-              {loading
-                ? "Loading..."
-                : `Showing ${filtered.length} of ${talents.length} talent${talents.length !== 1 ? "s" : ""}`}
-            </span>
-            {(search || branchFilter || archetypeFilter) && (
-              <button
-                onClick={() => {
-                  setSearch("");
-                  setBranchFilter("");
-                  setArchetypeFilter("");
-                }}
-                style={{
-                  fontSize: 12,
-                  color: "var(--holo-rose)",
-                  background: "none",
-                  border: "none",
-                  fontWeight: 700,
-                  cursor: "pointer",
-                }}
-              >
-                ✕ Clear filters
-              </button>
-            )}
-          </div>
-
-          <div style={{ overflowX: "auto" }}>
-            <table style={{ width: "100%", borderCollapse: "collapse", minWidth: 720 }}>
-              <thead>
-                <tr style={{ background: "var(--holo-off-white)" }}>
-                  {SORTABLE_HEADERS.map(({ key, label }) => {
-                    const active = sortKey === key;
-                    const indicator = active ? (sortDirection === "asc" ? "↑" : "↓") : "↕";
-
-                    return (
-                      <th
-                        key={key}
-                        style={{
-                          padding: "11px 16px",
-                          textAlign: "left",
-                          fontSize: 11,
-                          fontWeight: 800,
-                          color: active ? "var(--holo-blue-dark)" : "var(--holo-text-muted)",
-                          textTransform: "uppercase",
-                          letterSpacing: "0.06em",
-                          borderBottom: "1.5px solid var(--holo-border)",
-                          whiteSpace: "nowrap",
-                        }}
-                      >
-                        <button
-                          type="button"
-                          onClick={() => toggleSort(key)}
-                          style={{
-                            display: "inline-flex",
-                            alignItems: "center",
-                            gap: 6,
-                            background: "none",
-                            border: "none",
-                            padding: 0,
-                            cursor: "pointer",
-                            font: "inherit",
-                            color: "inherit",
-                          }}
-                          aria-label={`Sort by ${label}`}
-                        >
-                          {label}
-                          <span aria-hidden="true" style={{ fontSize: 10 }}>
-                            {indicator}
-                          </span>
-                        </button>
-                      </th>
-                    );
-                  })}
-                  {["Alt names", ""].map((h) => (
-                    <th
-                      key={h}
-                      style={{
-                        padding: "11px 16px",
-                        textAlign: "left",
-                        fontSize: 11,
-                        fontWeight: 800,
-                        color: "var(--holo-text-muted)",
-                        textTransform: "uppercase",
-                        letterSpacing: "0.06em",
-                        borderBottom: "1.5px solid var(--holo-border)",
-                        whiteSpace: "nowrap",
-                      }}
-                    >
-                      {h}
-                    </th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {loading ? (
-                  Array.from({ length: 5 }).map((_, i) => (
-                    <tr key={i}>
-                      {Array.from({ length: 8 }).map((__, j) => (
-                        <td key={j} style={{ padding: "14px 16px" }}>
-                          <div
-                            style={{
-                              height: 14,
-                              borderRadius: 7,
-                              background: "var(--holo-border)",
-                              opacity: 0.6,
-                              width: j === 0 ? 140 : j === 6 ? 100 : 60,
-                              animation: "pulse 1.5s ease infinite",
-                            }}
-                          />
-                        </td>
-                      ))}
-                    </tr>
-                  ))
-                ) : filtered.length === 0 ? (
-                  <tr>
-                    <td
-                      colSpan={8}
-                      style={{
-                        padding: "3.5rem",
-                        textAlign: "center",
-                        color: "var(--holo-text-muted)",
-                        fontSize: 15,
-                      }}
-                    >
-                      🎨 No talents found
-                    </td>
-                  </tr>
-                ) : (
-                  filtered.map((talent, idx) => {
-                    const bs = getBranchStyle(talent.branch);
-                    return (
-                      <tr
-                        key={talent.id}
-                        className="row-reveal"
-                        style={{
-                          animationDelay: `${Math.min(idx * 30, 300)}ms`,
-                          borderBottom: "1px solid var(--holo-border)",
-                        }}
-                      >
-                        {/* Talent name + avatar */}
-                        <td style={{ padding: "12px 16px", whiteSpace: "nowrap" }}>
-                          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                            {talent.image_url ? (
-                              // eslint-disable-next-line @next/next/no-img-element
-                              <img
-                                src={talent.image_url}
-                                alt={talent.name}
-                                style={{
-                                  width: 36,
-                                  height: 36,
-                                  borderRadius: "50%",
-                                  objectFit: "cover",
-                                  border: "2px solid var(--holo-border)",
-                                  flexShrink: 0,
-                                }}
-                                onError={(e) => {
-                                  const el = e.currentTarget as HTMLImageElement;
-                                  el.style.display = "none";
-                                }}
-                              />
-                            ) : (
-                              <div
-                                style={{
-                                  width: 36,
-                                  height: 36,
-                                  borderRadius: "50%",
-                                  background:
-                                    "linear-gradient(135deg, var(--holo-blue-light), var(--holo-blue))",
-                                  display: "flex",
-                                  alignItems: "center",
-                                  justifyContent: "center",
-                                  fontSize: 14,
-                                  fontWeight: 800,
-                                  color: "#fff",
-                                  flexShrink: 0,
-                                }}
-                              >
-                                {talent.name[0]}
-                              </div>
-                            )}
-                            <span
-                              style={{ fontWeight: 700, fontSize: 14, color: "var(--holo-text)" }}
-                            >
-                              {talent.name}
-                            </span>
-                          </div>
-                        </td>
-
-                        {/* Branch badge */}
-                        <td style={{ padding: "12px 16px" }}>
-                          <span
-                            style={{
-                              fontSize: 12,
-                              fontWeight: 800,
-                              padding: "3px 10px",
-                              borderRadius: 20,
-                              background: bs.bg,
-                              color: bs.color,
-                              border: `1px solid ${bs.border}`,
-                              whiteSpace: "nowrap",
-                            }}
-                          >
-                            {talent.branch}
-                          </span>
-                        </td>
-
-                        {/* Archetype */}
-                        <td
-                          style={{
-                            padding: "12px 16px",
-                            fontSize: 13,
-                            color: "var(--holo-text-muted)",
-                            fontWeight: 600,
-                          }}
-                        >
-                          {talent.lore_archetype || "—"}
-                        </td>
-
-                        {/* Debut */}
-                        <td
-                          style={{
-                            padding: "12px 16px",
-                            fontSize: 13,
-                            fontWeight: 700,
-                            color: "var(--holo-text)",
-                          }}
-                        >
-                          {talent.debut_year || "—"}
-                        </td>
-
-                        {/* Height */}
-                        <td
-                          style={{
-                            padding: "12px 16px",
-                            fontSize: 13,
-                            fontWeight: 700,
-                            color: "var(--holo-text)",
-                            whiteSpace: "nowrap",
-                          }}
-                        >
-                          {talent.height ? `${talent.height} cm` : "—"}
-                        </td>
-
-                        {/* Birthday */}
-                        <td
-                          style={{
-                            padding: "12px 16px",
-                            fontSize: 13,
-                            color: "var(--holo-text-muted)",
-                            fontWeight: 600,
-                          }}
-                        >
-                          {talent.birth_month || "—"}
-                        </td>
-
-                        {/* Alt names */}
-                        <td style={{ padding: "12px 16px" }}>
-                          <div style={{ display: "flex", flexWrap: "wrap", gap: 4 }}>
-                            {talent.alt_names.length === 0 ? (
-                              <span
-                                style={{
-                                  fontSize: 12,
-                                  color: "var(--holo-border)",
-                                  fontStyle: "italic",
-                                }}
-                              >
-                                none
-                              </span>
-                            ) : (
-                              talent.alt_names.map((a: string) => (
-                                <span
-                                  key={a}
-                                  style={{
-                                    fontSize: 11,
-                                    padding: "2px 8px",
-                                    borderRadius: 20,
-                                    background: "rgba(0,180,216,0.10)",
-                                    border: "1px solid rgba(0,180,216,0.25)",
-                                    color: "var(--holo-blue-dark)",
-                                    fontWeight: 700,
-                                    whiteSpace: "nowrap",
-                                  }}
-                                >
-                                  {a}
-                                </span>
-                              ))
-                            )}
-                          </div>
-                        </td>
-
-                        {/* Actions */}
-                        <td style={{ padding: "12px 16px" }}>
-                          <button
-                            onClick={() => setModal({ mode: "edit", talent })}
-                            style={{
-                              padding: "6px 14px",
-                              borderRadius: 8,
-                              border: "1.5px solid var(--holo-border)",
-                              background: "var(--holo-off-white)",
-                              color: "var(--holo-blue-dark)",
-                              fontFamily: '"Baloo 2", sans-serif',
-                              fontWeight: 700,
-                              fontSize: 12,
-                              cursor: "pointer",
-                              whiteSpace: "nowrap",
-                              transition: "all 0.15s ease",
-                            }}
-                            onMouseEnter={(e) => {
-                              (e.currentTarget as HTMLButtonElement).style.borderColor =
-                                "var(--holo-blue)";
-                              (e.currentTarget as HTMLButtonElement).style.background =
-                                "rgba(0,180,216,0.08)";
-                            }}
-                            onMouseLeave={(e) => {
-                              (e.currentTarget as HTMLButtonElement).style.borderColor =
-                                "var(--holo-border)";
-                              (e.currentTarget as HTMLButtonElement).style.background =
-                                "var(--holo-off-white)";
-                            }}
-                          >
-                            ✏️ Edit
-                          </button>
-                        </td>
-                      </tr>
-                    );
-                  })
-                )}
-              </tbody>
-            </table>
-          </div>
-        </div>
+        <AdminTable
+          talents={talents}
+          loading={loading}
+          filtered={filtered}
+          sortKey={sortKey}
+          sortDirection={sortDirection}
+          onSortToggle={toggleSort}
+          onEdit={(t) => setModal({ mode: "edit", talent: t })}
+          search={search}
+          branchFilter={branchFilter}
+          archetypeFilter={archetypeFilter}
+          onClearFilters={() => {
+            setSearch("");
+            setBranchFilter("");
+            setArchetypeFilter("");
+          }}
+        />
       </main>
 
-      {/* ── Modal ────────────────────────────────────────────────────────────── */}
       {modal && (
         <TalentModal
           mode={modal.mode}
@@ -791,38 +303,7 @@ export default function AdminPage() {
         />
       )}
 
-      {/* ── Toast ────────────────────────────────────────────────────────────── */}
-      {toast && (
-        <div
-          className={toast.type === "ok" ? "win-banner" : "lose-banner"}
-          style={{
-            position: "fixed",
-            bottom: "1.5rem",
-            right: "1.5rem",
-            padding: "14px 22px",
-            borderRadius: 14,
-            fontWeight: 700,
-            fontSize: 14,
-            zIndex: 100,
-            animation: "bounceIn 0.4s ease forwards",
-            maxWidth: 320,
-          }}
-        >
-          {toast.msg}
-        </div>
-      )}
-
-      <style>{`
-        @keyframes pulse {
-          0%, 100% { opacity: 0.4; }
-          50% { opacity: 0.8; }
-        }
-        @keyframes bounceIn {
-          0% { transform: scale(0.9) translateY(10px); opacity: 0; }
-          60% { transform: scale(1.03) translateY(0); }
-          100% { transform: scale(1); opacity: 1; }
-        }
-      `}</style>
+      {toast && <AdminToast message={toast.msg} type={toast.type} />}
     </div>
   );
 }
