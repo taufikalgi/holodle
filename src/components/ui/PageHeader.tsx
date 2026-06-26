@@ -19,16 +19,18 @@ export default function PageHeader({
 }) {
   let buttonShown = (showButton ? 1 : 0) + (showLeaderboardButton ? 1 : 0);
   return (
-    <div className={`flex items-center justify-between ${vsiHeader ? "pl-12" : ""} `}>
-      <div className={`w-${buttonShown * 8}`} />
+    <div
+      className={`flex flex-col items-center gap-3 md:flex-row md:items-center md:justify-between ${vsiHeader ? "md:pl-12" : ""}`}
+    >
+      <div className={`hidden md:block w-${buttonShown * 8}`} />
       <div className="flex flex-col items-center">
-        <div className="flex items-center gap-2 mb-1">
+        <div className="hidden md:flex items-center gap-2 mb-1">
           <div className="w-8 h-0.5 bg-gradient-to-r from-transparent to-[#00B4D8]" />
           <span className="text-[#00B4D8] text-xs">✦</span>
           <div className="w-8 h-0.5 bg-gradient-to-l from-transparent to-[#00B4D8]" />
         </div>
         <h1
-          className="text-5xl font-black tracking-widest"
+          className="text-3xl md:text-5xl font-black tracking-widest"
           style={{ fontFamily: "'Poppins', sans-serif" }}
         >
           <span className="shimmer-text">HOLO</span>
