@@ -3,7 +3,6 @@
 import { useState, useRef, useCallback } from "react";
 import {
   ALL_TALENTS,
-  searchTalents,
   compareTalents,
   type Talent,
   type CompareResult,
@@ -22,6 +21,7 @@ import {
 } from "@/components/ui";
 import { useLocalStorageState } from "@/hooks/useLocalStorageState";
 import { useOutsideClick } from "@/hooks/useOutsideClick";
+import { useTalentSearch } from "@/hooks/useTalentSearch";
 
 const MAX_GUESSES = 6;
 const STATS_KEY = "holodle-endless-stats";
@@ -74,32 +74,17 @@ function getInitialState(): EndlessState {
 
 export default function EndlessGame() {
   const [state, setState] = useLocalStorageState<EndlessState>(STATS_KEY, getInitialState());
-  const [input, setInput] = useState("");
-  const [suggestions, setSuggestions] = useState<Talent[]>([]);
-  const [showDropdown, setShowDropdown] = useState(false);
   const [showHowTo, setShowHowTo] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
+
+  const { input, suggestions, showDropdown, handleInput, clear, onFocus, setShowDropdown } = useTalentSearch();
 
   const { current, stats } = state;
   const guessesLeft = MAX_GUESSES - current.guesses.length;
   const alreadyGuessed = current.guesses.map((g) => g.talent.name);
 
   useOutsideClick(dropdownRef, () => setShowDropdown(false), inputRef);
-
-  const handleInput = useCallback(
-    (val: string) => {
-      setInput(val);
-      if (val.trim().length > 0) {
-        setSuggestions(searchTalents(val).filter((t) => !alreadyGuessed.includes(t.name)));
-        setShowDropdown(true);
-      } else {
-        setSuggestions([]);
-        setShowDropdown(false);
-      }
-    },
-    [alreadyGuessed]
-  );
 
   const makeGuess = useCallback(
     (talent: Talent) => {
@@ -124,11 +109,9 @@ export default function EndlessGame() {
           : prev.stats,
       }));
 
-      setInput("");
-      setSuggestions([]);
-      setShowDropdown(false);
+      clear();
     },
-    [current, setState]
+    [current, setState, clear]
   );
 
   function nextRound() {
@@ -138,7 +121,7 @@ export default function EndlessGame() {
       current: { answer: next, guesses: [], gameOver: false, won: false },
       recentTalents: [...prev.recentTalents, next.name].slice(-20),
     }));
-    setInput("");
+    clear();
   }
 
   const displayCurrentHistory = current.guesses
@@ -213,14 +196,10 @@ export default function EndlessGame() {
             input={input}
             suggestions={suggestions}
             showDropdown={showDropdown}
-            onInput={handleInput}
+            onInput={(val) => handleInput(val, alreadyGuessed)}
             onGuess={makeGuess}
-            onClear={() => {
-              setInput("");
-              setSuggestions([]);
-              setShowDropdown(false);
-            }}
-            onFocus={() => input && suggestions.length > 0 && setShowDropdown(true)}
+            onClear={clear}
+            onFocus={onFocus}
             dropdownRef={dropdownRef}
           />
         )}

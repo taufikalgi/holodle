@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef, useCallback } from "react";
-import { ALL_TALENTS, Keypoint, searchTalents, type Talent } from "@/lib/talents";
+import { ALL_TALENTS, getDateString, Keypoint, type Talent } from "@/lib/talents";
 import {
   Footer,
   GameOverBanner,
@@ -10,6 +10,7 @@ import {
 } from "@/components/ui";
 import { useLocalStorageState } from "@/hooks/useLocalStorageState";
 import { useOutsideClick } from "@/hooks/useOutsideClick";
+import { useTalentSearch } from "@/hooks/useTalentSearch";
 
 const MAX_GUESSES = 5;
 const STORAGE_KEY = "holodle-avatar-state";
@@ -19,11 +20,6 @@ interface PhotoState {
   gameOver: boolean;
   won: boolean;
   date: string;
-}
-
-function getDateString() {
-  const d = new Date();
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
 }
 
 function getTalentOfTheDay(): Talent {
@@ -96,32 +92,17 @@ function PhotoCrop({
 
 export default function PhotoGame() {
   const [state, setState] = useLocalStorageState<PhotoState>(STORAGE_KEY, emptyState, isValidPhotoState);
-  const [input, setInput] = useState("");
-  const [suggestions, setSuggestions] = useState<Talent[]>([]);
-  const [showDropdown, setShowDropdown] = useState(false);
   const [revealAnswer, setRevealAnswer] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
+
+  const { input, suggestions, showDropdown, handleInput, clear, onFocus, setShowDropdown } = useTalentSearch();
 
   const todayAnswer = getTalentOfTheDay();
   const guessCount = state.guesses.length;
   const alreadyGuessed = state.guesses.map((g) => g.talent.name);
 
   useOutsideClick(dropdownRef, () => setShowDropdown(false), inputRef);
-
-  const handleInput = useCallback(
-    (val: string) => {
-      setInput(val);
-      if (val.trim().length > 0) {
-        setSuggestions(searchTalents(val).filter((t) => !alreadyGuessed.includes(t.name)));
-        setShowDropdown(true);
-      } else {
-        setSuggestions([]);
-        setShowDropdown(false);
-      }
-    },
-    [alreadyGuessed]
-  );
 
   const makeGuess = useCallback(
     (talent: Talent) => {
@@ -135,11 +116,9 @@ export default function PhotoGame() {
         won: correct,
         date: getDateString(),
       });
-      setInput("");
-      setSuggestions([]);
-      setShowDropdown(false);
+      clear();
     },
-    [state, todayAnswer, setState]
+    [state, todayAnswer, setState, clear]
   );
 
   return (
@@ -213,14 +192,10 @@ export default function PhotoGame() {
             input={input}
             suggestions={suggestions}
             showDropdown={showDropdown}
-            onInput={handleInput}
+            onInput={(val) => handleInput(val, alreadyGuessed)}
             onGuess={makeGuess}
-            onClear={() => {
-              setInput("");
-              setSuggestions([]);
-              setShowDropdown(false);
-            }}
-            onFocus={() => input && suggestions.length > 0 && setShowDropdown(true)}
+            onClear={clear}
+            onFocus={onFocus}
             dropdownRef={dropdownRef}
             renderSuggestion={(t) => (
               <>

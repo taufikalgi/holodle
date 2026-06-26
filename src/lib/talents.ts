@@ -83,6 +83,11 @@ export function getTalentOfTheDay(): Talent {
   return ALL_TALENTS[index];
 }
 
+export function getDateString(): string {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+}
+
 export function searchTalents(query: string): Talent[] {
   const q = query.toLowerCase().trim();
   if (!q) return [];

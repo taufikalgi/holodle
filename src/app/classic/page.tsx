@@ -4,7 +4,7 @@ import { useState, useRef, useCallback } from "react";
 import {
   ALL_TALENTS,
   getTalentOfTheDay,
-  searchTalents,
+  getDateString,
   compareTalents,
   type Talent,
   type CompareResult,
@@ -23,6 +23,7 @@ import {
 } from "@/components/ui";
 import { useLocalStorageState } from "@/hooks/useLocalStorageState";
 import { useOutsideClick } from "@/hooks/useOutsideClick";
+import { useTalentSearch } from "@/hooks/useTalentSearch";
 
 const MAX_GUESSES = 6;
 const STORAGE_KEY = "holodle-classic-state";
@@ -40,11 +41,6 @@ interface GameStats {
   bestStreak: number;
   totalPlayed: number;
   totalWon: number;
-}
-
-function getDateString() {
-  const d = new Date();
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
 }
 
 function isValidGameState(data: unknown): data is GameState {
@@ -65,9 +61,6 @@ const emptyStats: GameStats = { streak: 0, bestStreak: 0, totalPlayed: 0, totalW
 export default function ClassicGame() {
   const [state, setState] = useLocalStorageState<GameState>(STORAGE_KEY, emptyState, isValidGameState);
   const [stats, setStats] = useLocalStorageState<GameStats>(STATS_STORAGE_KEY, emptyStats);
-  const [input, setInput] = useState("");
-  const [suggestions, setSuggestions] = useState<Talent[]>([]);
-  const [showDropdown, setShowDropdown] = useState(false);
   const [showHowTo, setShowHowTo] = useState(false);
   const [revealAnswer, setRevealAnswer] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -75,21 +68,11 @@ export default function ClassicGame() {
   const todayAnswer = getTalentOfTheDay();
   const guessesLeft = MAX_GUESSES - state.guesses.length;
 
+  const { input, suggestions, showDropdown, handleInput, clear, onFocus, setShowDropdown } = useTalentSearch();
+
   const alreadyGuessed = state.guesses.map((g) => g.talent.name);
-  const filteredSuggestions = suggestions.filter((t) => !alreadyGuessed.includes(t.name));
 
   useOutsideClick(dropdownRef, () => setShowDropdown(false), inputRef);
-
-  const handleInput = useCallback((val: string) => {
-    setInput(val);
-    if (val.trim().length > 0) {
-      setSuggestions(searchTalents(val));
-      setShowDropdown(true);
-    } else {
-      setSuggestions([]);
-      setShowDropdown(false);
-    }
-  }, []);
 
   const makeGuess = useCallback(
     (talent: Talent) => {
@@ -109,11 +92,9 @@ export default function ClassicGame() {
           totalWon: won ? stats.totalWon + 1 : stats.totalWon,
         });
       }
-      setInput("");
-      setSuggestions([]);
-      setShowDropdown(false);
+      clear();
     },
-    [state, stats, todayAnswer, setState, setStats]
+    [state, stats, todayAnswer, setState, setStats, clear]
   );
 
   const displayCurrentHistory = state.guesses
@@ -191,16 +172,12 @@ export default function ClassicGame() {
         {!state.gameOver && (
           <TalentSearchInput
             input={input}
-            suggestions={filteredSuggestions}
+            suggestions={suggestions}
             showDropdown={showDropdown}
-            onInput={handleInput}
+            onInput={(val) => handleInput(val, alreadyGuessed)}
             onGuess={makeGuess}
-            onClear={() => {
-              setInput("");
-              setSuggestions([]);
-              setShowDropdown(false);
-            }}
-            onFocus={() => input && filteredSuggestions.length > 0 && setShowDropdown(true)}
+            onClear={clear}
+            onFocus={onFocus}
             dropdownRef={dropdownRef}
           />
         )}
