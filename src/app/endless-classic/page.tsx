@@ -42,6 +42,27 @@ interface EndlessState {
   recentTalents: string[];
 }
 
+function isValidEndlessState(data: unknown): data is EndlessState {
+  if (typeof data !== "object" || data === null) return false;
+  const c = data as Record<string, unknown>;
+  const curr = c.current as Record<string, unknown> | undefined;
+  const st = c.stats as Record<string, unknown> | undefined;
+  return (
+    typeof curr === "object" && curr !== null &&
+    typeof curr.answer === "object" && curr.answer !== null &&
+    Array.isArray(curr.guesses) &&
+    typeof curr.gameOver === "boolean" &&
+    typeof curr.won === "boolean" &&
+    typeof st === "object" && st !== null &&
+    typeof st.streak === "number" &&
+    typeof st.bestStreak === "number" &&
+    typeof st.totalPlayed === "number" &&
+    typeof st.totalWon === "number" &&
+    Array.isArray(c.recentTalents) &&
+    c.recentTalents.every((t: unknown) => typeof t === "string")
+  );
+}
+
 function getRandomTalent(exclude: string[] = []): Talent {
   const pool = ALL_TALENTS.filter((t) => !exclude.includes(t.name));
   const source = pool.length > 0 ? pool : ALL_TALENTS;
@@ -49,31 +70,16 @@ function getRandomTalent(exclude: string[] = []): Talent {
 }
 
 function getInitialState(): EndlessState {
-  const defaultStats = { streak: 0, bestStreak: 0, totalPlayed: 0, totalWon: 0 };
-  let stats = defaultStats;
-  let recentTalents: string[] = [];
-
-  if (typeof window !== "undefined") {
-    try {
-      const saved = localStorage.getItem(STATS_KEY);
-      if (saved) {
-        const parsed = JSON.parse(saved);
-        stats = parsed.stats ?? defaultStats;
-        recentTalents = parsed.recentTalents ?? [];
-      }
-    } catch {}
-  }
-
-  const answer = getRandomTalent(recentTalents);
+  const answer = getRandomTalent([]);
   return {
     current: { answer, guesses: [], gameOver: false, won: false },
-    stats,
-    recentTalents: [...recentTalents, answer.name].slice(-20),
+    stats: { streak: 0, bestStreak: 0, totalPlayed: 0, totalWon: 0 },
+    recentTalents: [answer.name],
   };
 }
 
 export default function EndlessGame() {
-  const [state, setState] = useLocalStorageState<EndlessState>(STATS_KEY, getInitialState());
+  const [state, setState] = useLocalStorageState<EndlessState>(STATS_KEY, getInitialState(), isValidEndlessState);
   const [showHowTo, setShowHowTo] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
