@@ -133,6 +133,7 @@ function EndlessGamePage() {
       <main className="min-h-screen" style={{ background: "var(--holo-bg)" }}>
         <Navbar title="ENDLESS" />
         <BranchFilterModal
+          initialBranches={selectedBranches ?? undefined}
           onStart={handleBranchSelect}
           onClose={() => setShowFilter(false)}
         />

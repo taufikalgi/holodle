@@ -6,13 +6,17 @@ import { ALL_BRANCHES } from "@/lib/talents";
 interface BranchFilterModalProps {
   onStart: (branches: string[]) => void;
   onClose: () => void;
+  initialBranches?: string[];
 }
 
 export default function BranchFilterModal({
   onStart,
   onClose,
+  initialBranches,
 }: BranchFilterModalProps) {
-  const [selected, setSelected] = useState<Set<string>>(new Set(ALL_BRANCHES));
+  const [selected, setSelected] = useState<Set<string>>(
+    new Set(initialBranches ?? ALL_BRANCHES)
+  );
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
