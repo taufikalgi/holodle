@@ -85,12 +85,18 @@ function getInitialState(pool: Talent[]): EndlessState {
 function EndlessGameInner() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const branchParam = searchParams.get("branches");
-  const activeBranches = branchParam ? branchParam.split(",") : [];
-  const [showFilter, setShowFilter] = useState(!branchParam);
+  const initialBranchParam = searchParams.get("branches");
+  const [selectedBranches, setSelectedBranches] = useState<string[] | null>(
+    initialBranchParam ? initialBranchParam.split(",") : null
+  );
+  const [showFilter, setShowFilter] = useState(!initialBranchParam);
+
   const pool = useMemo(
-    () => filterTalentsByBranch(ALL_TALENTS, activeBranches),
-    [activeBranches.join(",")]
+    () =>
+      selectedBranches
+        ? filterTalentsByBranch(ALL_TALENTS, selectedBranches)
+        : ALL_TALENTS,
+    [selectedBranches?.join(",")]
   );
 
   const [state, setState] = useLocalStorageState<EndlessState>(
@@ -153,8 +159,10 @@ function EndlessGameInner() {
     .reverse();
 
   function handleBranchSelect(branches: string[]) {
-    const params = branches.join(",");
-    router.replace(`/endless-classic?branches=${params}`);
+    const newPool = filterTalentsByBranch(ALL_TALENTS, branches);
+    setSelectedBranches(branches);
+    setState(getInitialState(newPool));
+    router.replace(`/endless-classic?branches=${branches.join(",")}`);
     setShowFilter(false);
   }
 
@@ -200,11 +208,11 @@ function EndlessGameInner() {
                 {guessesLeft !== 1 ? "es" : ""} remaining
               </>
             )}
-            {activeBranches.length > 0 &&
-              activeBranches.length < ALL_BRANCHES.length && (
+            {selectedBranches &&
+              selectedBranches.length < ALL_BRANCHES.length && (
                 <>
                   <span className="opacity-30">|</span>
-                  {activeBranches.map((b) => (
+                  {selectedBranches.map((b) => (
                     <span
                       key={b}
                       className="rounded px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wider"
