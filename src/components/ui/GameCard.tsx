@@ -6,14 +6,19 @@ interface GameCardProps {
   alt: string;
   title: string;
   description: string;
+  onPlay?: () => void;
 }
 
-export default function GameCard({ href, logo, alt, title, description }: GameCardProps) {
-  return (
-    <Link
-      href={href}
-      className="holo-card p-8 flex flex-col items-center gap-3 hover:shadow-lg transition-shadow group"
-    >
+export default function GameCard({
+  href,
+  logo,
+  alt,
+  title,
+  description,
+  onPlay,
+}: GameCardProps) {
+  const content = (
+    <>
       <img
         src={logo}
         alt={alt}
@@ -31,6 +36,27 @@ export default function GameCard({ href, logo, alt, title, description }: GameCa
           </span>
         )}
       </p>
+    </>
+  );
+
+  if (onPlay) {
+    return (
+      <button
+        type="button"
+        onClick={onPlay}
+        className="holo-card p-8 flex flex-col items-center gap-3 hover:shadow-lg transition-shadow group w-full text-left"
+      >
+        {content}
+      </button>
+    );
+  }
+
+  return (
+    <Link
+      href={href}
+      className="holo-card p-8 flex flex-col items-center gap-3 hover:shadow-lg transition-shadow group"
+    >
+      {content}
     </Link>
   );
 }

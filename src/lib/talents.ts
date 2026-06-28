@@ -3,6 +3,8 @@ import { ApiError } from "./errors";
 
 export type Branch = "JP" | "EN" | "ID" | "DEV_IS" | "Stars JP" | "Stars EN";
 
+export const ALL_BRANCHES: Branch[] = ["JP", "EN", "ID", "DEV_IS", "Stars JP", "Stars EN"];
+
 export interface Keypoint {
   label: string;
   x: number;
@@ -86,6 +88,14 @@ export function getTalentOfTheDay(): Talent {
 export function getDateString(): string {
   const d = new Date();
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+}
+
+export function filterTalentsByBranch(
+  talents: Talent[],
+  branches: string[]
+): Talent[] {
+  if (branches.length === 0) return talents;
+  return talents.filter((t) => branches.includes(t.branch));
 }
 
 export function searchTalents(query: string): Talent[] {

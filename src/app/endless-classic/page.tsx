@@ -1,13 +1,17 @@
 "use client";
 
-import { useState, useRef, useCallback } from "react";
+import { Suspense, useState, useRef, useCallback, useMemo } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import {
   ALL_TALENTS,
+  ALL_BRANCHES,
   compareTalents,
+  filterTalentsByBranch,
   type Talent,
   type CompareResult,
 } from "@/lib/talents";
 import {
+  BranchFilterModal,
   ColumnHeaders,
   DEFAULT_COLUMN_HEADERS,
   Footer,
@@ -63,14 +67,14 @@ function isValidEndlessState(data: unknown): data is EndlessState {
   );
 }
 
-function getRandomTalent(exclude: string[] = []): Talent {
-  const pool = ALL_TALENTS.filter((t) => !exclude.includes(t.name));
-  const source = pool.length > 0 ? pool : ALL_TALENTS;
+function getRandomTalent(pool: Talent[], excludeIds: string[] = []): Talent {
+  const filtered = pool.filter((t) => !excludeIds.includes(t.id));
+  const source = filtered.length > 0 ? filtered : pool;
   return source[Math.floor(Math.random() * source.length)];
 }
 
-function getInitialState(): EndlessState {
-  const answer = getRandomTalent([]);
+function getInitialState(pool: Talent[]): EndlessState {
+  const answer = getRandomTalent(pool, []);
   return {
     current: { answer, guesses: [], gameOver: false, won: false },
     stats: { streak: 0, bestStreak: 0, totalPlayed: 0, totalWon: 0 },
@@ -78,8 +82,22 @@ function getInitialState(): EndlessState {
   };
 }
 
-export default function EndlessGame() {
-  const [state, setState] = useLocalStorageState<EndlessState>(STATS_KEY, getInitialState(), isValidEndlessState);
+function EndlessGameInner() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const branchParam = searchParams.get("branches");
+  const activeBranches = branchParam ? branchParam.split(",") : [];
+  const [showFilter, setShowFilter] = useState(!branchParam);
+  const pool = useMemo(
+    () => filterTalentsByBranch(ALL_TALENTS, activeBranches),
+    [activeBranches.join(",")]
+  );
+
+  const [state, setState] = useLocalStorageState<EndlessState>(
+    STATS_KEY,
+    getInitialState(pool),
+    isValidEndlessState
+  );
   const [showHowTo, setShowHowTo] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -121,7 +139,7 @@ export default function EndlessGame() {
   );
 
   function nextRound() {
-    const next = getRandomTalent(state.recentTalents);
+    const next = getRandomTalent(pool, state.recentTalents);
     setState((prev) => ({
       ...prev,
       current: { answer: next, guesses: [], gameOver: false, won: false },
@@ -134,9 +152,22 @@ export default function EndlessGame() {
     .map((g) => ({ talent: g.talent, result: g.result }))
     .reverse();
 
+  function handleBranchSelect(branches: string[]) {
+    const params = branches.join(",");
+    router.replace(`/endless-classic?branches=${params}`);
+    setShowFilter(false);
+  }
+
   return (
     <main className="min-h-screen" style={{ background: "var(--holo-bg)" }}>
       <Navbar title="ENDLESS" />
+
+      {showFilter && (
+        <BranchFilterModal
+          onStart={handleBranchSelect}
+          onClose={() => setShowFilter(false)}
+        />
+      )}
 
       <div className="max-w-5xl mx-auto px-4 py-8">
         <div className="text-center mb-6">
@@ -169,6 +200,24 @@ export default function EndlessGame() {
                 {guessesLeft !== 1 ? "es" : ""} remaining
               </>
             )}
+            {activeBranches.length > 0 &&
+              activeBranches.length < ALL_BRANCHES.length && (
+                <>
+                  <span className="opacity-30">|</span>
+                  {activeBranches.map((b) => (
+                    <span
+                      key={b}
+                      className="rounded px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wider"
+                      style={{
+                        background: "var(--holo-off-white)",
+                        color: "var(--holo-text-muted)",
+                      }}
+                    >
+                      {b}
+                    </span>
+                  ))}
+                </>
+              )}
           </div>
         </div>
 
@@ -220,13 +269,28 @@ export default function EndlessGame() {
           ))}
         </div>
 
-        {!current.gameOver && current.guesses.length === 0 && (
+        {pool.length === 0 ? (
+          <div className="text-center py-14">
+            <p className="text-sm font-semibold" style={{ color: "var(--holo-text-muted)" }}>
+              No talents match the selected branches.
+            </p>
+            <p className="text-xs mt-1 opacity-50" style={{ color: "var(--holo-text-muted)" }}>
+              <button
+                type="button"
+                onClick={() => setShowFilter(true)}
+                className="underline"
+              >
+                Choose different branches
+              </button>
+            </p>
+          </div>
+        ) : !current.gameOver && current.guesses.length === 0 && (
           <div className="text-center py-14">
             <p className="text-sm font-semibold" style={{ color: "var(--holo-text-muted)" }}>
               Start typing to make your first guess!
             </p>
             <p className="text-xs mt-1 opacity-50" style={{ color: "var(--holo-text-muted)" }}>
-              {ALL_TALENTS.length} talents in the pool
+              {pool.length} talent{pool.length !== 1 ? "s" : ""} in the pool
             </p>
           </div>
         )}
@@ -234,5 +298,13 @@ export default function EndlessGame() {
         <Footer />
       </div>
     </main>
+  );
+}
+
+export default function EndlessGame() {
+  return (
+    <Suspense fallback={null}>
+      <EndlessGameInner />
+    </Suspense>
   );
 }
