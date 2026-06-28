@@ -1,7 +1,14 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Navbar, PageHeader, HowToPlay, ColumnHeaders, DEFAULT_COLUMN_HEADERS, Footer } from "@/components/ui";
+import {
+  Navbar,
+  PageHeader,
+  HowToPlay,
+  ColumnHeaders,
+  DEFAULT_COLUMN_HEADERS,
+  Footer,
+} from "@/components/ui";
 import GuessRow from "@/components/ui/GuessRow";
 import { useOutsideClick } from "@/hooks/useOutsideClick";
 import { ApiError } from "@/lib/errors";
@@ -20,11 +27,24 @@ import LeaderboardModal from "./LeaderboardModal";
 import FinalResultCard from "./FinalResultCard";
 import StartSessionCard from "./StartSessionCard";
 import type { ApiTalent } from "@/lib/talents";
-import type { AuthUser, TalentChoice, GameSession, LeaderboardEntry, Comparison, GuessEntry } from "./types";
+import type {
+  AuthUser,
+  TalentChoice,
+  GameSession,
+  LeaderboardEntry,
+  Comparison,
+  GuessEntry,
+} from "./types";
 
 const SESSION_KEY = "giveaway-vsi-session-id";
 
-export default function GiveawayVsiGame({ user, onLogout }: { user: AuthUser; onLogout: () => void }) {
+export default function GiveawayVsiGame({
+  user,
+  onLogout,
+}: {
+  user: AuthUser;
+  onLogout: () => void;
+}) {
   const [talents, setTalents] = useState<TalentChoice[]>([]);
   const [talentsLoading, setTalentsLoading] = useState(true);
   const [talentError, setTalentError] = useState("");
@@ -42,7 +62,7 @@ export default function GiveawayVsiGame({ user, onLogout }: { user: AuthUser; on
   const [showHowTo, setShowHowTo] = useState(false);
   const [showLeaderboard, setShowLeaderboard] = useState(false);
   const [submittingId, setSubmittingId] = useState<string | null>(null);
-  const [toast, setToast] = useState<string | null>(null);
+  const [toast, setToast] = useState<{ message: string; type: "ok" | "err" } | null>(null);
   const [now, setNow] = useState(Date.now());
   const dropdownRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -197,7 +217,12 @@ export default function GiveawayVsiGame({ user, onLogout }: { user: AuthUser; on
         const data = await authedJson<{
           correct: boolean;
           comparison: Comparison;
-          session: { score: number; correct_guesses: number; wrong_answers: number; round_number: number };
+          session: {
+            score: number;
+            correct_guesses: number;
+            wrong_answers: number;
+            round_number: number;
+          };
         }>(`/api/v1/game-session/${session.id}/answer`, {
           method: "POST",
           body: JSON.stringify({ talent_id: talent.id }),
@@ -230,7 +255,10 @@ export default function GiveawayVsiGame({ user, onLogout }: { user: AuthUser; on
               }
             : prev
         );
-        setToast(data.correct ? "Correct guess." : "Wrong answer.");
+        setToast({
+          message: data.correct ? "Correct guess." : "Wrong answer.",
+          type: data.correct ? "ok" : "err",
+        });
       } catch (err) {
         if (err instanceof ApiError && err.status === 401) return;
         if (err instanceof ApiError && /expired/i.test(err.message)) {
@@ -376,14 +404,10 @@ export default function GiveawayVsiGame({ user, onLogout }: { user: AuthUser; on
 
         {toast && (
           <div
-            className="fixed bottom-6 left-1/2 -translate-x-1/2 w-max max-w-sm rounded-2xl border px-4 py-3 text-sm font-bold animate-slide-up z-50"
-            style={{
-              borderColor: "var(--holo-border)",
-              background: "white",
-              color: "var(--holo-text)",
-            }}
+            className={`fixed top-4 inset-x-0 mx-auto w-full max-w-5xl rounded-2xl px-4 py-3 text-center text-sm font-bold z-50 animate-slide-down ${toast.type === "ok" ? "win-banner" : "lose-banner"}`}
+            style={{ boxShadow: "0 4px 20px rgba(0,0,0,0.1)" }}
           >
-            {toast}
+            {toast.message}
           </div>
         )}
 
