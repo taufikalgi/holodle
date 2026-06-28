@@ -1,6 +1,6 @@
 "use client";
 
-import { Suspense, useState, useRef, useCallback, useMemo } from "react";
+import { Suspense, useState, useRef, useCallback, useMemo, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import {
   ALL_TALENTS,
@@ -28,7 +28,7 @@ import { useOutsideClick } from "@/hooks/useOutsideClick";
 import { useTalentSearch } from "@/hooks/useTalentSearch";
 
 const MAX_GUESSES = 6;
-const STATS_KEY = "holodle-endless-stats";
+const LAST_BRANCHES_KEY = "holodle-endless-last-branches";
 
 interface EndlessState {
   current: {
@@ -67,6 +67,13 @@ function isValidEndlessState(data: unknown): data is EndlessState {
   );
 }
 
+function getEndlessStorageKey(branches: string[] | null): string {
+  if (!branches || branches.length === 0 || branches.length === ALL_BRANCHES.length) {
+    return "holodle-endless-stats";
+  }
+  return `holodle-endless-stats-${branches.join("-")}`;
+}
+
 function getRandomTalent(pool: Talent[], excludeIds: string[] = []): Talent {
   const filtered = pool.filter((t) => !excludeIds.includes(t.id));
   const source = filtered.length > 0 ? filtered : pool;
@@ -82,15 +89,78 @@ function getInitialState(pool: Talent[]): EndlessState {
   };
 }
 
-function EndlessGameInner() {
+function EndlessGamePage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const initialBranchParam = searchParams.get("branches");
-  const [selectedBranches, setSelectedBranches] = useState<string[] | null>(
-    initialBranchParam ? initialBranchParam.split(",") : null
-  );
-  const [showFilter, setShowFilter] = useState(!initialBranchParam);
 
+  const [hydrated, setHydrated] = useState(false);
+  const [selectedBranches, setSelectedBranches] = useState<string[] | null>(null);
+  const [showFilter, setShowFilter] = useState(true);
+
+  useEffect(() => {
+    let branches: string[] | null = null;
+    if (initialBranchParam) {
+      branches = initialBranchParam.split(",");
+    } else {
+      try {
+        const last = localStorage.getItem(LAST_BRANCHES_KEY);
+        if (last) branches = JSON.parse(last);
+      } catch {}
+    }
+    setSelectedBranches(branches);
+    setShowFilter(!branches);
+    setHydrated(true);
+  }, []);
+
+  function handleBranchSelect(branches: string[]) {
+    localStorage.setItem(LAST_BRANCHES_KEY, JSON.stringify(branches));
+    setSelectedBranches(branches);
+    router.replace(`/endless-classic?branches=${branches.join(",")}`);
+    setShowFilter(false);
+  }
+
+  if (!hydrated) {
+    return (
+      <main className="min-h-screen" style={{ background: "var(--holo-bg)" }}>
+        <Navbar title="ENDLESS" />
+      </main>
+    );
+  }
+
+  if (showFilter) {
+    return (
+      <main className="min-h-screen" style={{ background: "var(--holo-bg)" }}>
+        <Navbar title="ENDLESS" />
+        <BranchFilterModal
+          onStart={handleBranchSelect}
+          onClose={() => setShowFilter(false)}
+        />
+      </main>
+    );
+  }
+
+  const storageKey = getEndlessStorageKey(selectedBranches);
+
+  return (
+    <EndlessGameContent
+      key={storageKey}
+      storageKey={storageKey}
+      selectedBranches={selectedBranches}
+      onChangeBranches={() => setShowFilter(true)}
+    />
+  );
+}
+
+function EndlessGameContent({
+  storageKey,
+  selectedBranches,
+  onChangeBranches,
+}: {
+  storageKey: string;
+  selectedBranches: string[] | null;
+  onChangeBranches: () => void;
+}) {
   const pool = useMemo(
     () =>
       selectedBranches
@@ -100,7 +170,7 @@ function EndlessGameInner() {
   );
 
   const [state, setState] = useLocalStorageState<EndlessState>(
-    STATS_KEY,
+    storageKey,
     getInitialState(pool),
     isValidEndlessState
   );
@@ -158,24 +228,9 @@ function EndlessGameInner() {
     .map((g) => ({ talent: g.talent, result: g.result }))
     .reverse();
 
-  function handleBranchSelect(branches: string[]) {
-    const newPool = filterTalentsByBranch(ALL_TALENTS, branches);
-    setSelectedBranches(branches);
-    setState(getInitialState(newPool));
-    router.replace(`/endless-classic?branches=${branches.join(",")}`);
-    setShowFilter(false);
-  }
-
   return (
     <main className="min-h-screen" style={{ background: "var(--holo-bg)" }}>
       <Navbar title="ENDLESS" />
-
-      {showFilter && (
-        <BranchFilterModal
-          onStart={handleBranchSelect}
-          onClose={() => setShowFilter(false)}
-        />
-      )}
 
       <div className="max-w-5xl mx-auto px-4 py-8">
         <div className="text-center mb-6">
@@ -188,44 +243,54 @@ function EndlessGameInner() {
             showLeaderboardButton={false}
           />
 
-          <div
-            className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-xs font-bold border"
-            style={{
-              background: "white",
-              borderColor: "var(--holo-border)",
-              color: "var(--holo-text-muted)",
-            }}
-          >
-            {current.gameOver ? (
-              current.won ? (
-                "Correct! Ready for the next one?"
+          <div className="flex items-center justify-center gap-2 flex-wrap">
+            <div
+              className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-xs font-bold border"
+              style={{
+                background: "white",
+                borderColor: "var(--holo-border)",
+                color: "var(--holo-text-muted)",
+              }}
+            >
+              {current.gameOver ? (
+                current.won ? (
+                  "Correct! Ready for the next one?"
+                ) : (
+                  "Wrong — try the next one!"
+                )
               ) : (
-                "Wrong — try the next one!"
-              )
-            ) : (
-              <>
-                <span style={{ color: "var(--holo-blue)" }}>●</span> {guessesLeft} guess
-                {guessesLeft !== 1 ? "es" : ""} remaining
-              </>
-            )}
-            {selectedBranches &&
-              selectedBranches.length < ALL_BRANCHES.length && (
                 <>
-                  <span className="opacity-30">|</span>
-                  {selectedBranches.map((b) => (
-                    <span
-                      key={b}
-                      className="rounded px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wider"
-                      style={{
-                        background: "var(--holo-off-white)",
-                        color: "var(--holo-text-muted)",
-                      }}
-                    >
-                      {b}
-                    </span>
-                  ))}
+                  <span style={{ color: "var(--holo-blue)" }}>●</span> {guessesLeft} guess
+                  {guessesLeft !== 1 ? "es" : ""} remaining
                 </>
               )}
+              {selectedBranches &&
+                selectedBranches.length < ALL_BRANCHES.length && (
+                  <>
+                    <span className="opacity-30">|</span>
+                    {selectedBranches.map((b) => (
+                      <span
+                        key={b}
+                        className="rounded px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wider"
+                        style={{
+                          background: "var(--holo-off-white)",
+                          color: "var(--holo-text-muted)",
+                        }}
+                      >
+                        {b}
+                      </span>
+                    ))}
+                  </>
+                )}
+            </div>
+            <button
+              type="button"
+              onClick={onChangeBranches}
+              className="rounded-full border px-3 py-1.5 text-[11px] font-bold transition-colors hover:bg-[var(--holo-off-white)]"
+              style={{ borderColor: "var(--holo-border)", color: "var(--holo-text-muted)" }}
+            >
+              Change branches
+            </button>
           </div>
         </div>
 
@@ -285,7 +350,7 @@ function EndlessGameInner() {
             <p className="text-xs mt-1 opacity-50" style={{ color: "var(--holo-text-muted)" }}>
               <button
                 type="button"
-                onClick={() => setShowFilter(true)}
+                onClick={onChangeBranches}
                 className="underline"
               >
                 Choose different branches
@@ -312,7 +377,7 @@ function EndlessGameInner() {
 export default function EndlessGame() {
   return (
     <Suspense fallback={null}>
-      <EndlessGameInner />
+      <EndlessGamePage />
     </Suspense>
   );
 }
