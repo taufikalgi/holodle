@@ -108,7 +108,7 @@ function EndlessGameInner() {
   const inputRef = useRef<HTMLInputElement>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
-  const { input, suggestions, showDropdown, handleInput, clear, onFocus, setShowDropdown } = useTalentSearch();
+  const { input, suggestions, showDropdown, handleInput, clear, onFocus, setShowDropdown } = useTalentSearch(pool);
 
   const { current, stats } = state;
   const guessesLeft = MAX_GUESSES - current.guesses.length;

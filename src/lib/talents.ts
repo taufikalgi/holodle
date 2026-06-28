@@ -98,14 +98,19 @@ export function filterTalentsByBranch(
   return talents.filter((t) => branches.includes(t.branch));
 }
 
-export function searchTalents(query: string): Talent[] {
+export function searchTalents(
+  query: string,
+  pool: Talent[] = ALL_TALENTS
+): Talent[] {
   const q = query.toLowerCase().trim();
   if (!q) return [];
-  return ALL_TALENTS.filter(
-    (t) =>
-      t.name.toLowerCase().includes(q) ||
-      (t.altNames && t.altNames.some((alt) => alt.toLowerCase().includes(q)))
-  ).slice(0, 8);
+  return pool
+    .filter(
+      (t) =>
+        t.name.toLowerCase().includes(q) ||
+        (t.altNames && t.altNames.some((alt) => alt.toLowerCase().includes(q)))
+    )
+    .slice(0, 8);
 }
 
 export type CompareResult = {
