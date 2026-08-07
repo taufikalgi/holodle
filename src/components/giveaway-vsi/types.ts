@@ -41,6 +41,8 @@ export type SessionHistoryState = {
   previousRounds: GuessEntry[][];
 };
 
+export type LeaderboardPeriod = "all" | "weekly" | "monthly";
+
 export type LeaderboardEntry = {
   session_id: string;
   user_id: string;
@@ -50,8 +52,16 @@ export type LeaderboardEntry = {
   correct_guesses: number;
   wrong_answers: number;
   expires_at: string;
-  finished_at: string;
+  finished_at: string | null;
   rank: number;
+};
+
+export type LeaderboardResponse = {
+  page: number;
+  page_size: number;
+  total: number;
+  has_more: boolean;
+  entries: LeaderboardEntry[];
 };
 
 export type ApiResponse<T> = {

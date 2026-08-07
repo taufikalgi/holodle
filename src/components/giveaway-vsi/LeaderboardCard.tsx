@@ -4,9 +4,15 @@ import type { LeaderboardEntry } from "./types";
 export default function LeaderboardCard({
   entries,
   loading,
+  hasMore,
+  loadingMore,
+  onLoadMore,
 }: {
   entries: LeaderboardEntry[];
   loading: boolean;
+  hasMore: boolean;
+  loadingMore: boolean;
+  onLoadMore: () => void;
 }) {
   return (
     <div className="space-y-2">
@@ -70,6 +76,17 @@ export default function LeaderboardCard({
         >
           No leaderboard data yet.
         </div>
+      )}
+      {!loading && hasMore && entries.length > 0 && (
+        <button
+          type="button"
+          onClick={onLoadMore}
+          disabled={loadingMore}
+          className="w-full rounded-2xl border px-4 py-3 text-sm font-bold transition-colors hover:bg-[var(--holo-off-white)] disabled:opacity-50"
+          style={{ borderColor: "var(--holo-border)", color: "var(--holo-text)" }}
+        >
+          {loadingMore ? "Loading..." : "Load more"}
+        </button>
       )}
     </div>
   );

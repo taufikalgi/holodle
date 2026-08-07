@@ -14,12 +14,17 @@ import { useOutsideClick } from "@/hooks/useOutsideClick";
 import { ApiError } from "@/lib/errors";
 import {
   authedJson,
+  addDays,
+  addMonths,
   clearStoredHistory,
   formatTimer,
   getEmptySessionHistoryState,
+  getMondayDate,
   getStoredHistoryState,
   normalizeTalent,
   setStoredHistoryState,
+  toIsoDate,
+  toMonthString,
 } from "./utils";
 import TalentSearch from "./TalentSearch";
 import HeaderStat from "./HeaderStat";
@@ -32,6 +37,8 @@ import type {
   TalentChoice,
   GameSession,
   LeaderboardEntry,
+  LeaderboardPeriod,
+  LeaderboardResponse,
   Comparison,
   GuessEntry,
 } from "./types";
@@ -57,6 +64,13 @@ export default function GiveawayVsiGame({
   const [historyTab, setHistoryTab] = useState<"current" | "previous">("current");
   const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
   const [leaderboardLoading, setLeaderboardLoading] = useState(true);
+  const [leaderboardLoadingMore, setLeaderboardLoadingMore] = useState(false);
+  const [leaderboardTotal, setLeaderboardTotal] = useState(0);
+  const [leaderboardHasMore, setLeaderboardHasMore] = useState(false);
+  const [leaderboardPage, setLeaderboardPage] = useState(0);
+  const [period, setPeriod] = useState<LeaderboardPeriod>("all");
+  const [week, setWeek] = useState(() => toIsoDate(getMondayDate(new Date())));
+  const [month, setMonth] = useState(() => toMonthString(new Date()));
   const [search, setSearch] = useState("");
   const [showDropdown, setShowDropdown] = useState(false);
   const [showHowTo, setShowHowTo] = useState(false);
@@ -91,27 +105,78 @@ export default function GiveawayVsiGame({
 
   useOutsideClick(dropdownRef, () => setShowDropdown(false), inputRef);
 
-  const syncLeaderboard = useCallback(async () => {
+  const buildLeaderboardUrl = useCallback(
+    (page: number) => {
+      const params = new URLSearchParams({ period, page: String(page), page_size: "20" });
+      if (period === "weekly") params.set("week", week);
+      if (period === "monthly") params.set("month", month);
+      return `/api/v1/game-session/leaderboard?${params.toString()}`;
+    },
+    [period, week, month]
+  );
+
+  const fetchLeaderboard = useCallback(async () => {
     setLeaderboardLoading(true);
+    setLeaderboardLoadingMore(false);
+    setLeaderboard([]);
+    setLeaderboardPage(0);
     try {
-      const data = await authedJson<LeaderboardEntry[]>(
-        "/api/v1/game-session/leaderboard?limit=20",
-        { method: "GET" }
-      );
-      const sorted = [...data].sort((a, b) => {
-        if (b.score !== a.score) return b.score - a.score;
-        if (b.correct_guesses !== a.correct_guesses) return b.correct_guesses - a.correct_guesses;
-        if (a.wrong_answers !== b.wrong_answers) return a.wrong_answers - b.wrong_answers;
-        return a.rank - b.rank;
+      const data = await authedJson<LeaderboardResponse>(buildLeaderboardUrl(1), {
+        method: "GET",
       });
-      setLeaderboard(sorted);
+      setLeaderboard(data.entries);
+      setLeaderboardTotal(data.total);
+      setLeaderboardHasMore(data.has_more);
+      setLeaderboardPage(data.page);
     } catch (err) {
       if (err instanceof ApiError && err.status === 401) return;
       setSessionError(err instanceof Error ? err.message : "Failed to load leaderboard");
     } finally {
       setLeaderboardLoading(false);
     }
+  }, [buildLeaderboardUrl]);
+
+  const loadMoreLeaderboard = useCallback(async () => {
+    if (leaderboardLoading || leaderboardLoadingMore || !leaderboardHasMore) return;
+    setLeaderboardLoadingMore(true);
+    try {
+      const data = await authedJson<LeaderboardResponse>(buildLeaderboardUrl(leaderboardPage + 1), {
+        method: "GET",
+      });
+      setLeaderboard((prev) => [...prev, ...data.entries]);
+      setLeaderboardTotal(data.total);
+      setLeaderboardHasMore(data.has_more);
+      setLeaderboardPage(data.page);
+    } catch (err) {
+      if (err instanceof ApiError && err.status === 401) return;
+      setSessionError(err instanceof Error ? err.message : "Failed to load leaderboard");
+    } finally {
+      setLeaderboardLoadingMore(false);
+    }
+  }, [
+    buildLeaderboardUrl,
+    leaderboardHasMore,
+    leaderboardLoading,
+    leaderboardLoadingMore,
+    leaderboardPage,
+  ]);
+
+  const changePeriod = useCallback((next: LeaderboardPeriod) => {
+    setPeriod(next);
+    if (next === "weekly") setWeek(toIsoDate(getMondayDate(new Date())));
+    if (next === "monthly") setMonth(toMonthString(new Date()));
   }, []);
+
+  const navigatePeriod = useCallback(
+    (direction: 1 | -1) => {
+      if (period === "weekly") {
+        setWeek((w) => toIsoDate(addDays(new Date(w + "T00:00:00"), direction * 7)));
+      } else if (period === "monthly") {
+        setMonth((m) => toMonthString(addMonths(new Date(m + "-01T00:00:00"), direction)));
+      }
+    },
+    [period]
+  );
 
   const loadSession = useCallback(async () => {
     setSessionLoading(true);
@@ -342,8 +407,8 @@ export default function GiveawayVsiGame({
 
   useEffect(() => {
     if (!showLeaderboard) return;
-    void syncLeaderboard();
-  }, [showLeaderboard, syncLeaderboard]);
+    void fetchLeaderboard();
+  }, [fetchLeaderboard, showLeaderboard]);
 
   const totalGuessCount =
     currentRoundHistory.length + previousRounds.reduce((count, round) => count + round.length, 0);
@@ -421,6 +486,13 @@ export default function GiveawayVsiGame({
           open={showLeaderboard}
           entries={leaderboard}
           loading={leaderboardLoading}
+          loadingMore={leaderboardLoadingMore}
+          hasMore={leaderboardHasMore}
+          total={leaderboardTotal}
+          period={period}
+          onPeriodChange={changePeriod}
+          onNavigate={navigatePeriod}
+          onLoadMore={loadMoreLeaderboard}
           onClose={() => setShowLeaderboard(false)}
         />
 

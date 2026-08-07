@@ -1,18 +1,38 @@
 "use client";
 
 import { useEffect } from "react";
-import type { LeaderboardEntry } from "./types";
+import type { LeaderboardEntry, LeaderboardPeriod } from "./types";
 import LeaderboardCard from "./LeaderboardCard";
+
+const PERIOD_OPTIONS: { value: LeaderboardPeriod; label: string }[] = [
+  { value: "all", label: "All time" },
+  { value: "weekly", label: "Weekly" },
+  { value: "monthly", label: "Monthly" },
+];
 
 export default function LeaderboardModal({
   open,
   entries,
   loading,
+  loadingMore,
+  hasMore,
+  total,
+  period,
+  onPeriodChange,
+  onNavigate,
+  onLoadMore,
   onClose,
 }: {
   open: boolean;
   entries: LeaderboardEntry[];
   loading: boolean;
+  loadingMore: boolean;
+  hasMore: boolean;
+  total: number;
+  period: LeaderboardPeriod;
+  onPeriodChange: (period: LeaderboardPeriod) => void;
+  onNavigate: (direction: 1 | -1) => void;
+  onLoadMore: () => void;
   onClose: () => void;
 }) {
   useEffect(() => {
@@ -72,16 +92,66 @@ export default function LeaderboardModal({
           </div>
 
           <div className="p-4 md:p-6">
-            <div className="mb-4 flex items-center justify-between gap-3">
-              <span
-                className="rounded-full border px-3 py-1 text-xs font-bold"
-                style={{ borderColor: "var(--holo-border)", color: "var(--holo-text-muted)" }}
+            <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+              <div
+                className="flex rounded-2xl border p-1"
+                style={{ borderColor: "var(--holo-border)" }}
               >
-                Top {entries.length || 0}
-              </span>
+                {PERIOD_OPTIONS.map((option) => (
+                  <button
+                    key={option.value}
+                    type="button"
+                    onClick={() => onPeriodChange(option.value)}
+                    className={`rounded-xl px-3 py-1.5 text-xs font-bold transition-colors ${
+                      period === option.value ? "bg-[var(--holo-off-white)]" : "bg-transparent"
+                    }`}
+                    style={{ color: "var(--holo-text)" }}
+                  >
+                    {option.label}
+                  </button>
+                ))}
+              </div>
+
+              <div className="flex items-center gap-3">
+                {period !== "all" && (
+                  <div className="flex items-center gap-1">
+                    <button
+                      type="button"
+                      onClick={() => onNavigate(-1)}
+                      aria-label="Previous period"
+                      className="rounded-full border px-2 py-1 text-sm font-bold transition-colors hover:bg-[var(--holo-off-white)]"
+                      style={{ borderColor: "var(--holo-border)", color: "var(--holo-text)" }}
+                    >
+                      ‹
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => onNavigate(1)}
+                      aria-label="Next period"
+                      className="rounded-full border px-2 py-1 text-sm font-bold transition-colors hover:bg-[var(--holo-off-white)]"
+                      style={{ borderColor: "var(--holo-border)", color: "var(--holo-text)" }}
+                    >
+                      ›
+                    </button>
+                  </div>
+                )}
+                <span
+                  className="rounded-full border px-3 py-1 text-xs font-bold"
+                  style={{ borderColor: "var(--holo-border)", color: "var(--holo-text-muted)" }}
+                >
+                  Top {total}
+                </span>
+              </div>
             </div>
+
             <div className="max-h-[75vh] overflow-y-auto pr-1">
-              <LeaderboardCard entries={entries} loading={loading} />
+              <LeaderboardCard
+                entries={entries}
+                loading={loading}
+                hasMore={hasMore}
+                loadingMore={loadingMore}
+                onLoadMore={onLoadMore}
+              />
             </div>
           </div>
         </div>
