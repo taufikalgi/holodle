@@ -44,6 +44,7 @@ import type {
 } from "./types";
 
 const SESSION_KEY = "giveaway-vsi-session-id";
+const MIN_MONTH = "2026-06";
 
 export default function GiveawayVsiGame({
   user,
@@ -171,12 +172,26 @@ export default function GiveawayVsiGame({
     (direction: 1 | -1) => {
       if (period === "weekly") {
         setWeek((w) => toIsoDate(addDays(new Date(w + "T00:00:00"), direction * 7)));
-      } else if (period === "monthly") {
-        setMonth((m) => toMonthString(addMonths(new Date(m + "-01T00:00:00"), direction)));
+        return;
+      }
+      if (period === "monthly") {
+        setMonth((m) => {
+          const next = toMonthString(addMonths(new Date(m + "-01T00:00:00"), direction));
+          const max = toMonthString(new Date());
+          if (next < MIN_MONTH) return MIN_MONTH;
+          if (next > max) return max;
+          return next;
+        });
       }
     },
     [period]
   );
+
+  const currentMonth = toMonthString(new Date());
+  const prevMonth = toMonthString(addMonths(new Date(month + "-01T00:00:00"), -1));
+  const nextMonth = toMonthString(addMonths(new Date(month + "-01T00:00:00"), 1));
+  const monthPrevDisabled = prevMonth < MIN_MONTH;
+  const monthNextDisabled = nextMonth > currentMonth;
 
   const loadSession = useCallback(async () => {
     setSessionLoading(true);
@@ -490,6 +505,9 @@ export default function GiveawayVsiGame({
           hasMore={leaderboardHasMore}
           total={leaderboardTotal}
           period={period}
+          month={month}
+          prevDisabled={period === "monthly" && monthPrevDisabled}
+          nextDisabled={period === "monthly" && monthNextDisabled}
           onPeriodChange={changePeriod}
           onNavigate={navigatePeriod}
           onLoadMore={loadMoreLeaderboard}

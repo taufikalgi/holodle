@@ -18,6 +18,9 @@ export default function LeaderboardModal({
   hasMore,
   total,
   period,
+  month,
+  prevDisabled,
+  nextDisabled,
   onPeriodChange,
   onNavigate,
   onLoadMore,
@@ -30,11 +33,19 @@ export default function LeaderboardModal({
   hasMore: boolean;
   total: number;
   period: LeaderboardPeriod;
+  month: string;
+  prevDisabled: boolean;
+  nextDisabled: boolean;
   onPeriodChange: (period: LeaderboardPeriod) => void;
   onNavigate: (direction: 1 | -1) => void;
   onLoadMore: () => void;
   onClose: () => void;
 }) {
+  const monthLabel = (() => {
+    const [y, m] = month.split("-").map(Number);
+    if (!y || !m) return month;
+    return `${new Date(y, m - 1, 1).toLocaleString("en-US", { month: "long" })} ${y}`;
+  })();
   useEffect(() => {
     if (!open) return;
 
@@ -103,9 +114,11 @@ export default function LeaderboardModal({
                     type="button"
                     onClick={() => onPeriodChange(option.value)}
                     className={`rounded-xl px-3 py-1.5 text-xs font-bold transition-colors ${
-                      period === option.value ? "bg-[var(--holo-off-white)]" : "bg-transparent"
+                      period === option.value ? "bg-[var(--holo-blue)]" : "bg-transparent"
                     }`}
-                    style={{ color: "var(--holo-text)" }}
+                    style={{
+                      color: period === option.value ? "white" : "var(--holo-text)",
+                    }}
                   >
                     {option.label}
                   </button>
@@ -114,25 +127,34 @@ export default function LeaderboardModal({
 
               <div className="flex items-center gap-3">
                 {period !== "all" && (
-                  <div className="flex items-center gap-1">
-                    <button
-                      type="button"
-                      onClick={() => onNavigate(-1)}
-                      aria-label="Previous period"
-                      className="rounded-full border px-2 py-1 text-sm font-bold transition-colors hover:bg-[var(--holo-off-white)]"
-                      style={{ borderColor: "var(--holo-border)", color: "var(--holo-text)" }}
-                    >
-                      ‹
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => onNavigate(1)}
-                      aria-label="Next period"
-                      className="rounded-full border px-2 py-1 text-sm font-bold transition-colors hover:bg-[var(--holo-off-white)]"
-                      style={{ borderColor: "var(--holo-border)", color: "var(--holo-text)" }}
-                    >
-                      ›
-                    </button>
+                  <div className="flex items-center gap-2">
+                    {period === "monthly" && (
+                      <span className="text-xs font-bold" style={{ color: "var(--holo-text)" }}>
+                        {monthLabel}
+                      </span>
+                    )}
+                    <div className="flex items-center gap-1">
+                      <button
+                        type="button"
+                        onClick={() => onNavigate(-1)}
+                        disabled={prevDisabled}
+                        aria-label="Previous period"
+                        className="rounded-full border px-2 py-1 text-sm font-bold transition-colors hover:bg-[var(--holo-off-white)] disabled:opacity-40 disabled:hover:bg-transparent"
+                        style={{ borderColor: "var(--holo-border)", color: "var(--holo-text)" }}
+                      >
+                        ‹
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => onNavigate(1)}
+                        disabled={nextDisabled}
+                        aria-label="Next period"
+                        className="rounded-full border px-2 py-1 text-sm font-bold transition-colors hover:bg-[var(--holo-off-white)] disabled:opacity-40 disabled:hover:bg-transparent"
+                        style={{ borderColor: "var(--holo-border)", color: "var(--holo-text)" }}
+                      >
+                        ›
+                      </button>
+                    </div>
                   </div>
                 )}
                 <span
