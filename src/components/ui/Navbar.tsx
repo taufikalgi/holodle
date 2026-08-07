@@ -3,6 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useState } from "react";
+import { usePathname } from "next/navigation";
 import { GameMode, GAMES } from "@/lib/game-modes";
 
 interface User {
@@ -20,6 +21,8 @@ export default function Navbar({
   onLogout?: () => void;
 }) {
   const [isOpen, setIsOpen] = useState(false);
+  const pathname = usePathname();
+  const isActive = (href: string) => pathname === href;
 
   return (
     <nav
@@ -46,7 +49,9 @@ export default function Navbar({
             >
               {game.title.toUpperCase()}
               <span
-                className="absolute bottom-0 left-0 h-0.5 w-0 group-hover:w-full transition-all duration-300 ease-in-out"
+                className={`absolute bottom-0 left-0 h-0.5 transition-all duration-300 ease-in-out ${
+                  isActive(game.href) ? "w-full" : "w-0 group-hover:w-full"
+                }`}
                 style={{ background: "var(--holo-blue)" }}
               />
             </Link>
@@ -123,11 +128,17 @@ export default function Navbar({
             <Link
               key={game.title}
               href={game.href}
-              className="text-sm font-black tracking-widest"
+              className="text-sm font-black tracking-widest relative group self-start"
               style={{ color: "var(--holo-text)" }}
               onClick={() => setIsOpen(false)}
             >
               {game.title.toUpperCase()}
+              <span
+                className={`absolute bottom-0 left-0 h-0.5 transition-all duration-300 ease-in-out ${
+                  isActive(game.href) ? "w-full" : "w-0 group-hover:w-full"
+                }`}
+                style={{ background: "var(--holo-blue)" }}
+              />
             </Link>
           ))}
 
