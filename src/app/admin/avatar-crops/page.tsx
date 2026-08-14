@@ -2,20 +2,20 @@
 
 import { Suspense, useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useAuth } from "@/hooks/useAuth";
+import { useAuth, getToken } from "@/hooks/useAuth";
+import { ApiError } from "@/lib/errors";
 import { AdminToast } from "@/components/admin";
 import { CropEditor, SavedCropsList, CropsReviewModal } from "@/components/admin/avatar-crops";
 import {
-  MOCK_TALENTS,
-  createMockArea,
-  deleteMockArea,
-  fetchMockAreas,
-  updateMockArea,
+  createArea,
+  deleteArea,
+  fetchAreas,
+  updateArea,
   type CropArea,
   type CropBox,
   type Difficulty,
   type EditableArea,
-  type MockTalent,
+  type Talent,
 } from "@/lib/avatar-crops";
 
 let keySeq = 0;
@@ -51,10 +51,12 @@ function AvatarCropsAdminContent() {
   const searchParams = useSearchParams();
 
   const initialId = searchParams.get("talentId");
-  const [selectedId, setSelectedId] = useState(
-    initialId && MOCK_TALENTS.some((t) => t.id === initialId) ? initialId : "mock-tokino-sora"
-  );
-  const talent: MockTalent = MOCK_TALENTS.find((t) => t.id === selectedId) ?? MOCK_TALENTS[0];
+  const [selectedId, setSelectedId] = useState<string | null>(initialId);
+  const [talents, setTalents] = useState<Talent[]>([]);
+  const [talentsLoading, setTalentsLoading] = useState(true);
+
+  const talent: Talent | undefined =
+    talents.find((t) => t.id === selectedId) ?? talents[0];
 
   const [loadedAreas, setLoadedAreas] = useState<CropArea[] | null>(null);
   const [areas, setAreas] = useState<EditableArea[]>([]);
@@ -73,20 +75,61 @@ function AvatarCropsAdminContent() {
   const loadAreas = useCallback(async (talentId: string) => {
     setLoadedAreas(null);
     setDeleted([]);
-    const fetched = await fetchMockAreas(talentId);
-    const editable: EditableArea[] = fetched.map((a) => ({
-      ...a,
-      key: nextKey(),
-      dirty: false,
-    }));
-    setAreas(editable);
-    setLoadedAreas(fetched);
-    setSelectedKey(null);
-  }, []);
+    try {
+      const fetched = await fetchAreas(talentId);
+      const editable: EditableArea[] = fetched.map((a) => ({
+        ...a,
+        key: nextKey(),
+        dirty: false,
+      }));
+      setAreas(editable);
+      setLoadedAreas(fetched);
+    } catch (e) {
+      if (e instanceof ApiError && e.status === 401) {
+        router.replace("/admin/login");
+        return;
+      }
+      setAreas([]);
+      setLoadedAreas([]);
+      showToast(e instanceof Error ? e.message : "Failed to load areas", "err");
+    } finally {
+      setSelectedKey(null);
+    }
+  }, [router]);
+
+  const fetchTalents = useCallback(async () => {
+    setTalentsLoading(true);
+    try {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8080"}/api/v1/talent/`, {
+        headers: { Authorization: `Bearer ${getToken() ?? ""}` },
+      });
+      if (res.status === 401) {
+        router.replace("/admin/login");
+        return;
+      }
+      const json = (await res.json().catch(() => null)) as { success?: boolean; data?: Talent[] } | null;
+      if (!res.ok || !json?.success) throw new Error(json ? "Failed to load talents" : `Request failed (${res.status})`);
+      setTalents(json.data ?? []);
+    } catch (e) {
+      showToast(e instanceof Error ? e.message : "Failed to load talents", "err");
+    } finally {
+      setTalentsLoading(false);
+    }
+  }, [router]);
 
   useEffect(() => {
-    loadAreas(selectedId);
-  }, [selectedId, loadAreas]);
+    fetchTalents();
+  }, [fetchTalents]);
+
+  useEffect(() => {
+    if (talents.length > 0 && selectedId && !talents.some((t) => t.id === selectedId)) {
+      setSelectedId(talents[0].id);
+    }
+  }, [talents, selectedId]);
+
+  useEffect(() => {
+    if (talent) loadAreas(talent.id);
+  }, [talent, loadAreas]);
 
   useEffect(() => {
     if (!authLoading && !user) router.replace("/admin/login");
@@ -115,7 +158,7 @@ function AvatarCropsAdminContent() {
     ]);
   }, []);
 
-  const updateArea = useCallback((key: string, box: CropBox) => {
+  const editArea = useCallback((key: string, box: CropBox) => {
     setAreas((prev) => prev.map((a) => (a.key === key ? { ...a, ...box, dirty: true } : a)));
   }, []);
 
@@ -150,19 +193,35 @@ function AvatarCropsAdminContent() {
   const savedCount = areas.filter((a) => a.id !== null).length;
 
   const handleSave = async () => {
+    if (!talent) return;
     setSaving(true);
     try {
       const created = areas.filter((a) => a.id === null);
       const updated = areas.filter((a) => a.dirty && a.id !== null);
 
-      await Promise.all(
-        created.map((c) =>
-          createMockArea(selectedId, { x: c.x, y: c.y, w: c.w, h: c.h, difficulty: c.difficulty })
-        )
+      const createdResults = await Promise.all(
+        created.map(async (c) => ({
+          key: c.key,
+          area: await createArea(talent.id, {
+            x: c.x,
+            y: c.y,
+            w: c.w,
+            h: c.h,
+            difficulty: c.difficulty,
+          }),
+        }))
       );
+
+      if (createdResults.length > 0) {
+        const ids = new Map(createdResults.map((r) => [r.key, r.area.id]));
+        setAreas((prev) =>
+          prev.map((a) => (ids.has(a.key) ? { ...a, id: ids.get(a.key) ?? a.id, dirty: false } : a))
+        );
+      }
+
       await Promise.all(
         updated.map((u) =>
-          updateMockArea(selectedId, u.id as string, {
+          updateArea(talent.id, u.id as string, {
             x: u.x,
             y: u.y,
             w: u.w,
@@ -171,23 +230,28 @@ function AvatarCropsAdminContent() {
           })
         )
       );
-      await Promise.all(deleted.map((d) => deleteMockArea(selectedId, d.id)));
+      await Promise.all(deleted.map((d) => deleteArea(talent.id, d.id)));
 
-      await loadAreas(selectedId);
+      await loadAreas(talent.id);
       showToast(
         `Saved ${created.length + updated.length + deleted.length} change${
           created.length + updated.length + deleted.length === 1 ? "" : "s"
         } ✨`
       );
-    } catch {
-      showToast("Save failed — check your connection.", "err");
+    } catch (e) {
+      if (e instanceof ApiError && e.status === 401) {
+        router.replace("/admin/login");
+        return;
+      }
+      showToast(e instanceof Error ? e.message : "Save failed — check your connection.", "err");
     } finally {
       setSaving(false);
     }
   };
 
   const handleReset = async () => {
-    await loadAreas(selectedId);
+    if (!talent) return;
+    await loadAreas(talent.id);
     showToast("Reset to last saved state ↺");
   };
 
@@ -259,7 +323,7 @@ function AvatarCropsAdminContent() {
 
         <div style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
           <span style={{ fontSize: 13, color: "var(--holo-text-muted)", fontWeight: 600 }}>
-            {talent.name}
+            {talent?.name ?? "Loading…"}
           </span>
           <button
             type="button"
@@ -282,48 +346,66 @@ function AvatarCropsAdminContent() {
       </nav>
 
       <main style={{ maxWidth: 1200, margin: "0 auto", padding: "2rem 1.5rem" }}>
-        <div style={{ display: "flex", gap: "0.75rem", flexWrap: "wrap", marginBottom: "1.5rem" }}>
-          {MOCK_TALENTS.map((t) => {
-            const selected = t.id === selectedId;
-            return (
-              <button
-                key={t.id}
-                type="button"
-                onClick={() => setSelectedId(t.id)}
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 8,
-                  padding: "7px 14px 7px 7px",
-                  borderRadius: 999,
-                  border: selected
-                    ? "2px solid var(--holo-blue)"
-                    : "1.5px solid var(--holo-border)",
-                  background: selected ? "rgba(0,180,216,0.10)" : "var(--holo-bg-card)",
-                  color: "var(--holo-text)",
-                  fontFamily: '"Baloo 2", sans-serif',
-                  fontWeight: 700,
-                  fontSize: 13,
-                  cursor: "pointer",
-                  transition: "all 0.15s ease",
-                }}
-              >
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src={t.imageUrl}
-                  alt=""
+        <div
+          style={{
+            display: "flex",
+            gap: "0.75rem",
+            marginBottom: "1.5rem",
+            overflowX: "auto",
+            paddingBottom: 6,
+          }}
+        >
+          {talentsLoading ? (
+            <span
+              style={{ fontSize: 13, color: "var(--holo-text-muted)", fontWeight: 600 }}
+            >
+              Loading talents…
+            </span>
+          ) : (
+            talents.map((t) => {
+              const selected = t.id === selectedId;
+              return (
+                <button
+                  key={t.id}
+                  type="button"
+                  onClick={() => setSelectedId(t.id)}
                   style={{
-                    width: 30,
-                    height: 30,
-                    borderRadius: "50%",
-                    objectFit: "cover",
-                    border: "1.5px solid var(--holo-border)",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 8,
+                    padding: "7px 14px 7px 7px",
+                    borderRadius: 999,
+                    border: selected
+                      ? "2px solid var(--holo-blue)"
+                      : "1.5px solid var(--holo-border)",
+                    background: selected ? "rgba(0,180,216,0.10)" : "var(--holo-bg-card)",
+                    color: "var(--holo-text)",
+                    fontFamily: '"Baloo 2", sans-serif',
+                    fontWeight: 700,
+                    fontSize: 13,
+                    cursor: "pointer",
+                    transition: "all 0.15s ease",
+                    whiteSpace: "nowrap",
+                    flexShrink: 0,
                   }}
-                />
-                {t.name}
-              </button>
-            );
-          })}
+                >
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={t.image_url}
+                    alt=""
+                    style={{
+                      width: 30,
+                      height: 30,
+                      borderRadius: "50%",
+                      objectFit: "cover",
+                      border: "1.5px solid var(--holo-border)",
+                    }}
+                  />
+                  {t.name}
+                </button>
+              );
+            })
+          )}
         </div>
 
         <div
@@ -396,58 +478,94 @@ function AvatarCropsAdminContent() {
           </button>
         </div>
 
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: "minmax(0, 2fr) minmax(260px, 1fr)",
-            gap: "1.25rem",
-            alignItems: "start",
-          }}
-        >
-          <div className="holo-card" style={{ padding: "1rem" }}>
-            {!loadedAreas ? (
-              <div
-                style={{
-                  aspectRatio: "1 / 0.6",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  color: "var(--holo-text-muted)",
-                  fontWeight: 700,
-                  fontSize: 14,
-                }}
-              >
-                Loading areas…
-              </div>
-            ) : (
-              <CropEditor
-                talent={talent}
-                areas={areas}
-                selectedKey={selectedKey}
-                onSelect={setSelectedKey}
-                onAdd={addArea}
-                onUpdate={updateArea}
-                onSetDifficulty={setAreaDifficulty}
-                onRemove={removeArea}
-                onNaturalSize={setNatural}
-              />
-            )}
+        {talentsLoading ? (
+          <div
+            className="holo-card"
+            style={{
+              padding: "2rem",
+              textAlign: "center",
+              color: "var(--holo-text-muted)",
+              fontWeight: 700,
+              fontSize: 14,
+            }}
+          >
+            Loading talents…
           </div>
+        ) : !talent ? (
+          <div
+            className="holo-card cell-wrong"
+            style={{ padding: "2rem", textAlign: "center", fontWeight: 700, fontSize: 14 }}
+          >
+            Couldn&apos;t load the talent list.{" "}
+            <button
+              type="button"
+              onClick={fetchTalents}
+              style={{
+                background: "none",
+                border: "none",
+                color: "inherit",
+                fontWeight: 800,
+                cursor: "pointer",
+                textDecoration: "underline",
+              }}
+            >
+              Retry
+            </button>
+          </div>
+        ) : (
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: "minmax(0, 2fr) minmax(260px, 1fr)",
+              gap: "1.25rem",
+              alignItems: "start",
+            }}
+          >
+            <div className="holo-card" style={{ padding: "1rem" }}>
+              {!loadedAreas ? (
+                <div
+                  style={{
+                    aspectRatio: "1 / 0.6",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    color: "var(--holo-text-muted)",
+                    fontWeight: 700,
+                    fontSize: 14,
+                  }}
+                >
+                  Loading areas…
+                </div>
+              ) : (
+                <CropEditor
+                  talent={talent}
+                  areas={areas}
+                  selectedKey={selectedKey}
+                  onSelect={setSelectedKey}
+                  onAdd={addArea}
+                  onUpdate={editArea}
+                  onSetDifficulty={setAreaDifficulty}
+                  onRemove={removeArea}
+                  onNaturalSize={setNatural}
+                />
+              )}
+            </div>
 
-          <div className="holo-card" style={{ padding: "1rem 1.25rem" }}>
-            <SavedCropsList
-              src={talent.imageUrl}
-              natural={natural}
-              areas={areas}
-              savedCount={savedCount}
-              onReview={setReview}
-              onDelete={removeArea}
-            />
+            <div className="holo-card" style={{ padding: "1rem 1.25rem" }}>
+              <SavedCropsList
+                src={talent.image_url}
+                natural={natural}
+                areas={areas}
+                savedCount={savedCount}
+                onReview={setReview}
+                onDelete={removeArea}
+              />
+            </div>
           </div>
-        </div>
+        )}
       </main>
 
-      {review && (
+      {review && talent && (
         <CropsReviewModal
           talent={talent}
           natural={natural}

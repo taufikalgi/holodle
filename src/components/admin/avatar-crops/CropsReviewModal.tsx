@@ -1,9 +1,9 @@
 "use client";
 
-import { DIFFICULTY_META, type CropAreaData, type MockTalent } from "@/lib/avatar-crops";
+import { DIFFICULTY_META, type CropAreaData, type Talent } from "@/lib/avatar-crops";
 
 interface CropsReviewModalProps {
-  talent: MockTalent;
+  talent: Talent;
   natural: { w: number; h: number };
   area: CropAreaData;
   label: string;
@@ -73,7 +73,7 @@ export default function CropsReviewModal({
             borderRadius: 12,
             overflow: "hidden",
             border: "1.5px solid var(--holo-border)",
-            backgroundImage: `url(${talent.imageUrl})`,
+            backgroundImage: `url(${talent.image_url})`,
             backgroundRepeat: "no-repeat",
             backgroundSize: `${natural.w * sx}px ${natural.h * sy}px`,
             backgroundPosition: `${-area.x * sx}px ${-area.y * sy}px`,

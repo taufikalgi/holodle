@@ -1,5 +1,11 @@
 "use client";
 
+import { authFetch } from "@/hooks/useAuth";
+import { ApiError } from "./errors";
+import type { Talent } from "./talent-api";
+
+export type { Talent };
+
 export type Corner = "nw" | "ne" | "sw" | "se";
 
 export type Difficulty = "easy" | "medium" | "hard";
@@ -33,77 +39,6 @@ export interface EditableArea extends CropAreaData {
   dirty: boolean;
 }
 
-export interface MockTalent {
-  id: string;
-  name: string;
-  branch: string;
-  imageUrl: string;
-}
-
-export const MOCK_TALENTS: MockTalent[] = [
-  {
-    id: "mock-tokino-sora",
-    name: "Tokino Sora",
-    branch: "JP",
-    imageUrl:
-      "https://hololive.hololivepro.com/wp-content/uploads/2020/06/Tokino-Sora_pr-img_01.webp",
-  },
-  {
-    id: "mock-roboco",
-    name: "Roboco",
-    branch: "JP",
-    imageUrl:
-      "https://hololive.hololivepro.com/wp-content/uploads/2020/06/Robocosan_pr-img_01.webp",
-  },
-  {
-    id: "mock-azki",
-    name: "AZKi",
-    branch: "JP",
-    imageUrl: "https://hololive.hololivepro.com/wp-content/uploads/2020/06/AZKi_pr-img_01.webp",
-  },
-  {
-    id: "mock-sakura-miko",
-    name: "Sakura Miko",
-    branch: "JP",
-    imageUrl:
-      "https://hololive.hololivepro.com/wp-content/uploads/2020/06/Sakura-Miko_pr-img_01.png",
-  },
-  {
-    id: "mock-hoshimachi-suisei",
-    name: "Hoshimachi Suisei",
-    branch: "JP",
-    imageUrl:
-      "https://hololive.hololivepro.com/wp-content/uploads/2020/06/Hoshimachi-Suisei_pr-img_01.png",
-  },
-];
-
-const STORAGE_PREFIX = "holodle-mock-avatar-areas:";
-const LATENCY = 650;
-
-const keyFor = (talentId: string) => `${STORAGE_PREFIX}${talentId}`;
-
-function readStored(talentId: string): CropArea[] {
-  if (typeof window === "undefined") return [];
-  try {
-    const raw = localStorage.getItem(keyFor(talentId));
-    return raw ? (JSON.parse(raw) as CropArea[]) : [];
-  } catch {
-    return [];
-  }
-}
-
-function writeStored(talentId: string, areas: CropArea[]) {
-  if (typeof window === "undefined") return;
-  localStorage.setItem(keyFor(talentId), JSON.stringify(areas));
-}
-
-function wait<T>(value: T): Promise<T> {
-  return new Promise((resolve) => setTimeout(() => resolve(value), LATENCY));
-}
-
-let seq = 0;
-const nextId = () => `area-${Date.now()}-${++seq}`;
-
 const roundBox = (box: CropAreaData) => ({
   x: Math.round(box.x),
   y: Math.round(box.y),
@@ -112,33 +47,57 @@ const roundBox = (box: CropAreaData) => ({
   difficulty: box.difficulty,
 });
 
-export async function fetchMockAreas(talentId: string): Promise<CropArea[]> {
-  return wait(readStored(talentId).map((a) => ({ ...a })));
+interface Envelope<T> {
+  success?: boolean;
+  message?: string;
+  data?: T;
 }
 
-export async function createMockArea(talentId: string, box: CropAreaData): Promise<CropArea> {
-  const area: CropArea = { id: nextId(), ...roundBox(box) };
-  writeStored(talentId, [...readStored(talentId), area]);
-  return wait({ ...area });
+async function read<T>(res: Response): Promise<Envelope<T>> {
+  const json = (await res.json().catch(() => null)) as Envelope<T> | null;
+  if (!res.ok) {
+    const message = (json && "error" in json && (json as { error?: string }).error) || null;
+    throw new ApiError(message ?? `Request failed (${res.status})`, res.status);
+  }
+  return json ?? {};
 }
 
-export async function updateMockArea(
+const areasPath = (talentId: string) =>
+  `/api/v1/talent/${encodeURIComponent(talentId)}/areas`;
+const areaPath = (talentId: string, areaId: string) =>
+  `${areasPath(talentId)}/${encodeURIComponent(areaId)}`;
+
+export async function fetchAreas(talentId: string): Promise<CropArea[]> {
+  const res = await authFetch(areasPath(talentId));
+  const json = await read<{ talent_id: string; areas: CropArea[] }>(res);
+  return json.data?.areas ?? [];
+}
+
+export async function createArea(talentId: string, box: CropAreaData): Promise<CropArea> {
+  const res = await authFetch(areasPath(talentId), {
+    method: "POST",
+    body: JSON.stringify(roundBox(box)),
+  });
+  const json = await read<CropArea>(res);
+  if (!json.data?.id) throw new ApiError("failed to create crop area", 500);
+  return json.data;
+}
+
+export async function updateArea(
   talentId: string,
   areaId: string,
   box: CropAreaData
 ): Promise<CropArea> {
-  const next: CropArea = { id: areaId, ...roundBox(box) };
-  writeStored(
-    talentId,
-    readStored(talentId).map((a) => (a.id === areaId ? next : a))
-  );
-  return wait({ ...next });
+  const res = await authFetch(areaPath(talentId, areaId), {
+    method: "PUT",
+    body: JSON.stringify(roundBox(box)),
+  });
+  const json = await read<CropArea>(res);
+  if (!json.data?.id) throw new ApiError("failed to update crop area", 500);
+  return json.data;
 }
 
-export async function deleteMockArea(talentId: string, areaId: string): Promise<void> {
-  writeStored(
-    talentId,
-    readStored(talentId).filter((a) => a.id !== areaId)
-  );
-  return wait(undefined);
+export async function deleteArea(talentId: string, areaId: string): Promise<void> {
+  const res = await authFetch(areaPath(talentId, areaId), { method: "DELETE" });
+  await read<null>(res);
 }

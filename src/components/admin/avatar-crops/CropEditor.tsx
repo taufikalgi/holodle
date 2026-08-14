@@ -7,7 +7,7 @@ import {
   type CropBox,
   type Difficulty,
   type EditableArea,
-  type MockTalent,
+  type Talent,
 } from "@/lib/avatar-crops";
 
 const MAX_CONTAINER_HEIGHT = 520;
@@ -58,7 +58,7 @@ function resizeBox(orig: CropBox, corner: Corner, dx: number, dy: number) {
 }
 
 interface CropEditorProps {
-  talent: MockTalent;
+  talent: Talent;
   areas: EditableArea[];
   selectedKey: string | null;
   onSelect: (key: string | null) => void;
@@ -234,7 +234,7 @@ export default function CropEditor({
   return (
     <div ref={wrapRef} style={{ width: "100%", userSelect: "none" }}>
       <img
-        src={talent.imageUrl}
+        src={talent.image_url}
         alt={talent.name}
         draggable={false}
         onLoad={(e) => {
@@ -263,7 +263,7 @@ export default function CropEditor({
             fontWeight: 700,
           }}
         >
-          {talent.imageUrl ? "Loading image…" : "No image"}
+          {talent.image_url ? "Loading image…" : "No image"}
         </div>
       ) : (
         <div
@@ -284,7 +284,7 @@ export default function CropEditor({
         >
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
-            src={talent.imageUrl}
+            src={talent.image_url}
             alt={talent.name}
             draggable={false}
             style={{ width: disp.w, height: disp.h, display: "block", pointerEvents: "none" }}
