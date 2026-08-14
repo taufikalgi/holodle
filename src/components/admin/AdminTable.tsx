@@ -3,7 +3,13 @@
 import type { Talent } from "@/lib/talent-api";
 import { MONTH_ORDER } from "@/lib/talents";
 
-export type SortKey = "name" | "branch" | "lore_archetype" | "debut_year" | "height" | "birth_month";
+export type SortKey =
+  | "name"
+  | "branch"
+  | "lore_archetype"
+  | "debut_year"
+  | "height"
+  | "birth_month";
 export type SortDirection = "asc" | "desc";
 
 const BRANCH_COLORS: Record<string, { bg: string; color: string; border: string }> = {
@@ -63,6 +69,7 @@ interface AdminTableProps {
   sortDirection: SortDirection;
   onSortToggle: (key: SortKey) => void;
   onEdit: (talent: Talent) => void;
+  onCrop: (talent: Talent) => void;
   search: string;
   branchFilter: string;
   archetypeFilter: string;
@@ -77,6 +84,7 @@ export default function AdminTable({
   sortDirection,
   onSortToggle,
   onEdit,
+  onCrop,
   search,
   branchFilter,
   archetypeFilter,
@@ -374,36 +382,68 @@ export default function AdminTable({
                       </td>
 
                       <td style={{ padding: "12px 16px" }}>
-                        <button
-                          onClick={() => onEdit(talent)}
-                          style={{
-                            padding: "6px 14px",
-                            borderRadius: 8,
-                            border: "1.5px solid var(--holo-border)",
-                            background: "var(--holo-off-white)",
-                            color: "var(--holo-blue-dark)",
-                            fontFamily: '"Baloo 2", sans-serif',
-                            fontWeight: 700,
-                            fontSize: 12,
-                            cursor: "pointer",
-                            whiteSpace: "nowrap",
-                            transition: "all 0.15s ease",
-                          }}
-                          onMouseEnter={(e) => {
-                            (e.currentTarget as HTMLButtonElement).style.borderColor =
-                              "var(--holo-blue)";
-                            (e.currentTarget as HTMLButtonElement).style.background =
-                              "rgba(0,180,216,0.08)";
-                          }}
-                          onMouseLeave={(e) => {
-                            (e.currentTarget as HTMLButtonElement).style.borderColor =
-                              "var(--holo-border)";
-                            (e.currentTarget as HTMLButtonElement).style.background =
-                              "var(--holo-off-white)";
-                          }}
-                        >
-                          ✏️ Edit
-                        </button>
+                        <div style={{ display: "flex", gap: 6 }}>
+                          <button
+                            onClick={() => onEdit(talent)}
+                            style={{
+                              padding: "6px 14px",
+                              borderRadius: 8,
+                              border: "1.5px solid var(--holo-border)",
+                              background: "var(--holo-off-white)",
+                              color: "var(--holo-blue-dark)",
+                              fontFamily: '"Baloo 2", sans-serif',
+                              fontWeight: 700,
+                              fontSize: 12,
+                              cursor: "pointer",
+                              whiteSpace: "nowrap",
+                              transition: "all 0.15s ease",
+                            }}
+                            onMouseEnter={(e) => {
+                              (e.currentTarget as HTMLButtonElement).style.borderColor =
+                                "var(--holo-blue)";
+                              (e.currentTarget as HTMLButtonElement).style.background =
+                                "rgba(0,180,216,0.08)";
+                            }}
+                            onMouseLeave={(e) => {
+                              (e.currentTarget as HTMLButtonElement).style.borderColor =
+                                "var(--holo-border)";
+                              (e.currentTarget as HTMLButtonElement).style.background =
+                                "var(--holo-off-white)";
+                            }}
+                          >
+                            ✏️ Edit
+                          </button>
+                          <button
+                            onClick={() => onCrop(talent)}
+                            style={{
+                              padding: "6px 10px",
+                              borderRadius: 8,
+                              border: "1.5px solid rgba(0,180,216,0.35)",
+                              background: "rgba(0,180,216,0.10)",
+                              color: "var(--holo-blue-dark)",
+                              fontFamily: '"Baloo 2", sans-serif',
+                              fontWeight: 700,
+                              fontSize: 12,
+                              cursor: "pointer",
+                              whiteSpace: "nowrap",
+                              transition: "all 0.15s ease",
+                            }}
+                            onMouseEnter={(e) => {
+                              (e.currentTarget as HTMLButtonElement).style.borderColor =
+                                "var(--holo-blue)";
+                              (e.currentTarget as HTMLButtonElement).style.background =
+                                "rgba(0,180,216,0.18)";
+                            }}
+                            onMouseLeave={(e) => {
+                              (e.currentTarget as HTMLButtonElement).style.borderColor =
+                                "rgba(0,180,216,0.35)";
+                              (e.currentTarget as HTMLButtonElement).style.background =
+                                "rgba(0,180,216,0.10)";
+                            }}
+                          >
+                            ✂️
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   );
