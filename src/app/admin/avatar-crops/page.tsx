@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { Suspense, useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "@/hooks/useAuth";
 import { AdminToast } from "@/components/admin";
@@ -13,6 +13,7 @@ import {
   updateMockArea,
   type CropArea,
   type CropBox,
+  type Difficulty,
   type EditableArea,
   type MockTalent,
 } from "@/lib/avatar-crops";
@@ -21,6 +22,30 @@ let keySeq = 0;
 const nextKey = () => `area-${++keySeq}-${Date.now() % 100000}`;
 
 export default function AvatarCropsAdminPage() {
+  return (
+    <Suspense fallback={<LoadingScreen />}>
+      <AvatarCropsAdminContent />
+    </Suspense>
+  );
+}
+
+function LoadingScreen() {
+  return (
+    <main
+      className="min-h-screen flex items-center justify-center"
+      style={{ background: "var(--holo-bg)" }}
+    >
+      <span
+        className="text-sm font-semibold animate-pulse"
+        style={{ color: "var(--holo-text-muted)" }}
+      >
+        Loading…
+      </span>
+    </main>
+  );
+}
+
+function AvatarCropsAdminContent() {
   const { user, loading: authLoading, logout } = useAuth({ requireAdmin: true });
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -73,15 +98,18 @@ export default function AvatarCropsAdminPage() {
   }
 
   const addArea = useCallback((box: CropBox) => {
+    const key = nextKey();
+    setSelectedKey(key);
     setAreas((prev) => [
       ...prev,
       {
-        key: nextKey(),
+        key,
         id: null,
         x: box.x,
         y: box.y,
         w: box.w,
         h: box.h,
+        difficulty: "medium",
         dirty: true,
       },
     ]);
@@ -89,6 +117,10 @@ export default function AvatarCropsAdminPage() {
 
   const updateArea = useCallback((key: string, box: CropBox) => {
     setAreas((prev) => prev.map((a) => (a.key === key ? { ...a, ...box, dirty: true } : a)));
+  }, []);
+
+  const setAreaDifficulty = useCallback((key: string, difficulty: Difficulty) => {
+    setAreas((prev) => prev.map((a) => (a.key === key ? { ...a, difficulty, dirty: true } : a)));
   }, []);
 
   const removeArea = useCallback(
@@ -101,6 +133,7 @@ export default function AvatarCropsAdminPage() {
           y: target.y,
           w: target.w,
           h: target.h,
+          difficulty: target.difficulty,
         };
         setDeleted((d) => [...d, removed]);
         setAreas((prev) => prev.filter((a) => a.key !== key));
@@ -123,11 +156,19 @@ export default function AvatarCropsAdminPage() {
       const updated = areas.filter((a) => a.dirty && a.id !== null);
 
       await Promise.all(
-        created.map((c) => createMockArea(selectedId, { x: c.x, y: c.y, w: c.w, h: c.h }))
+        created.map((c) =>
+          createMockArea(selectedId, { x: c.x, y: c.y, w: c.w, h: c.h, difficulty: c.difficulty })
+        )
       );
       await Promise.all(
         updated.map((u) =>
-          updateMockArea(selectedId, u.id as string, { x: u.x, y: u.y, w: u.w, h: u.h })
+          updateMockArea(selectedId, u.id as string, {
+            x: u.x,
+            y: u.y,
+            w: u.w,
+            h: u.h,
+            difficulty: u.difficulty,
+          })
         )
       );
       await Promise.all(deleted.map((d) => deleteMockArea(selectedId, d.id)));
@@ -151,19 +192,7 @@ export default function AvatarCropsAdminPage() {
   };
 
   if (authLoading || !user) {
-    return (
-      <main
-        className="min-h-screen flex items-center justify-center"
-        style={{ background: "var(--holo-bg)" }}
-      >
-        <span
-          className="text-sm font-semibold animate-pulse"
-          style={{ color: "var(--holo-text-muted)" }}
-        >
-          Loading…
-        </span>
-      </main>
-    );
+    return <LoadingScreen />;
   }
 
   return (
@@ -398,6 +427,7 @@ export default function AvatarCropsAdminPage() {
                 onSelect={setSelectedKey}
                 onAdd={addArea}
                 onUpdate={updateArea}
+                onSetDifficulty={setAreaDifficulty}
                 onRemove={removeArea}
                 onNaturalSize={setNatural}
               />
@@ -421,7 +451,13 @@ export default function AvatarCropsAdminPage() {
         <CropsReviewModal
           talent={talent}
           natural={natural}
-          area={{ x: review.x, y: review.y, w: review.w, h: review.h }}
+          area={{
+            x: review.x,
+            y: review.y,
+            w: review.w,
+            h: review.h,
+            difficulty: review.difficulty,
+          }}
           label={`Area #${areas.findIndex((a) => a.key === review.key) + 1 || "?"}`}
           onClose={() => setReview(null)}
         />

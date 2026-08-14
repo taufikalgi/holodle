@@ -2,6 +2,16 @@
 
 export type Corner = "nw" | "ne" | "sw" | "se";
 
+export type Difficulty = "easy" | "medium" | "hard";
+
+export const DIFFICULTIES: Difficulty[] = ["easy", "medium", "hard"];
+
+export const DIFFICULTY_META: Record<Difficulty, { label: string; color: string; bg: string }> = {
+  easy: { label: "Easy", color: "#15803d", bg: "#dcfce7" },
+  medium: { label: "Medium", color: "#a16207", bg: "#fef9c3" },
+  hard: { label: "Hard", color: "#b91c1c", bg: "#fee2e2" },
+};
+
 export interface CropBox {
   x: number;
   y: number;
@@ -9,11 +19,15 @@ export interface CropBox {
   h: number;
 }
 
-export interface CropArea extends CropBox {
+export interface CropAreaData extends CropBox {
+  difficulty: Difficulty;
+}
+
+export interface CropArea extends CropAreaData {
   id: string;
 }
 
-export interface EditableArea extends CropBox {
+export interface EditableArea extends CropAreaData {
   key: string;
   id: string | null;
   dirty: boolean;
@@ -90,18 +104,19 @@ function wait<T>(value: T): Promise<T> {
 let seq = 0;
 const nextId = () => `area-${Date.now()}-${++seq}`;
 
-const roundBox = (box: CropBox) => ({
+const roundBox = (box: CropAreaData) => ({
   x: Math.round(box.x),
   y: Math.round(box.y),
   w: Math.round(box.w),
   h: Math.round(box.h),
+  difficulty: box.difficulty,
 });
 
 export async function fetchMockAreas(talentId: string): Promise<CropArea[]> {
   return wait(readStored(talentId).map((a) => ({ ...a })));
 }
 
-export async function createMockArea(talentId: string, box: CropBox): Promise<CropArea> {
+export async function createMockArea(talentId: string, box: CropAreaData): Promise<CropArea> {
   const area: CropArea = { id: nextId(), ...roundBox(box) };
   writeStored(talentId, [...readStored(talentId), area]);
   return wait({ ...area });
@@ -110,7 +125,7 @@ export async function createMockArea(talentId: string, box: CropBox): Promise<Cr
 export async function updateMockArea(
   talentId: string,
   areaId: string,
-  box: CropBox
+  box: CropAreaData
 ): Promise<CropArea> {
   const next: CropArea = { id: areaId, ...roundBox(box) };
   writeStored(

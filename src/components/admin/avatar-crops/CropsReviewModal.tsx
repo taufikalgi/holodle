@@ -1,11 +1,11 @@
 "use client";
 
-import type { CropBox, MockTalent } from "@/lib/avatar-crops";
+import { DIFFICULTY_META, type CropAreaData, type MockTalent } from "@/lib/avatar-crops";
 
 interface CropsReviewModalProps {
   talent: MockTalent;
   natural: { w: number; h: number };
-  area: CropBox;
+  area: CropAreaData;
   label: string;
   onClose: () => void;
 }
@@ -88,6 +88,20 @@ export default function CropsReviewModal({
             flexWrap: "wrap",
           }}
         >
+          {DIFFICULTY_META[area.difficulty] && (
+            <span
+              style={{
+                fontSize: 12,
+                fontWeight: 800,
+                color: DIFFICULTY_META[area.difficulty].color,
+                background: DIFFICULTY_META[area.difficulty].bg,
+                padding: "3px 10px",
+                borderRadius: 20,
+              }}
+            >
+              {DIFFICULTY_META[area.difficulty].label}
+            </span>
+          )}
           {(
             [
               ["x", area.x],

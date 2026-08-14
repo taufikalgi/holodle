@@ -1,7 +1,14 @@
 "use client";
 
 import { useEffect, useRef, useState, type MouseEvent as ReactMouseEvent } from "react";
-import type { Corner, CropBox, EditableArea, MockTalent } from "@/lib/avatar-crops";
+import {
+  DIFFICULTY_META,
+  type Corner,
+  type CropBox,
+  type Difficulty,
+  type EditableArea,
+  type MockTalent,
+} from "@/lib/avatar-crops";
 
 const MAX_CONTAINER_HEIGHT = 520;
 const MIN_SIZE = 8;
@@ -57,6 +64,7 @@ interface CropEditorProps {
   onSelect: (key: string | null) => void;
   onAdd: (box: CropBox) => void;
   onUpdate: (key: string, box: CropBox) => void;
+  onSetDifficulty: (key: string, difficulty: Difficulty) => void;
   onRemove: (key: string) => void;
   onNaturalSize: (size: { w: number; h: number }) => void;
 }
@@ -68,6 +76,7 @@ export default function CropEditor({
   onSelect,
   onAdd,
   onUpdate,
+  onSetDifficulty,
   onRemove,
   onNaturalSize,
 }: CropEditorProps) {
@@ -114,8 +123,8 @@ export default function CropEditor({
 
       if (d.mode === "draw") {
         const box = normRect(d.start, pos);
-        previewRef.current = box;
-        setPreview(box);
+        previewRef.current = { x: box.x / s, y: box.y / s, w: box.w / s, h: box.h / s };
+        setPreview(previewRef.current);
         return;
       }
 
@@ -137,9 +146,7 @@ export default function CropEditor({
         const p = previewRef.current;
         const s = scaleRef.current;
         if (p && p.w >= 12 && p.h >= 12) {
-          propsRef.current.onAdd(
-            clampBox({ x: p.x / s, y: p.y / s, w: p.w / s, h: p.h / s }, naturalRef.current)
-          );
+          propsRef.current.onAdd(clampBox({ x: p.x, y: p.y, w: p.w, h: p.h }, naturalRef.current));
         }
         previewRef.current = null;
         setPreview(null);
@@ -181,9 +188,10 @@ export default function CropEditor({
     const areaEl = areaRef.current;
     if (!areaEl) return;
     const rect = areaEl.getBoundingClientRect();
+    const s = scaleRef.current;
     const start = { x: e.clientX - rect.left, y: e.clientY - rect.top };
     dragRef.current = { mode: "draw", start };
-    previewRef.current = { x: start.x, y: start.y, w: 0, h: 0 };
+    previewRef.current = { x: start.x / s, y: start.y / s, w: 0, h: 0 };
     setPreview(previewRef.current);
     e.preventDefault();
   };
@@ -333,6 +341,20 @@ export default function CropEditor({
                   #{i + 1}
                 </span>
 
+                <span
+                  title={`Difficulty: ${DIFFICULTY_META[area.difficulty]?.label ?? area.difficulty}`}
+                  style={{
+                    position: "absolute",
+                    bottom: 2,
+                    right: 4,
+                    width: 10,
+                    height: 10,
+                    borderRadius: "50%",
+                    border: "1.5px solid #fff",
+                    background: DIFFICULTY_META[area.difficulty]?.color ?? "var(--holo-text-muted)",
+                  }}
+                />
+
                 {selected && (
                   <>
                     {(Object.keys(HANDLE_CURSOR) as Corner[]).map((corner) => (
@@ -405,6 +427,56 @@ export default function CropEditor({
             }}
           >
             Drag to draw • {talent.name}
+          </div>
+
+          <div
+            onMouseDown={(e) => e.stopPropagation()}
+            style={{
+              position: "absolute",
+              bottom: 8,
+              right: 10,
+              display: "flex",
+              alignItems: "center",
+              gap: 6,
+              background: "rgba(20,20,31,0.85)",
+              padding: "6px 10px",
+              borderRadius: 10,
+              border: "1px solid rgba(255,255,255,0.15)",
+            }}
+          >
+            <span style={{ fontSize: 11, fontWeight: 700, color: "#fff", marginRight: 2 }}>
+              Difficulty
+            </span>
+            {(["easy", "medium", "hard"] as Difficulty[]).map((d) => {
+              const meta = DIFFICULTY_META[d];
+              const selected = areas.find((a) => a.key === selectedKey);
+              const active = selected?.difficulty === d;
+              return (
+                <button
+                  key={d}
+                  type="button"
+                  disabled={!selected}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    if (selected) onSetDifficulty(selected.key, d);
+                  }}
+                  title={selected ? `Set difficulty to ${meta.label}` : "Select a crop first"}
+                  style={{
+                    fontSize: 11,
+                    fontWeight: 800,
+                    padding: "3px 10px",
+                    borderRadius: 20,
+                    border: active ? "2px solid #fff" : `1px solid ${meta.bg}`,
+                    background: meta.bg,
+                    color: meta.color,
+                    cursor: selected ? "pointer" : "not-allowed",
+                    opacity: selected ? 1 : 0.45,
+                  }}
+                >
+                  {meta.label}
+                </button>
+              );
+            })}
           </div>
         </div>
       )}

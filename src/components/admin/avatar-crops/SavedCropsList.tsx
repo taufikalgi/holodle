@@ -1,6 +1,6 @@
 "use client";
 
-import type { CropBox, EditableArea } from "@/lib/avatar-crops";
+import { DIFFICULTY_META, type CropBox, type EditableArea } from "@/lib/avatar-crops";
 
 interface CropThumbProps {
   src: string;
@@ -137,21 +137,37 @@ export default function SavedCropsList({
                   x {Math.round(area.x)} · y {Math.round(area.y)} · {Math.round(area.w)}×
                   {Math.round(area.h)}
                 </div>
-                {area.dirty && (
-                  <span
-                    style={{
-                      fontSize: 10,
-                      fontWeight: 800,
-                      color: "#a16207",
-                      background: "#fef9c3",
-                      border: "1px solid #fde047",
-                      padding: "1px 7px",
-                      borderRadius: 20,
-                    }}
-                  >
-                    unsaved
-                  </span>
-                )}
+                <div style={{ display: "flex", gap: 4, alignItems: "center", marginTop: 3 }}>
+                  {DIFFICULTY_META[area.difficulty] && (
+                    <span
+                      style={{
+                        fontSize: 10,
+                        fontWeight: 800,
+                        color: DIFFICULTY_META[area.difficulty].color,
+                        background: DIFFICULTY_META[area.difficulty].bg,
+                        padding: "1px 8px",
+                        borderRadius: 20,
+                      }}
+                    >
+                      {DIFFICULTY_META[area.difficulty].label}
+                    </span>
+                  )}
+                  {area.dirty && (
+                    <span
+                      style={{
+                        fontSize: 10,
+                        fontWeight: 800,
+                        color: "#a16207",
+                        background: "#fef9c3",
+                        border: "1px solid #fde047",
+                        padding: "1px 7px",
+                        borderRadius: 20,
+                      }}
+                    >
+                      unsaved
+                    </span>
+                  )}
+                </div>
               </div>
 
               <button
