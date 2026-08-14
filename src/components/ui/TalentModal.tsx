@@ -35,6 +35,7 @@ const EMPTY: TalentFormData = {
   height: null,
   birth_month: "",
   image_url: "",
+  avatar_url: "",
   alt_names: [],
 };
 
@@ -303,6 +304,39 @@ export default function TalentModal({ mode, initial, onClose, onSaved, apiBase }
                   <img
                     src={form.image_url}
                     alt="Preview"
+                    style={{
+                      width: 48,
+                      height: 48,
+                      borderRadius: "50%",
+                      objectFit: "cover",
+                      border: "2px solid var(--holo-border)",
+                    }}
+                    onError={(e) => {
+                      (e.currentTarget as HTMLImageElement).style.display = "none";
+                    }}
+                  />
+                  <span style={{ fontSize: 12, color: "var(--holo-text-muted)" }}>Preview</span>
+                </div>
+              )}
+            </div>
+
+            {/* Avatar URL */}
+            <div style={{ gridColumn: "1 / -1" }}>
+              <label style={labelStyle}>Avatar URL</label>
+              <input
+                className="holo-input"
+                style={inputStyle}
+                type="url"
+                value={form.avatar_url}
+                onChange={(e) => set("avatar_url", e.target.value)}
+                placeholder="https://hololive.hololivepro.com/..."
+              />
+              {form.avatar_url && (
+                <div style={{ marginTop: 8, display: "flex", alignItems: "center", gap: 10 }}>
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={form.avatar_url}
+                    alt="Avatar preview"
                     style={{
                       width: 48,
                       height: 48,

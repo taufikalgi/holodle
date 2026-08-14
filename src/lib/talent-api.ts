@@ -7,6 +7,7 @@ export interface Talent {
   height: number | null;
   birth_month: string;
   image_url: string;
+  avatar_url: string;
   alt_names: string[];
 }
 

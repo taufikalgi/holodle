@@ -80,6 +80,7 @@ export default function CropEditor({
   onRemove,
   onNaturalSize,
 }: CropEditorProps) {
+  const src = talent.avatar_url || talent.image_url;
   const wrapRef = useRef<HTMLDivElement>(null);
   const areaRef = useRef<HTMLDivElement>(null);
 
@@ -234,7 +235,7 @@ export default function CropEditor({
   return (
     <div ref={wrapRef} style={{ width: "100%", userSelect: "none" }}>
       <img
-        src={talent.image_url}
+        src={src}
         alt={talent.name}
         draggable={false}
         onLoad={(e) => {
@@ -263,7 +264,7 @@ export default function CropEditor({
             fontWeight: 700,
           }}
         >
-          {talent.image_url ? "Loading image…" : "No image"}
+          {src ? "Loading image…" : "No image"}
         </div>
       ) : (
         <div
@@ -284,7 +285,7 @@ export default function CropEditor({
         >
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
-            src={talent.image_url}
+            src={src}
             alt={talent.name}
             draggable={false}
             style={{ width: disp.w, height: disp.h, display: "block", pointerEvents: "none" }}

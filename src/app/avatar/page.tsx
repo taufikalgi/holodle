@@ -160,14 +160,14 @@ export default function PhotoGame() {
                 key={i}
                 className={`flex items-center gap-3 px-3 py-2 rounded-xl text-sm font-semibold ${correct ? "cell-correct" : "cell-wrong"}`}
               >
-                {talent.image ? (
+                {talent.avatarUrl ? (
                   <img
-                    src={talent.image}
+                    src={talent.avatarUrl}
                     alt={talent.name}
                     className="w-7 h-7 rounded-full object-cover"
                   />
                 ) : (
-                  <span>{talent.image}</span>
+                  <span className="text-lg">🖼️</span>
                 )}
                 <span>{talent.name}</span>
                 <span className="ml-auto">{correct ? "✓ Correct!" : "✗ Wrong"}</span>
@@ -199,14 +199,14 @@ export default function PhotoGame() {
             dropdownRef={dropdownRef}
             renderSuggestion={(t) => (
               <>
-                {t.image ? (
+                {t.avatarUrl ? (
                   <img
-                    src={t.image}
+                    src={t.avatarUrl}
                     alt={t.name}
                     className="w-10 h-10 rounded-full object-cover flex-shrink-0"
                   />
                 ) : (
-                  <span className="text-xl">{t.image}</span>
+                  <span className="text-xl">🖼️</span>
                 )}
                 <div>
                   <div className="text-sm font-bold" style={{ color: "var(--holo-text)" }}>

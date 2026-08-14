@@ -391,7 +391,7 @@ function AvatarCropsAdminContent() {
                 >
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
-                    src={t.image_url}
+                    src={t.avatar_url || t.image_url}
                     alt=""
                     style={{
                       width: 30,
@@ -553,7 +553,7 @@ function AvatarCropsAdminContent() {
 
             <div className="holo-card" style={{ padding: "1rem 1.25rem" }}>
               <SavedCropsList
-                src={talent.image_url}
+                src={talent.avatar_url || talent.image_url}
                 natural={natural}
                 areas={areas}
                 savedCount={savedCount}

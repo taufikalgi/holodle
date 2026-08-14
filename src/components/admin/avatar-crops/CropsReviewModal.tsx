@@ -73,7 +73,7 @@ export default function CropsReviewModal({
             borderRadius: 12,
             overflow: "hidden",
             border: "1.5px solid var(--holo-border)",
-            backgroundImage: `url(${talent.image_url})`,
+            backgroundImage: `url(${talent.avatar_url || talent.image_url})`,
             backgroundRepeat: "no-repeat",
             backgroundSize: `${natural.w * sx}px ${natural.h * sy}px`,
             backgroundPosition: `${-area.x * sx}px ${-area.y * sy}px`,

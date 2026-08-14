@@ -21,6 +21,7 @@ export interface Talent {
   height: number;
   birthMonth: string;
   image: string;
+  avatarUrl: string;
   altNames: string[]; // alternative search names
   photoUrl: string;
   keypoints?: Keypoint[];
@@ -36,6 +37,7 @@ export type ApiTalent = {
   height: number | null;
   birth_month: string;
   image_url: string;
+  avatar_url: string;
   alt_names: string[];
 };
 
@@ -50,6 +52,7 @@ export function normalizeTalent(talent: ApiTalent): Talent {
     birthMonth: talent.birth_month,
     photoUrl: talent.image_url,
     image: "",
+    avatarUrl: talent.avatar_url,
     altNames: talent.alt_names ?? [],
   };
 }
