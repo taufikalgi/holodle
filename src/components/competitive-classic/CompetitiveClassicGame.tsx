@@ -43,10 +43,10 @@ import type {
   GuessEntry,
 } from "./types";
 
-const SESSION_KEY = "giveaway-vsi-session-id";
+const SESSION_KEY = "competitive-classic-session-id";
 const MIN_MONTH = "2026-06";
 
-export default function GiveawayVsiGame({
+export default function CompetitiveClassicGame({
   user,
   onLogout,
 }: {
@@ -449,18 +449,18 @@ export default function GiveawayVsiGame({
 
   return (
     <main className="min-h-screen" style={{ background: "var(--holo-bg)" }}>
-      <Navbar title="GIVEAWAY VSI" user={user} onLogout={onLogout} />
+      <Navbar title="COMPETITIVE CLASSIC" user={user} onLogout={onLogout} />
 
       <div className="max-w-5xl mx-auto px-4 py-8">
         <div className="text-center mb-6">
           <PageHeader
-            subtitle="Giveaway VSI - Guess the Hololive talent!"
+            subtitle="Competitive Classic - Guess the Hololive talent!"
             onHowTo={() => setShowHowTo(!showHowTo)}
             onLeaderboard={() => setShowLeaderboard((prev) => !prev)}
             showHowTo={showHowTo}
             showLeaderboard={showLeaderboard}
             showLeaderboardButton={true}
-            vsiHeader={true}
+            competitiveHeader={true}
           />
         </div>
 
@@ -663,7 +663,7 @@ export default function GiveawayVsiGame({
                               <div className="space-y-2">
                                 <ColumnHeaders
                                   headers={DEFAULT_COLUMN_HEADERS}
-                                  giveawayVsi={true}
+                                  competitive={true}
                                 />
 
                                 {[...round].reverse().map((guess, index) => (

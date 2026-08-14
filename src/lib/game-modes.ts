@@ -31,10 +31,11 @@ export const GAMES = [
     description: "Guess the talent from a cropped zoomed avatar — hints reveal more each try.",
   },
   {
-    href: "/giveaway-vsi",
+    href: "/competitive-classic",
     logo: "https://hololive.hololivepro.com/wp-content/uploads/2020/07/Anya-Melfissa_list_thumb.png",
-    alt: "giveaway vsi logo",
-    title: "Giveaway VSI",
-    description: "Mau merch gratis? Sini ikut giveaway VSI.",
+    alt: "competitive classic logo",
+    title: "Competitive Classic",
+    description:
+      "Test your knowledge against other players in time attack based game and reach the top in the leaderboard.",
   },
 ];

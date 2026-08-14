@@ -10,10 +10,10 @@ export const DEFAULT_COLUMN_HEADERS = [
 
 export default function ColumnHeaders({
   headers,
-  giveawayVsi,
+  competitive,
 }: {
   headers: string[];
-  giveawayVsi?: boolean;
+  competitive?: boolean;
 }) {
   // headers is expected to be 7 items: [photo, name, ...5 attrs]
   // On mobile we mirror GuessRow's layout: photo+name merged on top, 5 attrs below.
@@ -42,7 +42,7 @@ export default function ColumnHeaders({
         {/* Row 1: spans full width for photo + name column */}
 
         <div
-          className={`text-center ${giveawayVsi ? "text-[10px]" : "text-[10px]"} uppercase tracking-wider font-bold py-1`}
+          className={`text-center ${competitive ? "text-[10px]" : "text-[10px]"} uppercase tracking-wider font-bold py-1`}
           style={{ color: "var(--holo-text-muted)" }}
         >
           {headers[1]} {/* "Name" */}
@@ -53,7 +53,7 @@ export default function ColumnHeaders({
           {attrHeaders.map((h) => (
             <div
               key={h}
-              className={`text-center ${giveawayVsi ? "text-[8px]" : "text-[10px]"} uppercase tracking-wider font-bold py-1`}
+              className={`text-center ${competitive ? "text-[8px]" : "text-[10px]"} uppercase tracking-wider font-bold py-1`}
               style={{ color: "var(--holo-text-muted)" }}
             >
               {h}

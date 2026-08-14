@@ -32,7 +32,7 @@ export default function AuthGate({ onLogin }: { onLogin: () => void }) {
         <hr className="w-full" style={{ borderColor: "var(--holo-border)" }} />
 
         <p className="text-sm" style={{ color: "var(--holo-text-muted)", lineHeight: 1.6 }}>
-          Sign in untuk ikut <strong>Giveaway VSI</strong> bang.
+          Sign in untuk ikut <strong>Competitive Classic</strong> bang.
         </p>
 
         <button

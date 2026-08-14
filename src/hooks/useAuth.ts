@@ -6,7 +6,7 @@ import { API_ENDPOINTS } from "@/app/api/apiEndpoints";
 
 const TOKEN_KEY = "token";
 const AUTH_REDIRECT_KEY = "auth_redirect_to";
-const GIVEAWAY_SESSION_KEY = "giveaway-vsi-session-id";
+const COMPETITIVE_SESSION_KEY = "competitive-classic-session-id";
 
 export interface AuthUser {
   id: string;
@@ -105,14 +105,14 @@ export function useAuth({ requireAdmin }: UseAuthOptions = {}) {
   }, [requireAdmin]);
 
   const login = useCallback(() => {
-    const redirectPath = requireAdmin ? "/admin" : "/giveaway-vsi";
+    const redirectPath = requireAdmin ? "/admin" : "/competitive-classic";
     sessionStorage.setItem(AUTH_REDIRECT_KEY, redirectPath);
     window.location.href = API_ENDPOINTS.googleAuthUrl;
   }, [requireAdmin]);
 
   const logout = useCallback(() => {
     localStorage.removeItem(TOKEN_KEY);
-    localStorage.removeItem(GIVEAWAY_SESSION_KEY);
+    localStorage.removeItem(COMPETITIVE_SESSION_KEY);
     setUser(null);
   }, []);
 

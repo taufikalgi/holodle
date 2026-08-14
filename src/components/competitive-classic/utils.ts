@@ -4,7 +4,7 @@ import { API_ENDPOINTS } from "@/app/api/apiEndpoints";
 import type { SessionHistoryState, GuessEntry, ApiResponse } from "./types";
 
 const AUTH_REDIRECT_KEY = "auth_redirect_to";
-const HISTORY_KEY_PREFIX = "giveaway-vsi-history:";
+const HISTORY_KEY_PREFIX = "competitive-classic-history:";
 
 export { normalizeTalent } from "@/lib/talents";
 
@@ -99,7 +99,7 @@ export function formatTimer(ms: number) {
 
 export function redirectToLogin() {
   if (typeof window === "undefined") return;
-  sessionStorage.setItem(AUTH_REDIRECT_KEY, "/giveaway-vsi");
+  sessionStorage.setItem(AUTH_REDIRECT_KEY, "/competitive-classic");
   window.location.href = API_ENDPOINTS.googleAuthUrl;
 }
 

@@ -1,10 +1,10 @@
 "use client";
 
 import { useAuth } from "@/hooks/useAuth";
-import AuthGate from "@/components/giveaway-vsi/AuthGate";
-import GiveawayVsiGame from "@/components/giveaway-vsi/GiveawayVsiGame";
+import AuthGate from "@/components/competitive-classic/AuthGate";
+import CompetitiveClassicGame from "@/components/competitive-classic/CompetitiveClassicGame";
 
-export default function GiveawayVsiPage() {
+export default function CompetitiveClassicPage() {
   const { user, loading, login, logout } = useAuth();
 
   if (loading) {
@@ -25,5 +25,5 @@ export default function GiveawayVsiPage() {
 
   if (!user) return <AuthGate onLogin={login} />;
 
-  return <GiveawayVsiGame user={user} onLogout={logout} />;
+  return <CompetitiveClassicGame user={user} onLogout={logout} />;
 }

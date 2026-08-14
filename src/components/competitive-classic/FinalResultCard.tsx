@@ -20,7 +20,7 @@ export default function FinalResultCard({
         className="mx-auto mt-2 max-w-2xl text-sm leading-6"
         style={{ color: "var(--holo-text-muted)" }}
       >
-        The 5 minute giveaway session is over. Your final score is locked and the round no longer
+        The 5 minute competitive session is over. Your final score is locked and the round no longer
         accepts guesses.
       </p>
 

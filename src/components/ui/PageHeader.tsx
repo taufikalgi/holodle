@@ -6,7 +6,7 @@ export default function PageHeader({
   showButton = true,
   showLeaderboard,
   showLeaderboardButton,
-  vsiHeader = false,
+  competitiveHeader = false,
 }: {
   subtitle: string;
   onHowTo: () => void;
@@ -15,12 +15,12 @@ export default function PageHeader({
   showButton?: boolean;
   showLeaderboard?: boolean;
   showLeaderboardButton?: boolean;
-  vsiHeader?: boolean;
+  competitiveHeader?: boolean;
 }) {
   let buttonShown = (showButton ? 1 : 0) + (showLeaderboardButton ? 1 : 0);
   return (
     <div
-      className={`flex flex-col items-center gap-3 md:flex-row md:items-center md:justify-between ${vsiHeader ? "md:pl-12" : ""}`}
+      className={`flex flex-col items-center gap-3 md:flex-row md:items-center md:justify-between ${competitiveHeader ? "md:pl-12" : ""}`}
     >
       <div className={`hidden md:block w-${buttonShown * 8}`} />
       <div className="flex flex-col items-center">

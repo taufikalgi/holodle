@@ -6,13 +6,13 @@ import { useRouter, useSearchParams } from "next/navigation";
 type Status = "loading" | "success" | "error";
 
 const AUTH_REDIRECT_KEY = "auth_redirect_to";
-const AUTH_REDIRECT_PATHS = new Set(["/giveaway-vsi", "/admin"]);
+const AUTH_REDIRECT_PATHS = new Set(["/competitive-classic", "/admin"]);
 
 function getRedirectTarget(): string {
   const target = sessionStorage.getItem(AUTH_REDIRECT_KEY);
   sessionStorage.removeItem(AUTH_REDIRECT_KEY);
 
-  return target && AUTH_REDIRECT_PATHS.has(target) ? target : "/giveaway-vsi";
+  return target && AUTH_REDIRECT_PATHS.has(target) ? target : "/competitive-classic";
 }
 
 export default function AuthCallbackContent() {
