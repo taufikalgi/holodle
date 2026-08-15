@@ -28,7 +28,16 @@ export const GAMES = [
     logo: "https://hololive.hololivepro.com/wp-content/uploads/2023/09/Isaki-Riona_list_thumb.png",
     alt: "avatar logo",
     title: "Avatar",
-    description: "Guess the talent from a cropped zoomed avatar — hints reveal more each try.",
+    description:
+      "Guess the talent from a cropped avatar — each wrong guess reveals a bigger hint.",
+  },
+  {
+    href: "/avatar-endless",
+    logo: "https://hololive.hololivepro.com/wp-content/uploads/2023/09/Isaki-Riona_list_thumb.png",
+    alt: "avatar endless logo",
+    title: "Avatar Endless",
+    description:
+      "Guess talents from cropped avatars, endlessly. How long can you streak?",
   },
   {
     href: "/competitive-classic",

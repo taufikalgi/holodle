@@ -29,12 +29,6 @@ export default function GameCard({
       </h2>
       <p className="text-sm text-center" style={{ color: "var(--holo-text-muted)" }}>
         {description}
-        {/* TODO: remove once photo mode is ready */}
-        {title === "Avatar" && (
-          <span className="block text-red-400 text-xs mt-1">
-            In development — Please wait for the next update! 🙏
-          </span>
-        )}
       </p>
     </>
   );
