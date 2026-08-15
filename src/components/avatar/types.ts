@@ -34,7 +34,11 @@ function isRecord(x: unknown): x is Record<string, unknown> {
 
 function isTalentLike(x: unknown): x is Talent {
   if (!isRecord(x)) return false;
-  return typeof x.id === "string" && typeof x.name === "string";
+  return (
+    typeof x.id === "string" &&
+    typeof x.name === "string" &&
+    typeof x.branch === "string"
+  );
 }
 
 function isCropAreaLike(x: unknown): boolean {
@@ -77,6 +81,7 @@ export function isValidEndlessRoundState(data: unknown): data is EndlessRoundSta
       (r !== null &&
         isTalentLike(r.talent) &&
         Array.isArray(r.areas) &&
+        r.areas.length > 0 &&
         r.areas.every(isCropAreaLike))) &&
     Array.isArray(data.guesses) &&
     data.guesses.every(isGuessLike) &&
