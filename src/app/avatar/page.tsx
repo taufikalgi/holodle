@@ -1,227 +1,338 @@
 "use client";
 
-import { useState, useRef, useCallback } from "react";
-import { ALL_TALENTS, getDateString, Keypoint, type Talent } from "@/lib/talents";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { ALL_TALENTS, getDateString, type Talent } from "@/lib/talents";
 import {
   Footer,
   GameOverBanner,
   Navbar,
+  PageHeader,
+  StatsBar,
   TalentSearchInput,
 } from "@/components/ui";
 import { useLocalStorageState } from "@/hooks/useLocalStorageState";
 import { useOutsideClick } from "@/hooks/useOutsideClick";
 import { useTalentSearch } from "@/hooks/useTalentSearch";
+import { fetchAvatarRound, fetchAvatarValidCount } from "@/lib/avatar-api";
+import { ApiError } from "@/lib/errors";
+import CropStage from "@/components/avatar/CropStage";
+import AvatarHowToPlay from "@/components/avatar/AvatarHowToPlay";
+import {
+  isValidDailyState,
+  type AvatarStats,
+  type DailyState,
+} from "@/components/avatar/types";
 
 const MAX_GUESSES = 5;
-const STORAGE_KEY = "holodle-avatar-state";
+const ROUND_KEY = "holodle-avatar-round";
+const STATS_KEY = "holodle-avatar-stats";
 
-interface PhotoState {
-  guesses: { talent: Talent; correct: boolean }[];
-  gameOver: boolean;
-  won: boolean;
-  date: string;
-}
+const emptyRound: DailyState = {
+  talent: null,
+  areas: [],
+  guesses: [],
+  gameOver: false,
+  won: false,
+  date: getDateString(),
+};
 
-function getTalentOfTheDay(): Talent {
-  const today = getDateString();
-  let hash = 0;
-  for (let i = 0; i < today.length; i++) {
-    hash = (hash * 31 + today.charCodeAt(i)) >>> 0;
-  }
-  const index = 0;
-  return ALL_TALENTS[index];
-}
+const emptyStats: AvatarStats = { streak: 0, bestStreak: 0, totalPlayed: 0, totalWon: 0 };
 
-function isValidPhotoState(data: unknown): data is PhotoState {
-  if (typeof data !== "object" || data === null) return false;
-  const c = data as Record<string, unknown>;
-  return (
-    Array.isArray(c.guesses) &&
-    typeof c.gameOver === "boolean" &&
-    typeof c.won === "boolean" &&
-    typeof c.date === "string" &&
-    c.date === getDateString()
+type RoundStatus = "loading" | "ready" | "noValid" | "error";
+
+export default function AvatarGame() {
+  const [state, setState] = useLocalStorageState<DailyState>(
+    ROUND_KEY,
+    emptyRound,
+    (d) => isValidDailyState(d, getDateString())
   );
-}
-
-const emptyState: PhotoState = { guesses: [], gameOver: false, won: false, date: getDateString() };
-
-function PhotoCrop({
-  src,
-  keypoint,
-  revealed,
-}: {
-  src: string;
-  keypoint: Keypoint | null;
-  revealed: boolean;
-}) {
-  const [displayed, setDisplayed] = useState(keypoint);
-  const [visible, setVisible] = useState(true);
-
-  useState(() => {
-    if (keypoint !== displayed) {
-      setVisible(false);
-      const t = setTimeout(() => {
-        setDisplayed(keypoint);
-        setVisible(true);
-      }, 300);
-      return () => clearTimeout(t);
-    }
-  });
-
-  const focal = displayed ?? { x: 50, y: 20, zoom: 1, label: "" };
-
-  return (
-    <div className="w-full h-72 overflow-hidden rounded-2xl relative bg-gray-100">
-      <img
-        src={src}
-        alt="Mystery talent"
-        className="absolute inset-0 w-full h-full"
-        style={{
-          objectFit: "cover",
-          objectPosition: `${focal.x}% ${focal.y}%`,
-          transform: `scale(${revealed ? 1 : focal.zoom})`,
-          transformOrigin: `${focal.x}% ${focal.y}%`,
-          opacity: visible ? 1 : 0,
-          transition: "opacity 0.3s ease",
-        }}
-      />
-    </div>
-  );
-}
-
-export default function PhotoGame() {
-  const [state, setState] = useLocalStorageState<PhotoState>(STORAGE_KEY, emptyState, isValidPhotoState);
+  const [stats, setStats] = useLocalStorageState<AvatarStats>(STATS_KEY, emptyStats);
+  const [roundStatus, setRoundStatus] = useState<RoundStatus>(state.talent ? "ready" : "loading");
+  const [roundError, setRoundError] = useState("");
+  const [validCount, setValidCount] = useState<number | null>(null);
+  const [showHowTo, setShowHowTo] = useState(false);
   const [revealAnswer, setRevealAnswer] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
-  const { input, suggestions, showDropdown, handleInput, clear, onFocus, setShowDropdown } = useTalentSearch();
+  const searchPool = useMemo(() => {
+    const talent = state.talent;
+    if (!talent) return ALL_TALENTS;
+    return ALL_TALENTS.some((t) => t.id === talent.id) ? ALL_TALENTS : [...ALL_TALENTS, talent];
+  }, [state.talent]);
 
-  const todayAnswer = getTalentOfTheDay();
-  const guessCount = state.guesses.length;
-  const alreadyGuessed = state.guesses.map((g) => g.talent.name);
+  const { input, suggestions, showDropdown, handleInput, clear, onFocus, setShowDropdown } =
+    useTalentSearch(searchPool);
 
   useOutsideClick(dropdownRef, () => setShowDropdown(false), inputRef);
 
+  const loadRound = useCallback(async () => {
+    setRoundStatus("loading");
+    setRoundError("");
+    try {
+      const round = await fetchAvatarRound();
+      setState((prev) =>
+        prev.talent
+          ? prev
+          : {
+              talent: round.talent,
+              areas: round.areas,
+              guesses: [],
+              gameOver: false,
+              won: false,
+              date: getDateString(),
+            }
+      );
+      setRoundStatus("ready");
+    } catch (e) {
+      if (e instanceof ApiError && e.status === 404) {
+        setRoundStatus("noValid");
+        return;
+      }
+      setRoundError(e instanceof Error ? e.message : "Failed to load round");
+      setRoundStatus("error");
+    }
+  }, [setState]);
+
+  useEffect(() => {
+    void loadRound();
+    let alive = true;
+    fetchAvatarValidCount()
+      .then((count) => {
+        if (alive) setValidCount(count);
+      })
+      .catch(() => {});
+    return () => {
+      alive = false;
+    };
+  }, [loadRound]);
+
+  const guessesLeft = MAX_GUESSES - state.guesses.length;
+  const alreadyGuessed = state.guesses.map((g) => g.talent.name);
+  const revealedCount = state.talent
+    ? Math.min(state.guesses.length + 1, state.areas.length)
+    : 0;
+
   const makeGuess = useCallback(
     (talent: Talent) => {
-      if (state.gameOver) return;
-      const correct = talent.name === todayAnswer.name;
+      if (state.gameOver || !state.talent) return;
+      if (state.guesses.some((g) => g.talent.name === talent.name)) return;
+      const correct = talent.name === state.talent.name;
       const newGuesses = [...state.guesses, { talent, correct }];
       const gameOver = correct || newGuesses.length >= MAX_GUESSES;
       setState({
+        ...state,
         guesses: newGuesses,
         gameOver,
         won: correct,
         date: getDateString(),
       });
+      if (gameOver) {
+        setStats({
+          streak: correct ? stats.streak + 1 : 0,
+          bestStreak: correct ? Math.max(stats.bestStreak, stats.streak + 1) : stats.bestStreak,
+          totalPlayed: stats.totalPlayed + 1,
+          totalWon: correct ? stats.totalWon + 1 : stats.totalWon,
+        });
+      }
       clear();
     },
-    [state, todayAnswer, setState, clear]
+    [state, stats, setState, setStats, clear]
   );
 
   return (
     <main className="min-h-screen" style={{ background: "var(--holo-bg)" }}>
       <Navbar title="AVATAR" />
 
-      <div className="max-w-xl mx-auto px-4 py-8">
-        <div className="text-center mb-6">
-          <h1
-            className="text-3xl font-black tracking-widest"
-            style={{ fontFamily: "'Poppins', sans-serif", color: "var(--holo-text)" }}
-          >
-            Who is this? 📸
-          </h1>
-          <p className="text-sm mt-1" style={{ color: "var(--holo-text-muted)" }}>
-            {state.gameOver
-              ? state.won
-                ? "You got it! 🎉"
-                : "Better luck tomorrow!"
-              : `Underdevelopment - add keypoints to talent data for hints!`}
-          </p>
-        </div>
+      <div className="max-w-3xl mx-auto px-4 py-8">
+        <header className="text-center mb-8">
+          <PageHeader
+            subtitle="Who is this talent?"
+            onHowTo={() => setShowHowTo(!showHowTo)}
+            showHowTo={showHowTo}
+          />
 
-        <div
-          className="holo-card mb-6 overflow-hidden flex items-center justify-center"
-          style={{ height: 280 }}
+          <div
+            className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-xs font-bold border"
+            style={{
+              background: "white",
+              borderColor: "var(--holo-border)",
+              color: "var(--holo-text-muted)",
+            }}
+          >
+            {state.gameOver ? (
+              state.won ? (
+                <>
+                  <span className="text-green-500">●</span> You found them! 🎉
+                </>
+              ) : (
+                <>
+                  <span className="text-red-400">●</span> Game over — come back tomorrow!
+                </>
+              )
+            ) : (
+              <>
+                <span style={{ color: "var(--holo-blue)" }}>●</span> {guessesLeft} guess
+                {guessesLeft !== 1 ? "es" : ""} remaining
+              </>
+            )}
+          </div>
+        </header>
+
+        {showHowTo && <AvatarHowToPlay daily />}
+
+        <StatsBar
+          streak={stats.streak}
+          bestStreak={stats.bestStreak}
+          totalPlayed={stats.totalPlayed}
+          totalWon={stats.totalWon}
         />
 
-        {state.guesses.length > 0 && (
-          <div className="holo-card p-4 mb-5 space-y-2">
-            <p
-              className="text-xs font-bold uppercase tracking-widest mb-3"
-              style={{ color: "var(--holo-text-muted)" }}
-            >
-              Your guesses
+        {roundStatus === "loading" && (
+          <div className="text-center py-14">
+            <p className="text-sm font-semibold animate-pulse" style={{ color: "var(--holo-text-muted)" }}>
+              Loading today&apos;s avatar…
             </p>
-            {state.guesses.map(({ talent, correct }, i) => (
-              <div
-                key={i}
-                className={`flex items-center gap-3 px-3 py-2 rounded-xl text-sm font-semibold ${correct ? "cell-correct" : "cell-wrong"}`}
-              >
-                {talent.avatarUrl ? (
-                  <img
-                    src={talent.avatarUrl}
-                    alt={talent.name}
-                    className="w-7 h-7 rounded-full object-cover"
-                  />
-                ) : (
-                  <span className="text-lg">🖼️</span>
-                )}
-                <span>{talent.name}</span>
-                <span className="ml-auto">{correct ? "✓ Correct!" : "✗ Wrong"}</span>
-              </div>
-            ))}
           </div>
         )}
 
-        {state.gameOver && (
-          <GameOverBanner
-            won={state.won}
-            answerName={todayAnswer.name}
-            guessCount={guessCount}
-            revealed={revealAnswer}
-            onReveal={state.won ? undefined : () => setRevealAnswer(true)}
-            message="Come back tomorrow!"
-          />
+        {roundStatus === "noValid" && (
+          <div className="holo-card p-8 text-center">
+            <p className="text-sm font-semibold" style={{ color: "var(--holo-text-muted)" }}>
+              No playable talents yet.
+            </p>
+            <p className="text-xs mt-1 opacity-70" style={{ color: "var(--holo-text-muted)" }}>
+              Admins need to tag at least 3 hard, 3 medium, and 2 easy crops per talent.
+            </p>
+            <button
+              type="button"
+              onClick={() => void loadRound()}
+              className="mt-4 px-6 py-2 rounded-full text-sm font-bold text-white transition-opacity hover:opacity-80"
+              style={{ background: "var(--holo-blue)" }}
+            >
+              Retry
+            </button>
+          </div>
         )}
 
-        {!state.gameOver && (
-          <TalentSearchInput
-            input={input}
-            suggestions={suggestions}
-            showDropdown={showDropdown}
-            onInput={(val) => handleInput(val, alreadyGuessed)}
-            onGuess={makeGuess}
-            onClear={clear}
-            onFocus={onFocus}
-            dropdownRef={dropdownRef}
-            renderSuggestion={(t) => (
-              <>
-                {t.avatarUrl ? (
-                  <img
-                    src={t.avatarUrl}
-                    alt={t.name}
-                    className="w-10 h-10 rounded-full object-cover flex-shrink-0"
-                  />
-                ) : (
-                  <span className="text-xl">🖼️</span>
-                )}
-                <div>
-                  <div className="text-sm font-bold" style={{ color: "var(--holo-text)" }}>
-                    {t.name}
-                  </div>
-                  <div className="text-xs" style={{ color: "var(--holo-text-muted)" }}>
-                    {t.branch} • {t.debutYear}
-                  </div>
-                </div>
-              </>
-            )}
-          />
+        {roundStatus === "error" && (
+          <div className="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-semibold text-rose-700">
+            {roundError}{" "}
+            <button
+              type="button"
+              onClick={() => void loadRound()}
+              className="underline font-black"
+            >
+              Retry
+            </button>
+          </div>
         )}
+
+        {roundStatus === "ready" && state.talent && (
+          <>
+            <div className="holo-card p-4 mb-5">
+              <CropStage
+                src={state.talent.avatarUrl || state.talent.photoUrl}
+                areas={state.areas}
+                revealedCount={revealedCount}
+                fullReveal={state.gameOver}
+                answerName={state.talent.name}
+              />
+            </div>
+
+            {state.gameOver && (
+              <GameOverBanner
+                won={state.won}
+                answerName={state.talent.name}
+                guessCount={state.guesses.length}
+                revealed={revealAnswer}
+                onReveal={state.won ? undefined : () => setRevealAnswer(true)}
+                message="Come back tomorrow for a new talent!"
+              />
+            )}
+
+            {!state.gameOver && (
+              <TalentSearchInput
+                input={input}
+                suggestions={suggestions}
+                showDropdown={showDropdown}
+                onInput={(val) => handleInput(val, alreadyGuessed)}
+                onGuess={makeGuess}
+                onClear={clear}
+                onFocus={onFocus}
+                dropdownRef={dropdownRef}
+                renderSuggestion={(t) => (
+                  <>
+                    {t.avatarUrl ? (
+                      <img
+                        src={t.avatarUrl}
+                        alt={t.name}
+                        className="w-10 h-10 rounded-full object-cover flex-shrink-0"
+                      />
+                    ) : (
+                      <span className="text-xl">🖼️</span>
+                    )}
+                    <div>
+                      <div className="text-sm font-bold" style={{ color: "var(--holo-text)" }}>
+                        {t.name}
+                      </div>
+                      <div className="text-xs" style={{ color: "var(--holo-text-muted)" }}>
+                        {t.branch} • {t.debutYear}
+                      </div>
+                    </div>
+                  </>
+                )}
+              />
+            )}
+
+            {state.guesses.length > 0 && (
+              <div className="holo-card p-4 mb-5 space-y-2">
+                <p
+                  className="text-xs font-bold uppercase tracking-widest mb-3"
+                  style={{ color: "var(--holo-text-muted)" }}
+                >
+                  Your guesses
+                </p>
+                {state.guesses.map((g, i) => (
+                  <div
+                    key={i}
+                    className={`flex items-center gap-3 px-3 py-2 rounded-xl text-sm font-semibold ${
+                      g.correct ? "cell-correct" : "cell-wrong"
+                    }`}
+                  >
+                    {g.talent.avatarUrl ? (
+                      <img
+                        src={g.talent.avatarUrl}
+                        alt={g.talent.name}
+                        className="w-7 h-7 rounded-full object-cover"
+                      />
+                    ) : (
+                      <span className="text-lg">🖼️</span>
+                    )}
+                    <span>{g.talent.name}</span>
+                    <span className="ml-auto">{g.correct ? "✓ Correct!" : "✗ Wrong"}</span>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {!state.gameOver && state.guesses.length === 0 && (
+              <div className="text-center py-6">
+                <p className="text-sm font-semibold" style={{ color: "var(--holo-text-muted)" }}>
+                  Start typing to make your first guess!
+                </p>
+                {validCount !== null && (
+                  <p className="text-xs mt-1 opacity-50" style={{ color: "var(--holo-text-muted)" }}>
+                    {validCount} playable talent{validCount !== 1 ? "s" : ""}
+                  </p>
+                )}
+              </div>
+            )}
+          </>
+        )}
+
+        <Footer />
       </div>
-      <Footer />
     </main>
   );
 }
