@@ -57,7 +57,9 @@ function EndlessGamePage() {
     emptyPersisted,
     isValidEndlessPersisted
   );
-  const [roundStatus, setRoundStatus] = useState<RoundStatus>(roundState.round ? "ready" : "loading");
+  const [roundStatus, setRoundStatus] = useState<RoundStatus>(
+    roundState.round ? "ready" : "loading"
+  );
   const [roundError, setRoundError] = useState("");
   const [validCount, setValidCount] = useState<number | null>(null);
   const [showHowTo, setShowHowTo] = useState(false);
@@ -131,7 +133,9 @@ function EndlessGamePage() {
           ...prev,
           stats: {
             streak: correct ? prev.stats.streak + 1 : 0,
-            bestStreak: correct ? Math.max(prev.stats.bestStreak, prev.stats.streak + 1) : prev.stats.bestStreak,
+            bestStreak: correct
+              ? Math.max(prev.stats.bestStreak, prev.stats.streak + 1)
+              : prev.stats.bestStreak,
             totalPlayed: prev.stats.totalPlayed + 1,
             totalWon: correct ? prev.stats.totalWon + 1 : prev.stats.totalWon,
           },
@@ -201,7 +205,10 @@ function EndlessGamePage() {
 
         {roundStatus === "loading" && (
           <div className="text-center py-14">
-            <p className="text-sm font-semibold animate-pulse" style={{ color: "var(--holo-text-muted)" }}>
+            <p
+              className="text-sm font-semibold animate-pulse"
+              style={{ color: "var(--holo-text-muted)" }}
+            >
               Loading a new avatar…
             </p>
           </div>
@@ -211,9 +218,6 @@ function EndlessGamePage() {
           <div className="holo-card p-8 text-center">
             <p className="text-sm font-semibold" style={{ color: "var(--holo-text-muted)" }}>
               No playable talents yet.
-            </p>
-            <p className="text-xs mt-1 opacity-70" style={{ color: "var(--holo-text-muted)" }}>
-              Admins need to tag at least 3 hard, 3 medium, and 2 easy crops per talent.
             </p>
             <button
               type="button"
@@ -339,7 +343,10 @@ function EndlessGamePage() {
                   Start typing to make your first guess!
                 </p>
                 {validCount !== null && (
-                  <p className="text-xs mt-1 opacity-50" style={{ color: "var(--holo-text-muted)" }}>
+                  <p
+                    className="text-xs mt-1 opacity-50"
+                    style={{ color: "var(--holo-text-muted)" }}
+                  >
                     {validCount} playable talent{validCount !== 1 ? "s" : ""}
                   </p>
                 )}

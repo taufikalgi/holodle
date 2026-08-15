@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { DIFFICULTY_META, type CropArea } from "@/lib/avatar-crops";
+import type { CropArea } from "@/lib/avatar-crops";
 
 const MAX_W = 460;
 const MAX_H = 460;
@@ -13,11 +13,18 @@ interface CropFrameProps {
   width: number;
   height: number;
   radius?: number;
-  label?: string;
   ariaLabel?: string;
 }
 
-function CropFrame({ src, natural, area, width, height, radius = 14, label, ariaLabel }: CropFrameProps) {
+function CropFrame({
+  src,
+  natural,
+  area,
+  width,
+  height,
+  radius = 14,
+  ariaLabel,
+}: CropFrameProps) {
   const scale = Math.max(width / Math.max(area.w, 1), height / Math.max(area.h, 1));
   return (
     <div
@@ -35,16 +42,7 @@ function CropFrame({ src, natural, area, width, height, radius = 14, label, aria
         }px`,
         flexShrink: 0,
       }}
-    >
-      {label && (
-        <span
-          className="absolute bottom-1 left-1 rounded-full px-2 py-0.5 text-[10px] font-black uppercase tracking-wider"
-          style={{ background: "rgba(0,0,0,0.55)", color: "#fff" }}
-        >
-          {label}
-        </span>
-      )}
-    </div>
+    />
   );
 }
 
@@ -56,7 +54,13 @@ interface CropStageProps {
   answerName: string;
 }
 
-export default function CropStage({ src, areas, revealedCount, fullReveal, answerName }: CropStageProps) {
+export default function CropStage({
+  src,
+  areas,
+  revealedCount,
+  fullReveal,
+  answerName,
+}: CropStageProps) {
   const [natural, setNatural] = useState({ w: 0, h: 0 });
   const [disp, setDisp] = useState({ w: 0, h: 0 });
   const [error, setError] = useState(false);
@@ -166,25 +170,30 @@ export default function CropStage({ src, areas, revealedCount, fullReveal, answe
           <div className="flex md:flex-col gap-2 overflow-x-auto md:overflow-x-visible w-full md:w-auto md:max-h-[420px] md:overflow-y-auto">
             {past.map((area, i) => (
               <div key={`past-${i}`} className="flex flex-col items-center gap-1 shrink-0">
-                <CropFrame src={src} natural={natural} area={area} width={76} height={76} radius={12} label={`Crop #${i + 1}`} ariaLabel={`Hint ${i + 1}`} />
-                {DIFFICULTY_META[area.difficulty] && (
-                  <span
-                    className="rounded-full px-2 py-0.5 text-[9px] font-black uppercase tracking-wider"
-                    style={{
-                      color: DIFFICULTY_META[area.difficulty].color,
-                      background: DIFFICULTY_META[area.difficulty].bg,
-                    }}
-                  >
-                    {DIFFICULTY_META[area.difficulty].label}
-                  </span>
-                )}
+                <CropFrame
+                  src={src}
+                  natural={natural}
+                  area={area}
+                  width={76}
+                  height={76}
+                  radius={12}
+                  ariaLabel={`Hint ${i + 1}`}
+                />
               </div>
             ))}
           </div>
 
           {disp.w > 0 && disp.h > 0 ? (
             <div className="relative mx-auto">
-              <CropFrame src={src} natural={natural} area={current} width={disp.w} height={disp.h} radius={18} ariaLabel={`Current hint ${count}`} />
+              <CropFrame
+                src={src}
+                natural={natural}
+                area={current}
+                width={disp.w}
+                height={disp.h}
+                radius={18}
+                ariaLabel={`Current hint ${count}`}
+              />
               <span
                 className="absolute top-2 right-2 rounded-full px-2.5 py-1 text-[10px] font-black uppercase tracking-wider"
                 style={{ background: "rgba(0,0,0,0.55)", color: "#fff" }}

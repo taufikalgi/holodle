@@ -17,11 +17,7 @@ import { fetchAvatarRound, fetchAvatarValidCount } from "@/lib/avatar-api";
 import { ApiError } from "@/lib/errors";
 import CropStage from "@/components/avatar/CropStage";
 import AvatarHowToPlay from "@/components/avatar/AvatarHowToPlay";
-import {
-  isValidDailyState,
-  type AvatarStats,
-  type DailyState,
-} from "@/components/avatar/types";
+import { isValidDailyState, type AvatarStats, type DailyState } from "@/components/avatar/types";
 
 const MAX_GUESSES = 5;
 const ROUND_KEY = "holodle-avatar-round";
@@ -41,10 +37,8 @@ const emptyStats: AvatarStats = { streak: 0, bestStreak: 0, totalPlayed: 0, tota
 type RoundStatus = "loading" | "ready" | "noValid" | "error";
 
 export default function AvatarGame() {
-  const [state, setState] = useLocalStorageState<DailyState>(
-    ROUND_KEY,
-    emptyRound,
-    (d) => isValidDailyState(d, getDateString())
+  const [state, setState] = useLocalStorageState<DailyState>(ROUND_KEY, emptyRound, (d) =>
+    isValidDailyState(d, getDateString())
   );
   const [stats, setStats] = useLocalStorageState<AvatarStats>(STATS_KEY, emptyStats);
   const [roundStatus, setRoundStatus] = useState<RoundStatus>(state.talent ? "ready" : "loading");
@@ -115,9 +109,7 @@ export default function AvatarGame() {
 
   const guessesLeft = MAX_GUESSES - state.guesses.length;
   const alreadyGuessed = state.guesses.map((g) => g.talent.name);
-  const revealedCount = state.talent
-    ? Math.min(state.guesses.length + 1, state.areas.length)
-    : 0;
+  const revealedCount = state.talent ? Math.min(state.guesses.length + 1, state.areas.length) : 0;
 
   const makeGuess = useCallback(
     (talent: Talent) => {
@@ -196,7 +188,10 @@ export default function AvatarGame() {
 
         {roundStatus === "loading" && (
           <div className="text-center py-14">
-            <p className="text-sm font-semibold animate-pulse" style={{ color: "var(--holo-text-muted)" }}>
+            <p
+              className="text-sm font-semibold animate-pulse"
+              style={{ color: "var(--holo-text-muted)" }}
+            >
               Loading today&apos;s avatar…
             </p>
           </div>
@@ -206,9 +201,6 @@ export default function AvatarGame() {
           <div className="holo-card p-8 text-center">
             <p className="text-sm font-semibold" style={{ color: "var(--holo-text-muted)" }}>
               No playable talents yet.
-            </p>
-            <p className="text-xs mt-1 opacity-70" style={{ color: "var(--holo-text-muted)" }}>
-              Admins need to tag at least 3 hard, 3 medium, and 2 easy crops per talent.
             </p>
             <button
               type="button"
@@ -224,11 +216,7 @@ export default function AvatarGame() {
         {roundStatus === "error" && (
           <div className="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-semibold text-rose-700">
             {roundError}{" "}
-            <button
-              type="button"
-              onClick={() => void loadRound()}
-              className="underline font-black"
-            >
+            <button type="button" onClick={() => void loadRound()} className="underline font-black">
               Retry
             </button>
           </div>
@@ -328,7 +316,10 @@ export default function AvatarGame() {
                   Start typing to make your first guess!
                 </p>
                 {validCount !== null && (
-                  <p className="text-xs mt-1 opacity-50" style={{ color: "var(--holo-text-muted)" }}>
+                  <p
+                    className="text-xs mt-1 opacity-50"
+                    style={{ color: "var(--holo-text-muted)" }}
+                  >
                     {validCount} playable talent{validCount !== 1 ? "s" : ""}
                   </p>
                 )}
