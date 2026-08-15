@@ -54,6 +54,7 @@ export default function AvatarGame() {
   const [revealAnswer, setRevealAnswer] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const hasRoundRef = useRef(Boolean(state.talent));
 
   const searchPool = useMemo(() => {
     const talent = state.talent;
@@ -84,7 +85,12 @@ export default function AvatarGame() {
             }
       );
       setRoundStatus("ready");
+      hasRoundRef.current = true;
     } catch (e) {
+      if (hasRoundRef.current) {
+        setRoundStatus("ready");
+        return;
+      }
       if (e instanceof ApiError && e.status === 404) {
         setRoundStatus("noValid");
         return;
