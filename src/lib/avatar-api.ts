@@ -37,7 +37,7 @@ export async function fetchAvatarRound(): Promise<AvatarRound> {
   const res = await fetch(`${BASE}/avatar/random`);
   const json = await read<{ talent: Parameters<typeof normalizeTalent>[0]; areas: CropArea[] }>(res);
   const data = json.data;
-  if (!data || !data.talent || !Array.isArray(data.areas)) {
+  if (!data || !data.talent || !Array.isArray(data.areas) || data.areas.length === 0) {
     throw new ApiError("invalid avatar round payload", 500);
   }
   return { talent: normalizeTalent(data.talent), areas: data.areas };
