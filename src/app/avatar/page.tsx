@@ -101,7 +101,7 @@ export default function AvatarGame() {
   }, [setState]);
 
   useEffect(() => {
-    void loadRound();
+    if (!hasRoundRef.current) void loadRound();
     let alive = true;
     fetchAvatarValidCount()
       .then((count) => {

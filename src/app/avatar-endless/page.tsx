@@ -84,6 +84,10 @@ function EndlessGamePage() {
       try {
         const round = await fetchRoundAvoiding(avoid);
         setRoundState({ round, guesses: [], gameOver: false, won: false });
+        setPersisted((prev) => ({
+          ...prev,
+          recentTalentIds: [...prev.recentTalentIds, round.talent.id].slice(-20),
+        }));
         setRoundStatus("ready");
         return round;
       } catch (e) {
@@ -96,7 +100,7 @@ function EndlessGamePage() {
         return null;
       }
     },
-    [setRoundState]
+    [setRoundState, setPersisted]
   );
 
   useEffect(() => {
@@ -139,14 +143,12 @@ function EndlessGamePage() {
   );
 
   const nextRound = useCallback(async () => {
-    const round = await startRound(persisted.recentTalentIds);
-    if (round) {
-      setPersisted((prev) => ({
-        ...prev,
-        recentTalentIds: [...prev.recentTalentIds, round.talent.id].slice(-20),
-      }));
-    }
-  }, [startRound, persisted.recentTalentIds, setPersisted]);
+    const finishedId = roundState.round?.talent.id;
+    const avoid = finishedId
+      ? [...persisted.recentTalentIds, finishedId]
+      : persisted.recentTalentIds;
+    await startRound(avoid);
+  }, [startRound, persisted.recentTalentIds, roundState.round]);
 
   const { round, guesses } = roundState;
   const guessesLeft = MAX_GUESSES - guesses.length;

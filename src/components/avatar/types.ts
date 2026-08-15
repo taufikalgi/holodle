@@ -61,7 +61,8 @@ function isGuessLike(x: unknown): boolean {
 export function isValidDailyState(data: unknown, date: string): data is DailyState {
   if (!isRecord(data)) return false;
   return (
-    (data.talent === null || isTalentLike(data.talent)) &&
+    (data.talent === null ||
+      (isTalentLike(data.talent) && Array.isArray(data.areas) && data.areas.length > 0)) &&
     Array.isArray(data.areas) &&
     data.areas.every(isCropAreaLike) &&
     Array.isArray(data.guesses) &&
