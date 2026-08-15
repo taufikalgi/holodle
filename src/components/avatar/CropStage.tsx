@@ -14,13 +14,15 @@ interface CropFrameProps {
   height: number;
   radius?: number;
   label?: string;
+  ariaLabel?: string;
 }
 
-function CropFrame({ src, natural, area, width, height, radius = 14, label }: CropFrameProps) {
+function CropFrame({ src, natural, area, width, height, radius = 14, label, ariaLabel }: CropFrameProps) {
   const scale = Math.max(width / Math.max(area.w, 1), height / Math.max(area.h, 1));
   return (
     <div
       className="relative overflow-hidden"
+      aria-label={ariaLabel}
       style={{
         width,
         height,
@@ -57,6 +59,7 @@ interface CropStageProps {
 export default function CropStage({ src, areas, revealedCount, fullReveal, answerName }: CropStageProps) {
   const [natural, setNatural] = useState({ w: 0, h: 0 });
   const [disp, setDisp] = useState({ w: 0, h: 0 });
+  const [error, setError] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
 
   const count = Math.max(1, Math.min(revealedCount, areas.length));
@@ -64,11 +67,16 @@ export default function CropStage({ src, areas, revealedCount, fullReveal, answe
   const past = areas.slice(0, count - 1);
 
   useEffect(() => {
+    setError(false);
+    setNatural({ w: 0, h: 0 });
+  }, [src]);
+
+  useEffect(() => {
     const el = containerRef.current;
     if (!el || !natural.w || !natural.h || !current) return;
     const calc = () => {
       const availW = Math.min(el.clientWidth, MAX_W);
-      const ratio = current.h / current.w;
+      const ratio = Math.max(current.h, 1) / Math.max(current.w, 1);
       let w = availW;
       let h = w * ratio;
       if (h > MAX_H) {
@@ -89,6 +97,7 @@ export default function CropStage({ src, areas, revealedCount, fullReveal, answe
     <div ref={containerRef} className="w-full">
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
+        key={src}
         src={src}
         alt=""
         onLoad={(e) => {
@@ -97,10 +106,26 @@ export default function CropStage({ src, areas, revealedCount, fullReveal, answe
             setNatural({ w: img.naturalWidth, h: img.naturalHeight });
           }
         }}
+        onError={() => setError(true)}
         style={{ display: "none" }}
       />
 
-      {natural.w === 0 || !current ? (
+      {error ? (
+        <div
+          className="mx-auto rounded-2xl flex items-center justify-center"
+          style={{
+            maxWidth: MAX_W,
+            aspectRatio: "1 / 1",
+            background: "var(--holo-off-white)",
+            border: "1.5px solid var(--holo-border)",
+            color: "var(--holo-text-muted)",
+            fontSize: 13,
+            fontWeight: 700,
+          }}
+        >
+          Avatar image failed to load.
+        </div>
+      ) : natural.w === 0 || !current ? (
         <div
           className="mx-auto rounded-2xl"
           style={{
@@ -140,8 +165,8 @@ export default function CropStage({ src, areas, revealedCount, fullReveal, answe
         <div className="flex flex-col md:flex-row items-start md:items-center gap-4">
           <div className="flex md:flex-col gap-2 overflow-x-auto md:overflow-x-visible w-full md:w-auto md:max-h-[420px] md:overflow-y-auto">
             {past.map((area, i) => (
-              <div key={area.id ?? `past-${i}`} className="flex flex-col items-center gap-1 shrink-0">
-                <CropFrame src={src} natural={natural} area={area} width={76} height={76} radius={12} label={`Crop #${i + 1}`} />
+              <div key={`past-${i}`} className="flex flex-col items-center gap-1 shrink-0">
+                <CropFrame src={src} natural={natural} area={area} width={76} height={76} radius={12} label={`Crop #${i + 1}`} ariaLabel={`Hint ${i + 1}`} />
                 {DIFFICULTY_META[area.difficulty] && (
                   <span
                     className="rounded-full px-2 py-0.5 text-[9px] font-black uppercase tracking-wider"
@@ -157,15 +182,28 @@ export default function CropStage({ src, areas, revealedCount, fullReveal, answe
             ))}
           </div>
 
-          <div className="relative mx-auto">
-            <CropFrame src={src} natural={natural} area={current} width={disp.w} height={disp.h} radius={18} />
-            <span
-              className="absolute top-2 right-2 rounded-full px-2.5 py-1 text-[10px] font-black uppercase tracking-wider"
-              style={{ background: "rgba(0,0,0,0.55)", color: "#fff" }}
-            >
-              {count}/{areas.length} hints
-            </span>
-          </div>
+          {disp.w > 0 && disp.h > 0 ? (
+            <div className="relative mx-auto">
+              <CropFrame src={src} natural={natural} area={current} width={disp.w} height={disp.h} radius={18} ariaLabel={`Current hint ${count}`} />
+              <span
+                className="absolute top-2 right-2 rounded-full px-2.5 py-1 text-[10px] font-black uppercase tracking-wider"
+                style={{ background: "rgba(0,0,0,0.55)", color: "#fff" }}
+              >
+                {count}/{areas.length} hints
+              </span>
+            </div>
+          ) : (
+            <div
+              className="mx-auto rounded-2xl"
+              style={{
+                maxWidth: MAX_W,
+                aspectRatio: "1 / 1",
+                background: "var(--holo-off-white)",
+                border: "1.5px solid var(--holo-border)",
+                animation: "pulse 1.5s ease infinite",
+              }}
+            />
+          )}
         </div>
       )}
     </div>
