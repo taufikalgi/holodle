@@ -13,8 +13,12 @@ import {
 import { useLocalStorageState } from "@/hooks/useLocalStorageState";
 import { useOutsideClick } from "@/hooks/useOutsideClick";
 import { useTalentSearch } from "@/hooks/useTalentSearch";
-import { fetchAvatarRound, fetchAvatarValidCount, type AvatarRound } from "@/lib/avatar-api";
-import { ApiError } from "@/lib/errors";
+import {
+  fetchAvatarAreas,
+  fetchAvatarTalents,
+  getAvatarTalentPool,
+  pickRandomAvatarTalent,
+} from "@/lib/avatar-api";
 import CropStage from "@/components/avatar/CropStage";
 import AvatarHowToPlay from "@/components/avatar/AvatarHowToPlay";
 import {
@@ -36,16 +40,6 @@ const emptyPersisted: EndlessPersisted = {
 
 type RoundStatus = "loading" | "ready" | "noValid" | "error";
 
-async function fetchRoundAvoiding(exclude: string[], maxTries = 5): Promise<AvatarRound> {
-  let last: AvatarRound | null = null;
-  for (let i = 0; i < maxTries; i++) {
-    const round = await fetchAvatarRound();
-    last = round;
-    if (!exclude.includes(round.talent.id)) return round;
-  }
-  return last as AvatarRound;
-}
-
 function EndlessGamePage() {
   const [roundState, setRoundState] = useLocalStorageState<EndlessRoundState>(
     ROUND_KEY,
@@ -61,18 +55,20 @@ function EndlessGamePage() {
     roundState.round ? "ready" : "loading"
   );
   const [roundError, setRoundError] = useState("");
-  const [validCount, setValidCount] = useState<number | null>(null);
+  const [validTalents, setValidTalents] = useState<Talent[]>(ALL_TALENTS);
   const [showHowTo, setShowHowTo] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const hasStoredRoundRef = useRef(Boolean(roundState.round));
+  const recentTalentIdsRef = useRef(persisted.recentTalentIds);
 
   const pool = useMemo(() => {
     const round = roundState.round;
-    if (!round) return ALL_TALENTS;
-    return ALL_TALENTS.some((t) => t.id === round.talent.id)
-      ? ALL_TALENTS
-      : [...ALL_TALENTS, round.talent];
-  }, [roundState.round]);
+    if (!round) return validTalents;
+    return validTalents.some((t) => t.id === round.talent.id)
+      ? validTalents
+      : [...validTalents, round.talent];
+  }, [validTalents, roundState.round]);
 
   const { input, suggestions, showDropdown, handleInput, clear, onFocus, setShowDropdown } =
     useTalentSearch(pool);
@@ -80,25 +76,33 @@ function EndlessGamePage() {
   useOutsideClick(dropdownRef, () => setShowDropdown(false), inputRef);
 
   const startRound = useCallback(
-    async (avoid: string[]) => {
+    async (talentPool: Talent[], avoid: string[]) => {
       setRoundStatus("loading");
       setRoundError("");
+
+      if (talentPool.length === 0) {
+        setRoundStatus("noValid");
+        return null;
+      }
+
       try {
-        const round = await fetchRoundAvoiding(avoid);
+        const talent = pickRandomAvatarTalent(talentPool, avoid);
+        if (!talent) {
+          setRoundStatus("noValid");
+          return null;
+        }
+        const areas = await fetchAvatarAreas(talent.id);
+        const round = { talent, areas };
         setRoundState({ round, guesses: [], gameOver: false, won: false });
         setPersisted((prev) => ({
           ...prev,
-          recentTalentIds: [...prev.recentTalentIds, round.talent.id].slice(-20),
+          recentTalentIds: [...prev.recentTalentIds, talent.id].slice(-20),
         }));
         setRoundStatus("ready");
         return round;
       } catch (e) {
-        if (e instanceof ApiError && e.status === 404) {
-          setRoundStatus("noValid");
-        } else {
-          setRoundError(e instanceof Error ? e.message : "Failed to load round");
-          setRoundStatus("error");
-        }
+        setRoundError(e instanceof Error ? e.message : "Failed to load round");
+        setRoundStatus("error");
         return null;
       }
     },
@@ -107,17 +111,41 @@ function EndlessGamePage() {
 
   useEffect(() => {
     let alive = true;
-    if (!roundState.round) void startRound(persisted.recentTalentIds);
-    fetchAvatarValidCount()
-      .then((count) => {
-        if (alive) setValidCount(count);
-      })
-      .catch(() => {});
+
+    const load = async () => {
+      try {
+        const avatarTalents = await fetchAvatarTalents();
+        if (!alive) return;
+
+        const playableTalents = getAvatarTalentPool(avatarTalents);
+        setValidTalents(playableTalents);
+
+        if (hasStoredRoundRef.current) {
+          setRoundStatus("ready");
+          return;
+        }
+
+        await startRound(playableTalents, recentTalentIdsRef.current);
+      } catch {
+        if (!alive) return;
+
+        setValidTalents([]);
+        if (hasStoredRoundRef.current) {
+          setRoundStatus("ready");
+          return;
+        }
+
+        setRoundStatus("error");
+        setRoundError("Failed to load avatar talents");
+      }
+    };
+
+    void load();
+
     return () => {
       alive = false;
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [startRound]);
 
   const makeGuess = useCallback(
     (talent: Talent) => {
@@ -151,13 +179,14 @@ function EndlessGamePage() {
     const avoid = finishedId
       ? [...persisted.recentTalentIds, finishedId]
       : persisted.recentTalentIds;
-    await startRound(avoid);
-  }, [startRound, persisted.recentTalentIds, roundState.round]);
+    await startRound(pool, avoid);
+  }, [pool, persisted.recentTalentIds, roundState.round, startRound]);
 
   const { round, guesses } = roundState;
   const guessesLeft = MAX_GUESSES - guesses.length;
   const alreadyGuessed = guesses.map((g) => g.talent.name);
   const revealedCount = round ? Math.min(guesses.length + 1, round.areas.length) : 0;
+  const displayGuessHistory = [...guesses].reverse();
 
   return (
     <main className="min-h-screen" style={{ background: "var(--holo-bg)" }}>
@@ -221,7 +250,7 @@ function EndlessGamePage() {
             </p>
             <button
               type="button"
-              onClick={() => void startRound(persisted.recentTalentIds)}
+              onClick={() => void startRound(pool, persisted.recentTalentIds)}
               className="mt-4 px-6 py-2 rounded-full text-sm font-bold text-white transition-opacity hover:opacity-80"
               style={{ background: "var(--holo-blue)" }}
             >
@@ -235,7 +264,7 @@ function EndlessGamePage() {
             {roundError}{" "}
             <button
               type="button"
-              onClick={() => void startRound(persisted.recentTalentIds)}
+              onClick={() => void startRound(pool, persisted.recentTalentIds)}
               className="underline font-black"
             >
               Retry
@@ -247,6 +276,7 @@ function EndlessGamePage() {
           <>
             <div className="holo-card p-4 mb-5">
               <CropStage
+                key={round.talent.id}
                 src={round.talent.avatarUrl || round.talent.photoUrl}
                 areas={round.areas}
                 revealedCount={revealedCount}
@@ -314,7 +344,7 @@ function EndlessGamePage() {
                 >
                   Your guesses
                 </p>
-                {guesses.map((g, i) => (
+                {displayGuessHistory.map((g, i) => (
                   <div
                     key={i}
                     className={`flex items-center gap-3 px-3 py-2 rounded-xl text-sm font-semibold ${
@@ -342,12 +372,12 @@ function EndlessGamePage() {
                 <p className="text-sm font-semibold" style={{ color: "var(--holo-text-muted)" }}>
                   Start typing to make your first guess!
                 </p>
-                {validCount !== null && (
+                {pool.length > 0 && (
                   <p
                     className="text-xs mt-1 opacity-50"
                     style={{ color: "var(--holo-text-muted)" }}
                   >
-                    {validCount} playable talent{validCount !== 1 ? "s" : ""}
+                    {pool.length} playable talent{pool.length !== 1 ? "s" : ""}
                   </p>
                 )}
               </div>

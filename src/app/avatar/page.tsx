@@ -13,8 +13,12 @@ import {
 import { useLocalStorageState } from "@/hooks/useLocalStorageState";
 import { useOutsideClick } from "@/hooks/useOutsideClick";
 import { useTalentSearch } from "@/hooks/useTalentSearch";
-import { fetchAvatarRound, fetchAvatarValidCount } from "@/lib/avatar-api";
-import { ApiError } from "@/lib/errors";
+import {
+  fetchAvatarAreas,
+  fetchAvatarTalents,
+  getAvatarTalentOfTheDay,
+  getAvatarTalentPool,
+} from "@/lib/avatar-api";
 import CropStage from "@/components/avatar/CropStage";
 import AvatarHowToPlay from "@/components/avatar/AvatarHowToPlay";
 import { isValidDailyState, type AvatarStats, type DailyState } from "@/components/avatar/types";
@@ -43,65 +47,96 @@ export default function AvatarGame() {
   const [stats, setStats] = useLocalStorageState<AvatarStats>(STATS_KEY, emptyStats);
   const [roundStatus, setRoundStatus] = useState<RoundStatus>(state.talent ? "ready" : "loading");
   const [roundError, setRoundError] = useState("");
-  const [validCount, setValidCount] = useState<number | null>(null);
+  const [validTalents, setValidTalents] = useState<Talent[]>(ALL_TALENTS);
   const [showHowTo, setShowHowTo] = useState(false);
   const [revealAnswer, setRevealAnswer] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
-  const hasRoundRef = useRef(Boolean(state.talent));
+  const hasStoredRoundRef = useRef(Boolean(state.talent));
 
   const searchPool = useMemo(() => {
     const talent = state.talent;
-    if (!talent) return ALL_TALENTS;
-    return ALL_TALENTS.some((t) => t.id === talent.id) ? ALL_TALENTS : [...ALL_TALENTS, talent];
-  }, [state.talent]);
+    if (!talent) return validTalents;
+    return validTalents.some((t) => t.id === talent.id) ? validTalents : [...validTalents, talent];
+  }, [validTalents, state.talent]);
 
   const { input, suggestions, showDropdown, handleInput, clear, onFocus, setShowDropdown } =
     useTalentSearch(searchPool);
 
   useOutsideClick(dropdownRef, () => setShowDropdown(false), inputRef);
 
-  const loadRound = useCallback(async () => {
-    setRoundStatus("loading");
-    setRoundError("");
-    try {
-      const round = await fetchAvatarRound();
-      setState((prev) =>
-        prev.talent
-          ? prev
-          : {
-              talent: round.talent,
-              areas: round.areas,
-              guesses: [],
-              gameOver: false,
-              won: false,
-              date: getDateString(),
-            }
-      );
-      setRoundStatus("ready");
-      hasRoundRef.current = true;
-    } catch (e) {
-      if (hasRoundRef.current) {
-        setRoundStatus("ready");
-        return;
-      }
-      if (e instanceof ApiError && e.status === 404) {
+  const loadRound = useCallback(
+    async (pool: Talent[]) => {
+      setRoundStatus("loading");
+      setRoundError("");
+
+      if (pool.length === 0) {
         setRoundStatus("noValid");
         return;
       }
-      setRoundError(e instanceof Error ? e.message : "Failed to load round");
-      setRoundStatus("error");
-    }
-  }, [setState]);
+
+      const roundTalent = getAvatarTalentOfTheDay(pool, getDateString());
+      if (!roundTalent) {
+        setRoundStatus("noValid");
+        return;
+      }
+
+      try {
+        const areas = await fetchAvatarAreas(roundTalent.id);
+        setState((prev) =>
+          prev.talent
+            ? prev
+            : {
+                talent: roundTalent,
+                areas,
+                guesses: [],
+                gameOver: false,
+                won: false,
+                date: getDateString(),
+              }
+        );
+        setRoundStatus("ready");
+      } catch (e) {
+        setRoundError(e instanceof Error ? e.message : "Failed to load round");
+        setRoundStatus("error");
+      }
+    },
+    [setState]
+  );
 
   useEffect(() => {
-    if (!hasRoundRef.current) void loadRound();
     let alive = true;
-    fetchAvatarValidCount()
-      .then((count) => {
-        if (alive) setValidCount(count);
-      })
-      .catch(() => {});
+
+    const load = async () => {
+      try {
+        const avatarTalents = await fetchAvatarTalents();
+        if (!alive) return;
+
+        const pool = getAvatarTalentPool(avatarTalents);
+        setValidTalents(pool);
+
+        if (hasStoredRoundRef.current) {
+          setRoundStatus("ready");
+          return;
+        }
+
+        await loadRound(pool);
+      } catch {
+        if (!alive) return;
+
+        setValidTalents([]);
+        if (hasStoredRoundRef.current) {
+          setRoundStatus("ready");
+          return;
+        }
+
+        setRoundStatus("error");
+        setRoundError("Failed to load avatar talents");
+      }
+    };
+
+    void load();
+
     return () => {
       alive = false;
     };
@@ -110,6 +145,7 @@ export default function AvatarGame() {
   const guessesLeft = MAX_GUESSES - state.guesses.length;
   const alreadyGuessed = state.guesses.map((g) => g.talent.name);
   const revealedCount = state.talent ? Math.min(state.guesses.length + 1, state.areas.length) : 0;
+  const displayGuessHistory = [...state.guesses].reverse();
 
   const makeGuess = useCallback(
     (talent: Talent) => {
@@ -204,7 +240,7 @@ export default function AvatarGame() {
             </p>
             <button
               type="button"
-              onClick={() => void loadRound()}
+              onClick={() => void loadRound(validTalents)}
               className="mt-4 px-6 py-2 rounded-full text-sm font-bold text-white transition-opacity hover:opacity-80"
               style={{ background: "var(--holo-blue)" }}
             >
@@ -216,7 +252,11 @@ export default function AvatarGame() {
         {roundStatus === "error" && (
           <div className="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-semibold text-rose-700">
             {roundError}{" "}
-            <button type="button" onClick={() => void loadRound()} className="underline font-black">
+            <button
+              type="button"
+              onClick={() => void loadRound(validTalents)}
+              className="underline font-black"
+            >
               Retry
             </button>
           </div>
@@ -226,6 +266,7 @@ export default function AvatarGame() {
           <>
             <div className="holo-card p-4 mb-5">
               <CropStage
+                key={state.talent.id}
                 src={state.talent.avatarUrl || state.talent.photoUrl}
                 areas={state.areas}
                 revealedCount={revealedCount}
@@ -287,7 +328,7 @@ export default function AvatarGame() {
                 >
                   Your guesses
                 </p>
-                {state.guesses.map((g, i) => (
+                {displayGuessHistory.map((g, i) => (
                   <div
                     key={i}
                     className={`flex items-center gap-3 px-3 py-2 rounded-xl text-sm font-semibold ${
@@ -315,12 +356,12 @@ export default function AvatarGame() {
                 <p className="text-sm font-semibold" style={{ color: "var(--holo-text-muted)" }}>
                   Start typing to make your first guess!
                 </p>
-                {validCount !== null && (
+                {searchPool.length > 0 && (
                   <p
                     className="text-xs mt-1 opacity-50"
                     style={{ color: "var(--holo-text-muted)" }}
                   >
-                    {validCount} playable talent{validCount !== 1 ? "s" : ""}
+                    {searchPool.length} playable talent{searchPool.length !== 1 ? "s" : ""}
                   </p>
                 )}
               </div>

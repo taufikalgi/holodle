@@ -73,6 +73,18 @@ export default function CropStage({
   useEffect(() => {
     setError(false);
     setNatural({ w: 0, h: 0 });
+    if (!src) return;
+
+    const img = new Image();
+    img.onload = () => {
+      if (img.naturalWidth > 0 && img.naturalHeight > 0) {
+        setNatural({ w: img.naturalWidth, h: img.naturalHeight });
+      } else {
+        setError(true);
+      }
+    };
+    img.onerror = () => setError(true);
+    img.src = src;
   }, [src]);
 
   useEffect(() => {
@@ -99,21 +111,6 @@ export default function CropStage({
 
   return (
     <div ref={containerRef} className="w-full">
-      {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img
-        key={src}
-        src={src}
-        alt=""
-        onLoad={(e) => {
-          const img = e.currentTarget;
-          if (img.naturalWidth > 0 && img.naturalHeight > 0) {
-            setNatural({ w: img.naturalWidth, h: img.naturalHeight });
-          }
-        }}
-        onError={() => setError(true)}
-        style={{ display: "none" }}
-      />
-
       {error ? (
         <div
           className="mx-auto rounded-2xl flex items-center justify-center"
