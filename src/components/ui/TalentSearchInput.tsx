@@ -72,7 +72,7 @@ export default function TalentSearchInput({
         <div
           ref={dropdownRef}
           className="mt-2 rounded-xl border overflow-hidden"
-          style={{ borderColor: "var(--holo-border)", background: "white" }}
+          style={{ borderColor: "var(--holo-border)", background: "var(--holo-bg-card)" }}
         >
           {suggestions.map((t) => (
             <button
@@ -93,7 +93,7 @@ export default function TalentSearchInput({
           style={{
             borderColor: "var(--holo-border)",
             color: "var(--holo-text-muted)",
-            background: "white",
+            background: "var(--holo-bg-card)",
           }}
         >
           No talents found — try a different name!

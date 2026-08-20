@@ -83,7 +83,7 @@ export default function TalentSearch({
       {showDropdown && !disabled && (
         <div
           ref={dropdownRef}
-          className="mt-3 max-h-72 overflow-auto rounded-2xl border bg-white shadow-sm"
+          className="mt-3 max-h-72 overflow-auto rounded-2xl border bg-[var(--holo-bg-card)] shadow-sm"
           style={{ borderColor: "var(--holo-border)" }}
         >
           {suggestions.length > 0 ? (

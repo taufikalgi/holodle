@@ -27,7 +27,7 @@ export default function LeaderboardCard({
         entries.map((entry) => (
           <div
             key={entry.session_id}
-            className="rounded-2xl border bg-white px-4 py-3 shadow-sm"
+            className="rounded-2xl border bg-[var(--holo-bg-card)] px-4 py-3 shadow-sm"
             style={{ borderColor: "var(--holo-border)" }}
           >
             <div className="flex items-start gap-3">

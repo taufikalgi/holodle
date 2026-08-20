@@ -120,7 +120,7 @@ export default function AdminLoginPage() {
             padding: "12px 20px",
             borderRadius: 12,
             border: "1.5px solid var(--holo-border)",
-            background: "white",
+            background: "var(--holo-bg-card)",
             color: "var(--holo-text)",
             fontFamily: '"Baloo 2", sans-serif',
             fontWeight: 700,

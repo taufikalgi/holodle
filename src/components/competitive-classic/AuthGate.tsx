@@ -9,7 +9,7 @@ export default function AuthGate({ onLogin }: { onLogin: () => void }) {
       style={{ background: "var(--holo-bg)" }}
     >
       <div
-        className="bg-white rounded-3xl shadow-xl p-10 flex flex-col items-center gap-5 text-center justify-center"
+        className="bg-[var(--holo-bg-card)] rounded-3xl shadow-xl p-10 flex flex-col items-center gap-5 text-center justify-center"
         style={{ maxWidth: 400, width: "100%", border: "1px solid var(--holo-border)" }}
       >
         <a
@@ -40,7 +40,7 @@ export default function AuthGate({ onLogin }: { onLogin: () => void }) {
           className="w-full flex items-center justify-center gap-3 py-3 px-5 rounded-xl font-bold text-sm transition-opacity hover:opacity-80"
           style={{
             border: "1.5px solid var(--holo-border)",
-            background: "white",
+            background: "var(--holo-bg-card)",
             color: "var(--holo-text)",
             cursor: "pointer",
           }}

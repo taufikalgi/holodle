@@ -156,7 +156,7 @@ export default function CropStage({
           >
             <span
               className="rounded-full px-4 py-1.5 text-sm font-black"
-              style={{ background: "#fff", color: "var(--holo-text)" }}
+              style={{ background: "var(--holo-bg-card)", color: "var(--holo-text)" }}
             >
               {answerName}
             </span>

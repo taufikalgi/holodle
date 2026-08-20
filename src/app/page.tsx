@@ -1,13 +1,17 @@
 import Footer from "@/components/ui/Footer";
 import GameCard from "@/components/ui/GameCard";
 import { GameMode, GAMES } from "@/lib/game-modes";
+import ThemeToggle from "@/components/theme/ThemeToggle";
 
 export default function Home() {
   return (
     <main
-      className="min-h-screen flex flex-col items-center justify-center mt-16"
+      className="min-h-screen relative flex flex-col items-center justify-center mt-16"
       style={{ background: "var(--holo-bg)" }}
     >
+<div className="absolute top-4 right-4">
+  <ThemeToggle />
+</div>
       <div className="flex items-center gap-2 mb-1">
         <div className="w-8 h-0.5 bg-gradient-to-r from-transparent to-[#00B4D8]" />
         <span className="text-[#00B4D8] text-xs">✦</span>

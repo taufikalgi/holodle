@@ -632,7 +632,7 @@ export default function CompetitiveClassicGame({
                         return (
                           <div
                             key={`${roundNumber}-${roundLatest?.submittedAt ?? roundIndex}`}
-                            className="rounded-2xl border bg-white p-4 shadow-sm"
+                            className="rounded-2xl border bg-[var(--holo-bg-card)] p-4 shadow-sm"
                             style={{ borderColor: "var(--holo-border)" }}
                           >
                             <div className="flex items-center justify-between gap-3">
@@ -695,7 +695,7 @@ export default function CompetitiveClassicGame({
 
                 {latestGuess && (
                   <div
-                    className="mt-4 rounded-2xl border bg-white px-4 py-4 shadow-sm"
+                    className="mt-4 rounded-2xl border bg-[var(--holo-bg-card)] px-4 py-4 shadow-sm"
                     style={{ borderColor: "var(--holo-border)" }}
                   >
                     <div className="flex items-center justify-between gap-3">

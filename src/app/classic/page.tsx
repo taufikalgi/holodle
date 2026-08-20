@@ -115,7 +115,7 @@ export default function ClassicGame() {
           <div
             className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-xs font-bold border"
             style={{
-              background: "white",
+              background: "var(--holo-bg-card)",
               borderColor: "var(--holo-border)",
               color: "var(--holo-text-muted)",
             }}

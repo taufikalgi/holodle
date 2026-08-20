@@ -52,7 +52,7 @@ export default function PageHeader({
             style={{
               borderColor: "var(--holo-blue)",
               color: "var(--holo-blue)",
-              background: "white",
+              background: "var(--holo-bg-card)",
             }}
           >
             {showLeaderboard ? "x" : "🏆"}
@@ -66,7 +66,7 @@ export default function PageHeader({
             style={{
               borderColor: "var(--holo-blue)",
               color: "var(--holo-blue)",
-              background: "white",
+              background: "var(--holo-bg-card)",
             }}
           >
             {showHowTo ? "x" : "?"}

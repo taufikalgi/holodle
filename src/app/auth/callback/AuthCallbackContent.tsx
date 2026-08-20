@@ -86,7 +86,7 @@ export default function AuthCallbackContent() {
           align-items: center;
           justify-content: center;
           gap: 24px;
-          background: linear-gradient(160deg, #dbeafe 0%, #e0f2fe 50%, #f0f9ff 100%);
+          background: var(--holo-bg);
           font-family: var(--font-albert-sans), sans-serif;
           padding: 24px;
         }
@@ -107,7 +107,7 @@ export default function AuthCallbackContent() {
         .logo-dle {
           font-size: 36px;
           font-weight: 900;
-          color: #1e293b;
+          color: var(--holo-text);
           letter-spacing: -1px;
         }
 
@@ -118,8 +118,8 @@ export default function AuthCallbackContent() {
           align-items: center;
           gap: 16px;
           padding: 48px 44px;
-          background: white;
-          border: 1px solid #e2e8f0;
+          background: var(--holo-bg-card);
+          border: 1px solid var(--holo-border);
           border-radius: 20px;
           box-shadow: 0 8px 40px rgba(0, 0, 0, 0.08);
           min-width: 300px;
@@ -139,8 +139,8 @@ export default function AuthCallbackContent() {
           display: flex;
           align-items: center;
           justify-content: center;
-          border: 1.5px solid #e2e8f0;
-          background: #f8fafc;
+          border: 1.5px solid var(--holo-border);
+          background: var(--holo-off-white);
           transition: border-color 0.4s ease, background 0.4s ease;
         }
         .icon-ring.loading {
@@ -178,7 +178,7 @@ export default function AuthCallbackContent() {
         .status-label {
           font-size: 18px;
           font-weight: 700;
-          color: #1e293b;
+          color: var(--holo-text);
           letter-spacing: -0.01em;
         }
         .status-label.loading { color: #0891b2; }
@@ -189,7 +189,7 @@ export default function AuthCallbackContent() {
         .message {
           font-size: 13px;
           font-weight: 400;
-          color: #64748b;
+          color: var(--holo-text-muted);
           text-align: center;
           line-height: 1.6;
           max-width: 220px;
