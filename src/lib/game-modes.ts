@@ -24,27 +24,25 @@ export const GAMES = [
       "Guess the talent by their attributes. Keep guessing as long as you want. How long can you streak?",
   },
   {
-    href: "/avatar",
-    logo: "https://hololive.hololivepro.com/wp-content/uploads/2023/09/Isaki-Riona_list_thumb.png",
-    alt: "avatar logo",
-    title: "Avatar",
-    description:
-      "Guess the talent from a cropped avatar — each wrong guess reveals a bigger hint.",
-  },
-  {
-    href: "/avatar-endless",
-    logo: "https://hololive.hololivepro.com/wp-content/uploads/2023/09/Isaki-Riona_list_thumb.png",
-    alt: "avatar endless logo",
-    title: "Avatar Endless",
-    description:
-      "Guess talents from cropped avatars, endlessly. How long can you streak?",
-  },
-  {
     href: "/competitive-classic",
     logo: "https://hololive.hololivepro.com/wp-content/uploads/2020/07/Anya-Melfissa_list_thumb.png",
     alt: "competitive classic logo",
     title: "Competitive Classic",
     description:
       "Test your knowledge against other players in time attack based game and reach the top in the leaderboard.",
+  },
+  {
+    href: "/avatar",
+    logo: "https://hololive.hololivepro.com/wp-content/uploads/2023/09/Isaki-Riona_list_thumb.png",
+    alt: "avatar logo",
+    title: "Avatar",
+    description: "Guess the talent from a cropped avatar — each wrong guess reveals a bigger hint.",
+  },
+  {
+    href: "/avatar-endless",
+    logo: "https://hololive.hololivepro.com/wp-content/uploads/2020/07/Nanashi-Mumei_list_thumb.png",
+    alt: "avatar endless logo",
+    title: "Avatar Endless",
+    description: "Guess talents from cropped avatars, endlessly. How long can you streak?",
   },
 ];

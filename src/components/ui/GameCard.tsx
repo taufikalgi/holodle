@@ -9,14 +9,7 @@ interface GameCardProps {
   onPlay?: () => void;
 }
 
-export default function GameCard({
-  href,
-  logo,
-  alt,
-  title,
-  description,
-  onPlay,
-}: GameCardProps) {
+export default function GameCard({ href, logo, alt, title, description, onPlay }: GameCardProps) {
   const content = (
     <>
       <img
