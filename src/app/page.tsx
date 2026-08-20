@@ -15,9 +15,9 @@ export default function Home() {
       </div>
       <h1
         className="text-5xl font-black tracking-widest mb-2"
-        style={{ fontFamily: "'Poppins', sans-serif" }}
+        style={{ fontFamily: "var(--font-albert-sans), sans-serif" }}
       >
-        <span className="shimmer-text">HOLO</span>
+        <span style={{ color: "var(--holo-blue)" }}>HOLO</span>
         <span style={{ color: "var(--holo-text)" }}>DLE</span>
       </h1>
       <p

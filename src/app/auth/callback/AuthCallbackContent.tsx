@@ -77,8 +77,6 @@ export default function AuthCallbackContent() {
       <p className="footer">Holodle — Fan-made game. Not affiliated with Cover Corp.</p>
 
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700;900&display=swap');
-
         *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
         .callback-root {
@@ -89,7 +87,7 @@ export default function AuthCallbackContent() {
           justify-content: center;
           gap: 24px;
           background: linear-gradient(160deg, #dbeafe 0%, #e0f2fe 50%, #f0f9ff 100%);
-          font-family: 'Poppins', sans-serif;
+          font-family: var(--font-albert-sans), sans-serif;
           padding: 24px;
         }
 
@@ -205,7 +203,7 @@ export default function AuthCallbackContent() {
           border: none;
           border-radius: 99px;
           color: white;
-          font-family: 'Poppins', sans-serif;
+          font-family: var(--font-albert-sans), sans-serif;
           font-size: 13px;
           font-weight: 600;
           cursor: pointer;

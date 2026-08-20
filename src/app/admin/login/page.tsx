@@ -71,7 +71,7 @@ export default function AdminLoginPage() {
           <h1
             className="shimmer-text"
             style={{
-              fontFamily: '"Poppins", sans-serif',
+              fontFamily: "var(--font-albert-sans), sans-serif",
               fontSize: 26,
               fontWeight: 800,
               margin: "0 0 4px",

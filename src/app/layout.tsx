@@ -1,5 +1,11 @@
 import type { Metadata } from "next";
+import { Albert_Sans } from "next/font/google";
 import "./globals.css";
+
+const albertSans = Albert_Sans({
+  subsets: ["latin"],
+  variable: "--font-albert-sans",
+});
 
 export const metadata: Metadata = {
   title: "Holodle - Hololive Wordle",
@@ -14,7 +20,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body>{children}</body>
+      <body className={albertSans.variable}>{children}</body>
     </html>
   );
 }

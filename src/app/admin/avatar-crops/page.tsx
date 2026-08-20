@@ -304,7 +304,7 @@ function AvatarCropsAdminContent() {
           <div>
             <span
               className="shimmer-text"
-              style={{ fontFamily: '"Poppins", sans-serif', fontWeight: 800, fontSize: 18 }}
+              style={{ fontFamily: "var(--font-albert-sans), sans-serif", fontWeight: 800, fontSize: 18 }}
             >
               Holodle Admin
             </span>

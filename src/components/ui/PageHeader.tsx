@@ -31,9 +31,9 @@ export default function PageHeader({
         </div>
         <h1
           className="text-3xl md:text-5xl font-black tracking-widest"
-          style={{ fontFamily: "'Poppins', sans-serif" }}
+          style={{ fontFamily: "var(--font-albert-sans), sans-serif" }}
         >
-          <span className="shimmer-text">HOLO</span>
+          <span style={{ color: "var(--holo-blue)" }}>HOLO</span>
           <span style={{ color: "var(--holo-text)" }}>DLE</span>
         </h1>
         <p

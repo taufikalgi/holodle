@@ -157,7 +157,7 @@ export default function TalentModal({ mode, initial, onClose, onSaved, apiBase }
         >
           <h2
             style={{
-              fontFamily: '"Poppins", sans-serif',
+              fontFamily: "var(--font-albert-sans), sans-serif",
               fontWeight: 700,
               fontSize: 18,
               color: "var(--holo-text)",

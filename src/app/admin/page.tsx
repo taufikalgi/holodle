@@ -155,7 +155,7 @@ export default function AdminPage() {
             <span
               className="shimmer-text"
               style={{
-                fontFamily: '"Poppins", sans-serif',
+                fontFamily: "var(--font-albert-sans), sans-serif",
                 fontWeight: 800,
                 fontSize: 18,
               }}
