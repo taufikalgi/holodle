@@ -287,7 +287,9 @@ export default function AvatarGame() {
                 message="Come back tomorrow for a new talent!"
                 actions={
                   <div>
-                    <ShareButton text={buildAvatarShareText({ rounds: [state.won] })} />
+                    <ShareButton
+                      text={buildAvatarShareText({ guesses: state.guesses.map((g) => g.correct) })}
+                    />
                   </div>
                 }
               />

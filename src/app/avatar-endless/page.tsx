@@ -38,7 +38,6 @@ const emptyRound: EndlessRoundState = { round: null, guesses: [], gameOver: fals
 const emptyPersisted: EndlessPersisted = {
   stats: { streak: 0, bestStreak: 0, totalPlayed: 0, totalWon: 0 },
   recentTalentIds: [],
-  roundResults: [],
 };
 
 type RoundStatus = "loading" | "ready" | "noValid" | "error";
@@ -170,7 +169,6 @@ function EndlessGamePage() {
             totalPlayed: prev.stats.totalPlayed + 1,
             totalWon: correct ? prev.stats.totalWon + 1 : prev.stats.totalWon,
           },
-          roundResults: [...prev.roundResults, correct].slice(-20),
         }));
       }
       clear();
@@ -298,7 +296,9 @@ function EndlessGamePage() {
                   !roundState.won ? (
                     <div>
                       <ShareButton
-                        text={buildAvatarShareText({ rounds: persisted.roundResults })}
+                        text={buildAvatarShareText({
+                          guesses: guesses.map((g) => g.correct),
+                        })}
                       />
                     </div>
                   ) : undefined

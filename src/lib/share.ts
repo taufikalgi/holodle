@@ -40,13 +40,13 @@ export function buildGridShareText({
 }
 
 export function buildAvatarShareText({
-  rounds,
+  guesses,
   url,
 }: {
-  rounds: boolean[];
+  guesses: boolean[];
   url?: string;
 }): string {
-  const row = rounds.map((won) => (won ? "🟩" : "🟥")).join("");
+  const row = guesses.map((correct) => (correct ? "🟩" : "🟥")).join("");
   const shareUrl = url ?? (typeof window !== "undefined" ? window.location.href : "");
   const lines = ["Holodle", "", row, ""];
   if (shareUrl) lines.push(`Play Today's Game: ${shareUrl}`);
