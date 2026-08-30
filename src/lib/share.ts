@@ -38,3 +38,17 @@ export function buildGridShareText({
   if (shareUrl) lines.push(shareUrl);
   return lines.join("\n");
 }
+
+export function buildAvatarShareText({
+  rounds,
+  url,
+}: {
+  rounds: boolean[];
+  url?: string;
+}): string {
+  const row = rounds.map((won) => (won ? "🟩" : "🟥")).join("");
+  const shareUrl = url ?? (typeof window !== "undefined" ? window.location.href : "");
+  const lines = ["Holodle", "", row, ""];
+  if (shareUrl) lines.push(`Play Today's Game: ${shareUrl}`);
+  return lines.join("\n");
+}

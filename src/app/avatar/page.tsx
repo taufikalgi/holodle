@@ -7,9 +7,11 @@ import {
   GameOverBanner,
   Navbar,
   PageHeader,
+  ShareButton,
   StatsBar,
   TalentSearchInput,
 } from "@/components/ui";
+import { buildAvatarShareText } from "@/lib/share";
 import { useLocalStorageState } from "@/hooks/useLocalStorageState";
 import { useOutsideClick } from "@/hooks/useOutsideClick";
 import { useTalentSearch } from "@/hooks/useTalentSearch";
@@ -283,6 +285,11 @@ export default function AvatarGame() {
                 revealed={revealAnswer}
                 onReveal={state.won ? undefined : () => setRevealAnswer(true)}
                 message="Come back tomorrow for a new talent!"
+                actions={
+                  <div>
+                    <ShareButton text={buildAvatarShareText({ rounds: [state.won] })} />
+                  </div>
+                }
               />
             )}
 

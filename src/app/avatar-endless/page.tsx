@@ -7,9 +7,11 @@ import {
   GameOverBanner,
   Navbar,
   PageHeader,
+  ShareButton,
   StatsBar,
   TalentSearchInput,
 } from "@/components/ui";
+import { buildAvatarShareText } from "@/lib/share";
 import { useLocalStorageState } from "@/hooks/useLocalStorageState";
 import { useOutsideClick } from "@/hooks/useOutsideClick";
 import { useTalentSearch } from "@/hooks/useTalentSearch";
@@ -36,6 +38,7 @@ const emptyRound: EndlessRoundState = { round: null, guesses: [], gameOver: fals
 const emptyPersisted: EndlessPersisted = {
   stats: { streak: 0, bestStreak: 0, totalPlayed: 0, totalWon: 0 },
   recentTalentIds: [],
+  roundResults: [],
 };
 
 type RoundStatus = "loading" | "ready" | "noValid" | "error";
@@ -167,6 +170,7 @@ function EndlessGamePage() {
             totalPlayed: prev.stats.totalPlayed + 1,
             totalWon: correct ? prev.stats.totalWon + 1 : prev.stats.totalWon,
           },
+          roundResults: [...prev.roundResults, correct].slice(-20),
         }));
       }
       clear();
@@ -290,6 +294,15 @@ function EndlessGamePage() {
                 won={roundState.won}
                 answerName={round.talent.name}
                 guessCount={guesses.length}
+                actions={
+                  !roundState.won ? (
+                    <div>
+                      <ShareButton
+                        text={buildAvatarShareText({ rounds: persisted.roundResults })}
+                      />
+                    </div>
+                  ) : undefined
+                }
               >
                 <button
                   type="button"
@@ -297,7 +310,7 @@ function EndlessGamePage() {
                   className="mt-4 px-6 py-2 rounded-full text-sm font-bold text-white transition-opacity hover:opacity-80"
                   style={{ background: "var(--holo-blue)" }}
                 >
-                  Next talent →
+                  {roundState.won ? "Next talent →" : "New run →"}
                 </button>
               </GameOverBanner>
             )}
