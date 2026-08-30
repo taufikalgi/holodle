@@ -9,6 +9,7 @@ export default function GameOverBanner({
   onReveal,
   answerDetails,
   message,
+  actions,
 }: {
   won: boolean;
   answerName: string;
@@ -18,6 +19,7 @@ export default function GameOverBanner({
   onReveal?: () => void;
   answerDetails?: { image?: string; branch?: string; debutYear?: number; loreArchetype?: string };
   message?: string;
+  actions?: ReactNode;
 }) {
   return (
     <div
@@ -62,6 +64,7 @@ export default function GameOverBanner({
           )}
         </>
       )}
+      {actions}
       {message && <p className="text-xs mt-3 opacity-60">{message}</p>}
       {children}
     </div>

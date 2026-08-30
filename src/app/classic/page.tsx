@@ -18,9 +18,11 @@ import {
   HowToPlay,
   Navbar,
   PageHeader,
+  ShareButton,
   StatsBar,
   TalentSearchInput,
 } from "@/components/ui";
+import { buildGridShareText } from "@/lib/share";
 import { useLocalStorageState } from "@/hooks/useLocalStorageState";
 import { useOutsideClick } from "@/hooks/useOutsideClick";
 import { useTalentSearch } from "@/hooks/useTalentSearch";
@@ -166,6 +168,16 @@ export default function ClassicGame() {
                 : undefined
             }
             message="Come back tomorrow for a new talent!"
+            actions={
+              <ShareButton
+                text={buildGridShareText({
+                  gameLabel: "HOLODLE CLASSIC",
+                  guesses: state.guesses.map((g) => g.result),
+                  maxGuesses: MAX_GUESSES,
+                  won: state.won,
+                })}
+              />
+            }
           />
         )}
 
