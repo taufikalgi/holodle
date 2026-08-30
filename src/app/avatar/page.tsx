@@ -288,7 +288,13 @@ export default function AvatarGame() {
                 actions={
                   <div>
                     <ShareButton
-                      text={buildAvatarShareText({ guesses: state.guesses.map((g) => g.correct) })}
+                      text={buildAvatarShareText({
+                        mode: "AVATAR",
+                        guessCount: state.guesses.length,
+                        maxGuesses: MAX_GUESSES,
+                        streak: stats.streak,
+                        guesses: state.guesses.map((g) => g.correct),
+                      })}
                     />
                   </div>
                 }
