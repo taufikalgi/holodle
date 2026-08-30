@@ -20,9 +20,11 @@ import {
   HowToPlay,
   Navbar,
   PageHeader,
+  ShareButton,
   StatsBar,
   TalentSearchInput,
 } from "@/components/ui";
+import { buildGridShareText } from "@/lib/share";
 import { useLocalStorageState } from "@/hooks/useLocalStorageState";
 import { useOutsideClick } from "@/hooks/useOutsideClick";
 import { useTalentSearch } from "@/hooks/useTalentSearch";
@@ -43,6 +45,7 @@ interface EndlessState {
     totalPlayed: number;
     totalWon: number;
   };
+  lastRunStreak: number;
   recentTalents: string[];
 }
 
@@ -62,6 +65,7 @@ function isValidEndlessState(data: unknown): data is EndlessState {
     typeof st.bestStreak === "number" &&
     typeof st.totalPlayed === "number" &&
     typeof st.totalWon === "number" &&
+    typeof c.lastRunStreak === "number" &&
     Array.isArray(c.recentTalents) &&
     c.recentTalents.every((t: unknown) => typeof t === "string")
   );
@@ -85,6 +89,7 @@ function getInitialState(pool: Talent[]): EndlessState {
   return {
     current: { answer, guesses: [], gameOver: false, won: false },
     stats: { streak: 0, bestStreak: 0, totalPlayed: 0, totalWon: 0 },
+    lastRunStreak: 0,
     recentTalents: [answer.name],
   };
 }
@@ -181,7 +186,7 @@ function EndlessGameContent({
 
   const { input, suggestions, showDropdown, handleInput, clear, onFocus, setShowDropdown } = useTalentSearch(pool);
 
-  const { current, stats } = state;
+  const { current, stats, lastRunStreak } = state;
   const guessesLeft = MAX_GUESSES - current.guesses.length;
   const alreadyGuessed = current.guesses.map((g) => g.talent.name);
 
@@ -198,6 +203,7 @@ function EndlessGameContent({
       setState((prev) => ({
         ...prev,
         current: { ...prev.current, guesses: newGuesses, gameOver, won },
+        lastRunStreak: gameOver ? (won ? prev.stats.streak + 1 : prev.stats.streak) : prev.lastRunStreak,
         stats: gameOver
           ? {
               streak: won ? prev.stats.streak + 1 : 0,
@@ -309,13 +315,27 @@ function EndlessGameContent({
             won={current.won}
             answerName={current.answer.name}
             guessCount={current.guesses.length}
+            actions={
+              !current.won ? (
+                <div>
+                  <ShareButton
+                    text={buildGridShareText({
+                      gameLabel: `HOLODLE ENDLESS — Streak ${lastRunStreak} 🔥`,
+                      guesses: current.guesses.map((g) => g.result),
+                      maxGuesses: 0,
+                      won: false,
+                    })}
+                  />
+                </div>
+              ) : undefined
+            }
           >
             <button
               onClick={nextRound}
               className="mt-4 px-6 py-2 rounded-full text-sm font-bold text-white transition-opacity hover:opacity-80"
               style={{ background: "var(--holo-blue)" }}
             >
-              Next talent →
+              {current.won ? "Next talent →" : "New run →"}
             </button>
           </GameOverBanner>
         )}

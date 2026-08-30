@@ -26,6 +26,7 @@ export interface EndlessRoundState {
 export interface EndlessPersisted {
   stats: AvatarStats;
   recentTalentIds: string[];
+  lastRunStreak: number;
 }
 
 function isRecord(x: unknown): x is Record<string, unknown> {
@@ -101,6 +102,7 @@ export function isValidEndlessPersisted(data: unknown): data is EndlessPersisted
     typeof st.totalPlayed === "number" &&
     typeof st.totalWon === "number" &&
     Array.isArray(data.recentTalentIds) &&
-    data.recentTalentIds.every((id: unknown) => typeof id === "string")
+    data.recentTalentIds.every((id: unknown) => typeof id === "string") &&
+    typeof data.lastRunStreak === "number"
   );
 }
