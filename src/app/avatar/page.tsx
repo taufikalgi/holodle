@@ -292,7 +292,6 @@ export default function AvatarGame() {
                         mode: "AVATAR",
                         guessCount: state.guesses.length,
                         maxGuesses: MAX_GUESSES,
-                        streak: stats.streak,
                         guesses: state.guesses.map((g) => g.correct),
                       })}
                     />

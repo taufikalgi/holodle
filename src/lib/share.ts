@@ -43,14 +43,14 @@ export function buildAvatarShareText({
   mode,
   guessCount,
   maxGuesses,
-  streak,
+  streak = 0,
   guesses,
   url,
 }: {
   mode: string;
   guessCount: number;
   maxGuesses: number;
-  streak: number;
+  streak?: number;
   guesses: boolean[];
   url?: string;
 }): string {
