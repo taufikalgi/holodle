@@ -317,14 +317,16 @@ function EndlessGameContent({
             guessCount={current.guesses.length}
             actions={
               !current.won ? (
-                <ShareButton
-                  text={buildGridShareText({
-                    gameLabel: `HOLODLE ENDLESS — Streak ${lastRunStreak} 🔥`,
-                    guesses: current.guesses.map((g) => g.result),
-                    maxGuesses: 0,
-                    won: false,
-                  })}
-                />
+                <div>
+                  <ShareButton
+                    text={buildGridShareText({
+                      gameLabel: `HOLODLE ENDLESS — Streak ${lastRunStreak} 🔥`,
+                      guesses: current.guesses.map((g) => g.result),
+                      maxGuesses: 0,
+                      won: false,
+                    })}
+                  />
+                </div>
               ) : undefined
             }
           >
@@ -333,7 +335,7 @@ function EndlessGameContent({
               className="mt-4 px-6 py-2 rounded-full text-sm font-bold text-white transition-opacity hover:opacity-80"
               style={{ background: "var(--holo-blue)" }}
             >
-              Next talent →
+              {current.won ? "Next talent →" : "New run →"}
             </button>
           </GameOverBanner>
         )}
