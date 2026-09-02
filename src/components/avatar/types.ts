@@ -1,11 +1,13 @@
 import type { Talent } from "@/lib/talents";
 import type { CropArea } from "@/lib/avatar-crops";
 import type { AvatarRound } from "@/lib/avatar-api";
+import type { DailyStreakStats } from "@/lib/daily-streak";
+import { isValidDailyStreakStats } from "@/lib/daily-streak";
 
 export type { AvatarRound };
 
 export type AvatarGuess = { talent: Talent; correct: boolean };
-export type AvatarStats = { streak: number; bestStreak: number; totalPlayed: number; totalWon: number };
+export type AvatarStats = DailyStreakStats;
 
 export interface DailyState {
   talent: Talent | null;
@@ -97,12 +99,12 @@ export function isValidEndlessPersisted(data: unknown): data is EndlessPersisted
   const st = isRecord(data.stats) ? data.stats : null;
   return (
     st !== null &&
-    typeof st.streak === "number" &&
-    typeof st.bestStreak === "number" &&
-    typeof st.totalPlayed === "number" &&
-    typeof st.totalWon === "number" &&
+    isValidDailyStreakStats(st) &&
     Array.isArray(data.recentTalentIds) &&
     data.recentTalentIds.every((id: unknown) => typeof id === "string") &&
     typeof data.lastRunStreak === "number"
   );
 }
+
+export { isValidDailyStreakStats as isValidAvatarStats };
+export { isValidDailyStreakStats as isValidAvatarStatsPersisted };

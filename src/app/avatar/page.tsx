@@ -23,7 +23,9 @@ import {
 } from "@/lib/avatar-api";
 import CropStage from "@/components/avatar/CropStage";
 import AvatarHowToPlay from "@/components/avatar/AvatarHowToPlay";
-import { isValidDailyState, type AvatarStats, type DailyState } from "@/components/avatar/types";
+import { isValidDailyState, type DailyState } from "@/components/avatar/types";
+import type { DailyStreakStats } from "@/lib/daily-streak";
+import { useDailyStreak } from "@/hooks/useDailyStreak";
 
 const MAX_GUESSES = 5;
 const ROUND_KEY = "holodle-avatar-round";
@@ -38,7 +40,7 @@ const emptyRound: DailyState = {
   date: getDateString(),
 };
 
-const emptyStats: AvatarStats = { streak: 0, bestStreak: 0, totalPlayed: 0, totalWon: 0 };
+const emptyStats: DailyStreakStats = { streak: 0, bestStreak: 0, totalPlayed: 0, totalWon: 0, lastPlayedDate: undefined };
 
 type RoundStatus = "loading" | "ready" | "noValid" | "error";
 
@@ -46,7 +48,7 @@ export default function AvatarGame() {
   const [state, setState] = useLocalStorageState<DailyState>(ROUND_KEY, emptyRound, (d) =>
     isValidDailyState(d, getDateString())
   );
-  const [stats, setStats] = useLocalStorageState<AvatarStats>(STATS_KEY, emptyStats);
+  const { stats, streakResetToast, recordDailyGameOver } = useDailyStreak(STATS_KEY, emptyStats);
   const [roundStatus, setRoundStatus] = useState<RoundStatus>(state.talent ? "ready" : "loading");
   const [roundError, setRoundError] = useState("");
   const [validTalents, setValidTalents] = useState<Talent[]>(ALL_TALENTS);
@@ -164,16 +166,11 @@ export default function AvatarGame() {
         date: getDateString(),
       });
       if (gameOver) {
-        setStats({
-          streak: correct ? stats.streak + 1 : 0,
-          bestStreak: correct ? Math.max(stats.bestStreak, stats.streak + 1) : stats.bestStreak,
-          totalPlayed: stats.totalPlayed + 1,
-          totalWon: correct ? stats.totalWon + 1 : stats.totalWon,
-        });
+        recordDailyGameOver(getDateString(), correct);
       }
       clear();
     },
-    [state, stats, setState, setStats, clear]
+    [state, setState, recordDailyGameOver, clear]
   );
 
   return (
@@ -216,6 +213,12 @@ export default function AvatarGame() {
         </header>
 
         {showHowTo && <AvatarHowToPlay daily />}
+
+        {streakResetToast && (
+          <div className="mx-auto mb-3 max-w-md rounded-xl border border-amber-200 bg-amber-50 px-4 py-2 text-xs font-semibold text-amber-800">
+            Streak reset — you missed a day. Win today to start a new streak!
+          </div>
+        )}
 
         <StatsBar
           streak={stats.streak}
@@ -293,6 +296,7 @@ export default function AvatarGame() {
                         guessCount: state.guesses.length,
                         maxGuesses: MAX_GUESSES,
                         guesses: state.guesses.map((g) => g.correct),
+                        won: state.won,
                       })}
                     />
                   </div>
