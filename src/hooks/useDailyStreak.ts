@@ -23,10 +23,10 @@ export function useDailyStreak(storageKey: string, emptyStats: DailyStreakStats)
     if (shouldResetDailyStreakForMissedDay(stats.lastPlayedDate, today, stats.streak)) {
       setStats((prev) => ({ ...prev, streak: 0 }));
       setStreakResetToast(true);
-      const t = setTimeout(() => setStreakResetToast(false), 4000);
-      return () => clearTimeout(t);
     }
   }, []); // Wordle-style: eager reset on mount only
+
+  const dismissStreakResetPopup = () => setStreakResetToast(false);
 
   const recordDailyGameOver = (today: string, won: boolean) => {
     setStats((prev) => {
@@ -42,5 +42,5 @@ export function useDailyStreak(storageKey: string, emptyStats: DailyStreakStats)
     });
   };
 
-  return { stats, setStats, streakResetToast, recordDailyGameOver };
+  return { stats, setStats, streakResetToast, dismissStreakResetPopup, recordDailyGameOver };
 }
