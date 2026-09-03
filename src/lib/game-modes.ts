@@ -43,7 +43,7 @@ export const GAME_CATEGORIES: GameCategory[] = [
         title: "Endless Classic",
         label: "Endless",
         description:
-          "Guess the talent by their attributes. Keep guessing as long as you want. How long can you streak?",
+          "Guess the talent by their attributes. Keep guessing as long as you want. How far can you keep the streak going?",
       },
       {
         href: "/classic/competitive",
@@ -66,7 +66,8 @@ export const GAME_CATEGORIES: GameCategory[] = [
         alt: "avatar logo",
         title: "Avatar",
         label: "Daily",
-        description: "Guess the talent from a cropped avatar — each wrong guess reveals a bigger hint.",
+        description:
+          "Guess the talent from a cropped avatar — each wrong guess reveals a bigger hint.",
       },
       {
         href: "/avatar/endless",
@@ -74,7 +75,8 @@ export const GAME_CATEGORIES: GameCategory[] = [
         alt: "avatar endless logo",
         title: "Avatar Endless",
         label: "Endless",
-        description: "Guess talents from cropped avatars, endlessly. How long can you streak?",
+        description:
+          "Guess talents from cropped avatars, endlessly. How far can you keep the streak going?",
       },
     ],
   },
