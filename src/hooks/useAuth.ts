@@ -105,7 +105,7 @@ export function useAuth({ requireAdmin }: UseAuthOptions = {}) {
   }, [requireAdmin]);
 
   const login = useCallback(() => {
-    const redirectPath = requireAdmin ? "/admin" : "/competitive-classic";
+    const redirectPath = requireAdmin ? "/admin" : "/classic/competitive";
     sessionStorage.setItem(AUTH_REDIRECT_KEY, redirectPath);
     window.location.href = API_ENDPOINTS.googleAuthUrl;
   }, [requireAdmin]);

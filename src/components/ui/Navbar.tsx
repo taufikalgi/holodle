@@ -2,10 +2,11 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { usePathname } from "next/navigation";
-import { GameMode, GAMES } from "@/lib/game-modes";
+import { GAME_CATEGORIES } from "@/lib/game-modes";
 import ThemeToggle from "@/components/theme/ThemeToggle";
+import { useOutsideClick } from "@/hooks/useOutsideClick";
 
 interface User {
   name: string;
@@ -22,8 +23,23 @@ export default function Navbar({
   onLogout?: () => void;
 }) {
   const [isOpen, setIsOpen] = useState(false);
+  const [openCategory, setOpenCategory] = useState<string | null>(null);
+  const [expandedCategory, setExpandedCategory] = useState<string | null>(null);
   const pathname = usePathname();
   const isActive = (href: string) => pathname === href;
+  const isCategoryActive = (id: string) => pathname.startsWith(`/${id}`);
+
+  const desktopRef = useRef<HTMLDivElement>(null);
+  useOutsideClick(desktopRef, () => setOpenCategory(null));
+
+  useEffect(() => {
+    if (!openCategory) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setOpenCategory(null);
+    };
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, [openCategory]);
 
   return (
     <nav
@@ -40,22 +56,55 @@ export default function Navbar({
         </Link>
 
         {/* Desktop links */}
-        <div className="hidden md:flex items-center gap-4">
-          {GAMES.map((game: GameMode) => (
-            <Link
-              key={game.title}
-              href={game.href}
-              className="text-sm font-black tracking-widest relative group"
-              style={{ color: "var(--holo-text)" }}
-            >
-              {game.title.toUpperCase()}
-              <span
-                className={`absolute bottom-0 left-0 h-0.5 transition-all duration-300 ease-in-out ${
-                  isActive(game.href) ? "w-full" : "w-0 group-hover:w-full"
-                }`}
-                style={{ background: "var(--holo-blue)" }}
-              />
-            </Link>
+        <div ref={desktopRef} className="hidden md:flex items-center gap-4">
+          {GAME_CATEGORIES.map((category) => (
+            <div key={category.id} className="relative">
+              <button
+                type="button"
+                onClick={() => setOpenCategory((prev) => (prev === category.id ? null : category.id))}
+                aria-expanded={openCategory === category.id}
+                aria-haspopup="menu"
+                className="text-sm font-black tracking-widest relative flex items-center gap-1"
+                style={{ color: isCategoryActive(category.id) ? "var(--holo-blue)" : "var(--holo-text)" }}
+              >
+                {category.label.toUpperCase()}
+                <span className={`inline-block text-xs transition-transform ${openCategory === category.id ? "rotate-180" : ""}`}>▾</span>
+                <span
+                  className={`absolute bottom-0 left-0 h-0.5 transition-all duration-300 ease-in-out ${
+                    isCategoryActive(category.id) ? "w-full" : "w-0"
+                  }`}
+                  style={{ background: "var(--holo-blue)" }}
+                />
+              </button>
+
+              {openCategory === category.id && (
+                <div
+                  role="menu"
+                  className="absolute top-full left-0 mt-3 w-64 holo-card p-2 z-30 animate-slide-down overflow-hidden"
+                >
+                  {category.variants.map((variant) => (
+                    <Link
+                      key={variant.href}
+                      href={variant.href}
+                      role="menuitem"
+                      onClick={() => setOpenCategory(null)}
+                      className={`flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-bold transition-colors hover:bg-[var(--holo-off-white)] ${
+                        isActive(variant.href) ? "bg-[var(--holo-off-white)]" : ""
+                      }`}
+                      style={{ color: "var(--holo-text)" }}
+                    >
+                      <img src={variant.logo} alt={variant.alt} className="w-6 h-6 rounded-full object-cover flex-shrink-0" />
+                      <span>{variant.label.toUpperCase()}</span>
+                      {isActive(variant.href) && (
+                        <span className="ml-auto text-xs" style={{ color: "var(--holo-blue)" }}>
+                          ●
+                        </span>
+                      )}
+                    </Link>
+                  ))}
+                </div>
+              )}
+            </div>
           ))}
         </div>
 
@@ -124,33 +173,58 @@ export default function Navbar({
       {/* Mobile dropdown */}
       <div
         className={`md:hidden overflow-hidden transition-all duration-300 ease-in-out ${
-          isOpen ? "max-h-96 border-t" : "max-h-0"
+          isOpen ? "max-h-[500px] border-t" : "max-h-0"
         }`}
         style={{ borderColor: "var(--holo-border)" }}
       >
-        <div className="px-4 py-3 flex flex-col gap-4">
-          {GAMES.map((game: GameMode) => (
-            <Link
-              key={game.title}
-              href={game.href}
-              className="text-sm font-black tracking-widest relative group self-start"
-              style={{ color: "var(--holo-text)" }}
-              onClick={() => setIsOpen(false)}
+        <div className="px-4 py-3 flex flex-col gap-2">
+          {GAME_CATEGORIES.map((category) => (
+            <div
+              key={category.id}
+              className="rounded-xl"
+              style={{ border: "1px solid var(--holo-border)", background: "var(--holo-bg-card)" }}
             >
-              {game.title.toUpperCase()}
-              <span
-                className={`absolute bottom-0 left-0 h-0.5 transition-all duration-300 ease-in-out ${
-                  isActive(game.href) ? "w-full" : "w-0 group-hover:w-full"
-                }`}
-                style={{ background: "var(--holo-blue)" }}
-              />
-            </Link>
+              <button
+                type="button"
+                onClick={() => setExpandedCategory((prev) => (prev === category.id ? null : category.id))}
+                aria-expanded={expandedCategory === category.id}
+                className="w-full flex items-center justify-between px-3 py-2.5 text-sm font-black tracking-widest"
+                style={{ color: isCategoryActive(category.id) ? "var(--holo-blue)" : "var(--holo-text)" }}
+              >
+                <span>{category.label.toUpperCase()}</span>
+                <span className={`transition-transform ${expandedCategory === category.id ? "rotate-180" : ""}`}>▾</span>
+              </button>
+              <div className={`overflow-hidden transition-all duration-200 ${expandedCategory === category.id ? "max-h-64 border-t" : "max-h-0"}`} style={{ borderColor: "var(--holo-border)" }}>
+                <div className="flex flex-col p-2 gap-1">
+                  {category.variants.map((variant) => (
+                    <Link
+                      key={variant.href}
+                      href={variant.href}
+                      className={`flex items-center gap-2 px-2 py-1.5 rounded-lg text-sm font-bold ${isActive(variant.href) ? "bg-[var(--holo-off-white)]" : ""}`}
+                      style={{ color: "var(--holo-text)" }}
+                      onClick={() => {
+                        setIsOpen(false);
+                        setExpandedCategory(null);
+                      }}
+                    >
+                      <img src={variant.logo} alt={variant.alt} className="w-6 h-6 rounded-full object-cover" />
+                      {variant.label.toUpperCase()}
+                      {isActive(variant.href) && (
+                        <span className="ml-auto text-xs" style={{ color: "var(--holo-blue)" }}>
+                          ●
+                        </span>
+                      )}
+                    </Link>
+                  ))}
+                </div>
+              </div>
+            </div>
           ))}
 
           {/* Mobile user info */}
           {user && (
             <div
-              className="flex items-center gap-3 pt-2 border-t"
+              className="flex items-center gap-3 pt-2 border-t mt-1"
               style={{ borderColor: "var(--holo-border)" }}
             >
               {user.picture && (

@@ -1,18 +1,18 @@
 import Footer from "@/components/ui/Footer";
-import GameCard from "@/components/ui/GameCard";
-import { GameMode, GAMES } from "@/lib/game-modes";
+import CategoryDropdown from "@/components/ui/CategoryDropdown";
+import { GAME_CATEGORIES } from "@/lib/game-modes";
 import ThemeToggle from "@/components/theme/ThemeToggle";
 
 export default function Home() {
   return (
     <main
-      className="min-h-screen relative flex flex-col items-center justify-center mt-16"
+      className="min-h-screen relative flex flex-col items-center pt-8"
       style={{ background: "var(--holo-bg)" }}
     >
-<div className="absolute top-4 right-4">
-  <ThemeToggle />
-</div>
-      <div className="flex items-center gap-2 mb-1">
+      <div className="absolute top-4 right-4">
+        <ThemeToggle />
+      </div>
+      <div className="flex items-center gap-2 mb-1 mt-6">
         <div className="w-8 h-0.5 bg-gradient-to-r from-transparent to-[#00B4D8]" />
         <span className="text-[#00B4D8] text-xs">✦</span>
         <div className="w-8 h-0.5 bg-gradient-to-l from-transparent to-[#00B4D8]" />
@@ -31,9 +31,9 @@ export default function Home() {
         Prove your LOVE to your OSHI
       </p>
 
-      <div className="grid grid-cols-1 md:grid-cols gap-6 w-full max-w-2xl px-4">
-        {GAMES.map((game: GameMode) => (
-          <GameCard key={game.href} {...game} />
+      <div className="grid grid-cols-1 gap-6 w-full max-w-2xl px-4">
+        {GAME_CATEGORIES.map((category) => (
+          <CategoryDropdown key={category.id} category={category} />
         ))}
       </div>
 

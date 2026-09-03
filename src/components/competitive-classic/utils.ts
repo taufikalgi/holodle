@@ -99,7 +99,7 @@ export function formatTimer(ms: number) {
 
 export function redirectToLogin() {
   if (typeof window === "undefined") return;
-  sessionStorage.setItem(AUTH_REDIRECT_KEY, "/competitive-classic");
+  sessionStorage.setItem(AUTH_REDIRECT_KEY, "/classic/competitive");
   window.location.href = API_ENDPOINTS.googleAuthUrl;
 }
 

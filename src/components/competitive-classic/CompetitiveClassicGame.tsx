@@ -449,7 +449,7 @@ export default function CompetitiveClassicGame({
 
   return (
     <main className="min-h-screen" style={{ background: "var(--holo-bg)" }}>
-      <Navbar title="COMPETITIVE CLASSIC" user={user} onLogout={onLogout} />
+      <Navbar title="Classic - Competitive" user={user} onLogout={onLogout} />
 
       <div className="max-w-5xl mx-auto px-4 py-8">
         <div className="text-center mb-6">

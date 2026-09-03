@@ -121,7 +121,7 @@ function EndlessGamePage() {
   function handleBranchSelect(branches: string[]) {
     localStorage.setItem(LAST_BRANCHES_KEY, JSON.stringify(branches));
     setSelectedBranches(branches);
-    router.replace(`/endless-classic?branches=${branches.join(",")}`);
+    router.replace(`/classic/endless?branches=${branches.join(",")}`);
     setShowFilter(false);
   }
 
