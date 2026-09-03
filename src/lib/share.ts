@@ -29,7 +29,7 @@ export function buildGridShareText({
   url,
 }: GridShareOptions): string {
   const guessCount = guesses.length;
-  const score = maxGuesses > 0 ? `${guessCount}/${maxGuesses}` : "";
+  const score = maxGuesses > 0 ? `${won ? guessCount : "X"}/${maxGuesses}` : "";
   const header = score ? `${gameLabel} ${score}` : gameLabel;
   const shareUrl = url ?? (typeof window !== "undefined" ? window.location.href : "");
   const lines = [header, ""];
@@ -45,6 +45,7 @@ export function buildAvatarShareText({
   maxGuesses,
   streak = 0,
   guesses,
+  won = guesses.every(Boolean),
   url,
 }: {
   mode: string;
@@ -52,9 +53,10 @@ export function buildAvatarShareText({
   maxGuesses: number;
   streak?: number;
   guesses: boolean[];
+  won?: boolean;
   url?: string;
 }): string {
-  const score = maxGuesses > 0 ? `${guessCount}/${maxGuesses}` : "";
+  const score = maxGuesses > 0 ? `${won ? guessCount : "X"}/${maxGuesses}` : "";
   const streakPart = streak > 0 ? ` — Streak ${streak} 🔥` : "";
   const header = `HOLODLE ${mode}${score ? ` ${score}` : ""}${streakPart}`;
   const row = guesses.map((correct) => (correct ? "🟩" : "🟥")).join("");

@@ -23,7 +23,9 @@ import {
 } from "@/lib/avatar-api";
 import CropStage from "@/components/avatar/CropStage";
 import AvatarHowToPlay from "@/components/avatar/AvatarHowToPlay";
-import { isValidDailyState, type AvatarStats, type DailyState } from "@/components/avatar/types";
+import { isValidDailyState, type DailyState } from "@/components/avatar/types";
+import type { DailyStreakStats } from "@/lib/daily-streak";
+import { useDailyStreak } from "@/hooks/useDailyStreak";
 
 const MAX_GUESSES = 5;
 const ROUND_KEY = "holodle-avatar-round";
@@ -38,7 +40,7 @@ const emptyRound: DailyState = {
   date: getDateString(),
 };
 
-const emptyStats: AvatarStats = { streak: 0, bestStreak: 0, totalPlayed: 0, totalWon: 0 };
+const emptyStats: DailyStreakStats = { streak: 0, bestStreak: 0, totalPlayed: 0, totalWon: 0, lastPlayedDate: undefined };
 
 type RoundStatus = "loading" | "ready" | "noValid" | "error";
 
@@ -46,7 +48,8 @@ export default function AvatarGame() {
   const [state, setState] = useLocalStorageState<DailyState>(ROUND_KEY, emptyRound, (d) =>
     isValidDailyState(d, getDateString())
   );
-  const [stats, setStats] = useLocalStorageState<AvatarStats>(STATS_KEY, emptyStats);
+  const { stats, streakResetToast, dismissStreakResetPopup, recordDailyGameOver } =
+    useDailyStreak(STATS_KEY, emptyStats);
   const [roundStatus, setRoundStatus] = useState<RoundStatus>(state.talent ? "ready" : "loading");
   const [roundError, setRoundError] = useState("");
   const [validTalents, setValidTalents] = useState<Talent[]>(ALL_TALENTS);
@@ -164,16 +167,11 @@ export default function AvatarGame() {
         date: getDateString(),
       });
       if (gameOver) {
-        setStats({
-          streak: correct ? stats.streak + 1 : 0,
-          bestStreak: correct ? Math.max(stats.bestStreak, stats.streak + 1) : stats.bestStreak,
-          totalPlayed: stats.totalPlayed + 1,
-          totalWon: correct ? stats.totalWon + 1 : stats.totalWon,
-        });
+        recordDailyGameOver(getDateString(), correct);
       }
       clear();
     },
-    [state, stats, setState, setStats, clear]
+    [state, setState, recordDailyGameOver, clear]
   );
 
   return (
@@ -216,6 +214,45 @@ export default function AvatarGame() {
         </header>
 
         {showHowTo && <AvatarHowToPlay daily />}
+
+        {streakResetToast && (
+          <div
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4"
+            onClick={dismissStreakResetPopup}
+            role="dialog"
+            aria-modal="true"
+            aria-label="Streak reset"
+          >
+            <div
+              className="holo-card w-full max-w-sm p-6 text-center relative"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <button
+                type="button"
+                onClick={dismissStreakResetPopup}
+                aria-label="Close"
+                className="absolute top-3 right-3 w-7 h-7 rounded-full flex items-center justify-center text-sm font-bold"
+                style={{ background: "var(--holo-off-white)", color: "var(--holo-text-muted)" }}
+              >
+                ✕
+              </button>
+              <h3 className="font-black text-sm tracking-widest uppercase" style={{ color: "var(--holo-text)" }}>
+                Streak reset
+              </h3>
+              <p className="text-sm mt-2 font-semibold" style={{ color: "var(--holo-text-muted)" }}>
+                You missed a day. Your streak was reset to 0. Win today to start a new streak!
+              </p>
+              <button
+                type="button"
+                onClick={dismissStreakResetPopup}
+                className="mt-4 px-6 py-2 rounded-full text-sm font-bold text-white transition-opacity hover:opacity-80"
+                style={{ background: "var(--holo-blue)" }}
+              >
+                Got it
+              </button>
+            </div>
+          </div>
+        )}
 
         <StatsBar
           streak={stats.streak}
@@ -293,6 +330,7 @@ export default function AvatarGame() {
                         guessCount: state.guesses.length,
                         maxGuesses: MAX_GUESSES,
                         guesses: state.guesses.map((g) => g.correct),
+                        won: state.won,
                       })}
                     />
                   </div>

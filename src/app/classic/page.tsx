@@ -26,6 +26,8 @@ import { buildGridShareText } from "@/lib/share";
 import { useLocalStorageState } from "@/hooks/useLocalStorageState";
 import { useOutsideClick } from "@/hooks/useOutsideClick";
 import { useTalentSearch } from "@/hooks/useTalentSearch";
+import type { DailyStreakStats } from "@/lib/daily-streak";
+import { useDailyStreak } from "@/hooks/useDailyStreak";
 
 const MAX_GUESSES = 6;
 const STORAGE_KEY = "holodle-classic-state";
@@ -38,12 +40,7 @@ interface GameState {
   date: string;
 }
 
-interface GameStats {
-  streak: number;
-  bestStreak: number;
-  totalPlayed: number;
-  totalWon: number;
-}
+type GameStats = DailyStreakStats;
 
 function isValidGameState(data: unknown): data is GameState {
   if (typeof data !== "object" || data === null) return false;
@@ -58,11 +55,12 @@ function isValidGameState(data: unknown): data is GameState {
 }
 
 const emptyState: GameState = { guesses: [], gameOver: false, won: false, date: getDateString() };
-const emptyStats: GameStats = { streak: 0, bestStreak: 0, totalPlayed: 0, totalWon: 0 };
+const emptyStats: GameStats = { streak: 0, bestStreak: 0, totalPlayed: 0, totalWon: 0, lastPlayedDate: undefined };
 
 export default function ClassicGame() {
   const [state, setState] = useLocalStorageState<GameState>(STORAGE_KEY, emptyState, isValidGameState);
-  const [stats, setStats] = useLocalStorageState<GameStats>(STATS_STORAGE_KEY, emptyStats);
+  const { stats, streakResetToast, dismissStreakResetPopup, recordDailyGameOver } =
+    useDailyStreak(STATS_STORAGE_KEY, emptyStats);
   const [showHowTo, setShowHowTo] = useState(false);
   const [revealAnswer, setRevealAnswer] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -87,16 +85,11 @@ export default function ClassicGame() {
       const newState: GameState = { guesses: newGuesses, gameOver, won, date: getDateString() };
       setState(newState);
       if (gameOver) {
-        setStats({
-          streak: won ? stats.streak + 1 : 0,
-          bestStreak: won ? Math.max(stats.bestStreak, stats.streak + 1) : stats.bestStreak,
-          totalPlayed: stats.totalPlayed + 1,
-          totalWon: won ? stats.totalWon + 1 : stats.totalWon,
-        });
+        recordDailyGameOver(getDateString(), won);
       }
       clear();
     },
-    [state, stats, todayAnswer, setState, setStats, clear]
+    [state, todayAnswer, setState, recordDailyGameOver, clear]
   );
 
   const displayCurrentHistory = state.guesses
@@ -142,6 +135,45 @@ export default function ClassicGame() {
         </header>
 
         {showHowTo && <HowToPlay maxGuesses={MAX_GUESSES} classic={true} />}
+
+        {streakResetToast && (
+          <div
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4"
+            onClick={dismissStreakResetPopup}
+            role="dialog"
+            aria-modal="true"
+            aria-label="Streak reset"
+          >
+            <div
+              className="holo-card w-full max-w-sm p-6 text-center relative"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <button
+                type="button"
+                onClick={dismissStreakResetPopup}
+                aria-label="Close"
+                className="absolute top-3 right-3 w-7 h-7 rounded-full flex items-center justify-center text-sm font-bold"
+                style={{ background: "var(--holo-off-white)", color: "var(--holo-text-muted)" }}
+              >
+                ✕
+              </button>
+              <h3 className="font-black text-sm tracking-widest uppercase" style={{ color: "var(--holo-text)" }}>
+                Streak reset
+              </h3>
+              <p className="text-sm mt-2 font-semibold" style={{ color: "var(--holo-text-muted)" }}>
+                You missed a day. Your streak was reset to 0. Win today to start a new streak!
+              </p>
+              <button
+                type="button"
+                onClick={dismissStreakResetPopup}
+                className="mt-4 px-6 py-2 rounded-full text-sm font-bold text-white transition-opacity hover:opacity-80"
+                style={{ background: "var(--holo-blue)" }}
+              >
+                Got it
+              </button>
+            </div>
+          </div>
+        )}
 
         <StatsBar
           streak={stats.streak}
