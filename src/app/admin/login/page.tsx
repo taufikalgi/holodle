@@ -110,7 +110,7 @@ export default function AdminLoginPage() {
         )}
 
         <button
-          onClick={login}
+          onClick={() => login()}
           style={{
             width: "100%",
             display: "flex",

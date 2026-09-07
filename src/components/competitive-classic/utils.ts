@@ -97,9 +97,20 @@ export function formatTimer(ms: number) {
   return `${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
 }
 
-export function redirectToLogin() {
+export function redirectToLogin(path?: string) {
   if (typeof window === "undefined") return;
-  sessionStorage.setItem(AUTH_REDIRECT_KEY, "/classic/competitive");
+  const validPaths = new Set([
+    "/",
+    "/login",
+    "/classic/competitive",
+    "/classic/daily",
+    "/classic/endless",
+    "/avatar/daily",
+    "/avatar/endless",
+    "/admin",
+  ]);
+  const redirectPath = path && validPaths.has(path) ? path : "/classic/competitive";
+  sessionStorage.setItem(AUTH_REDIRECT_KEY, redirectPath);
   window.location.href = API_ENDPOINTS.googleAuthUrl;
 }
 

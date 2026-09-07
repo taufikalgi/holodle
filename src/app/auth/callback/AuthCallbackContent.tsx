@@ -7,6 +7,8 @@ type Status = "loading" | "success" | "error";
 
 const AUTH_REDIRECT_KEY = "auth_redirect_to";
 const AUTH_REDIRECT_PATHS = new Set([
+  "/",
+  "/login",
   "/classic/competitive",
   "/classic/daily",
   "/classic/endless",

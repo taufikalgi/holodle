@@ -45,75 +45,109 @@ export function useAuth({ requireAdmin }: UseAuthOptions = {}) {
   const [unauthorized, setUnauthorized] = useState(false);
 
   useEffect(() => {
+    const syncFromStorage = () => {
+      const token = getToken();
+      if (!token) {
+        setUser(null);
+        setLoading(false);
+        setUnauthorized(false);
+        return;
+      }
+      const payload = parseJwt(token);
+      if (!payload || Date.now() / 1000 > Number(payload.exp ?? 0)) {
+        localStorage.removeItem(TOKEN_KEY);
+        setUser(null);
+        setLoading(false);
+        return;
+      }
+      if (requireAdmin) {
+        const isAdmin =
+          payload.role === "admin" ||
+          payload.is_admin === true ||
+          (Array.isArray(payload.roles) && (payload.roles as string[]).includes("admin"));
+        if (!isAdmin) {
+          setUnauthorized(true);
+          setUser(null);
+          setLoading(false);
+          return;
+        }
+      }
+      const userId = String(payload.user_id ?? payload.sub ?? "");
+      const email = String(payload.email ?? "");
+      if (!userId || !email) {
+        localStorage.removeItem(TOKEN_KEY);
+        setUser(null);
+        setLoading(false);
+        return;
+      }
+      const name = email.split("@")[0];
+      fetch(`${API_ENDPOINTS.apiUrl}/api/v1/user/${userId}/picture`, {
+        headers: { Authorization: `Bearer ${token}` },
+      })
+        .then((r) => (r.ok ? r.json() : null))
+        .then((data) => {
+          setUser({ id: userId, email, name, picture: data?.data?.picture_url });
+        })
+        .catch(() => {
+          setUser({ id: userId, email, name });
+        })
+        .finally(() => setLoading(false));
+    };
+
     const hash = window.location.hash;
     if (hash.startsWith("#token=")) {
       localStorage.setItem(TOKEN_KEY, decodeURIComponent(hash.slice(7)));
       window.history.replaceState(null, "", window.location.pathname + window.location.search);
     }
 
-    const token = getToken();
-    if (!token) {
-      setLoading(false);
-      return;
-    }
+    syncFromStorage();
 
-    const payload = parseJwt(token);
-    if (!payload) {
-      localStorage.removeItem(TOKEN_KEY);
-      setLoading(false);
-      return;
-    }
+    const onAuthChange = () => syncFromStorage();
+    const onStorage = (e: StorageEvent) => {
+      if (e.key === TOKEN_KEY) syncFromStorage();
+    };
+    window.addEventListener("holodle:auth-change", onAuthChange);
+    window.addEventListener("storage", onStorage);
+    return () => {
+      window.removeEventListener("holodle:auth-change", onAuthChange);
+      window.removeEventListener("storage", onStorage);
+    };
+  }, [requireAdmin]);
 
-    if (Date.now() / 1000 > Number(payload.exp ?? 0)) {
-      localStorage.removeItem(TOKEN_KEY);
-      setLoading(false);
-      return;
-    }
-
-    if (requireAdmin) {
-      const isAdmin =
-        payload.role === "admin" ||
-        payload.is_admin === true ||
-        (Array.isArray(payload.roles) && (payload.roles as string[]).includes("admin"));
-      if (!isAdmin) {
-        setUnauthorized(true);
-        setLoading(false);
-        return;
+  const login = useCallback(
+    (redirectTo?: string) => {
+      const validPaths = new Set([
+        "/",
+        "/login",
+        "/classic/competitive",
+        "/classic/daily",
+        "/classic/endless",
+        "/avatar/daily",
+        "/avatar/endless",
+        "/admin",
+      ]);
+      let redirectPath: string;
+      if (redirectTo && validPaths.has(redirectTo)) {
+        redirectPath = redirectTo;
+      } else if (requireAdmin) {
+        redirectPath = "/admin";
+      } else {
+        redirectPath = "/classic/competitive";
       }
-    }
-
-    const userId = String(payload.user_id ?? payload.sub ?? "");
-    const email = String(payload.email ?? "");
-    if (!userId || !email) {
-      localStorage.removeItem(TOKEN_KEY);
-      setLoading(false);
-      return;
-    }
-
-    const name = email.split("@")[0];
-    fetch(`${API_ENDPOINTS.apiUrl}/api/v1/user/${userId}/picture`, {
-      headers: { Authorization: `Bearer ${token}` },
-    })
-      .then((r) => (r.ok ? r.json() : null))
-      .then((data) => {
-        setUser({ id: userId, email, name, picture: data?.data?.picture_url });
-      })
-      .catch(() => {
-        setUser({ id: userId, email, name });
-      })
-      .finally(() => setLoading(false));
-  }, [requireAdmin]);
-
-  const login = useCallback(() => {
-    const redirectPath = requireAdmin ? "/admin" : "/classic/competitive";
-    sessionStorage.setItem(AUTH_REDIRECT_KEY, redirectPath);
-    window.location.href = API_ENDPOINTS.googleAuthUrl;
-  }, [requireAdmin]);
+      sessionStorage.setItem(AUTH_REDIRECT_KEY, redirectPath);
+      window.location.href = API_ENDPOINTS.googleAuthUrl;
+    },
+    [requireAdmin]
+  );
 
   const logout = useCallback(() => {
     localStorage.removeItem(TOKEN_KEY);
     localStorage.removeItem(COMPETITIVE_SESSION_KEY);
     setUser(null);
+    setLoading(false);
+    setUnauthorized(false);
+    // Notify other useAuth instances (e.g. Navbar) in same tab
+    window.dispatchEvent(new Event("holodle:auth-change"));
   }, []);
 
   return { user, loading, unauthorized, login, logout };
