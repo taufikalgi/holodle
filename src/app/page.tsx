@@ -1,17 +1,13 @@
 import Footer from "@/components/ui/Footer";
 import CategoryDropdown from "@/components/ui/CategoryDropdown";
+import Navbar from "@/components/ui/Navbar";
 import { GAME_CATEGORIES } from "@/lib/game-modes";
-import ThemeToggle from "@/components/theme/ThemeToggle";
 
 export default function Home() {
   return (
-    <main
-      className="min-h-screen relative flex flex-col items-center pt-8"
-      style={{ background: "var(--holo-bg)" }}
-    >
-      <div className="absolute top-4 right-4">
-        <ThemeToggle />
-      </div>
+    <div className="min-h-screen flex flex-col" style={{ background: "var(--holo-bg)" }}>
+      <Navbar title="Holodle" />
+      <main className="flex-1 flex flex-col items-center pt-8">
       <div className="flex items-center gap-2 mb-1 mt-6">
         <div className="w-8 h-0.5 bg-gradient-to-r from-transparent to-[#00B4D8]" />
         <span className="text-[#00B4D8] text-xs">✦</span>
@@ -38,6 +34,7 @@ export default function Home() {
       </div>
 
       <Footer />
-    </main>
+      </main>
+    </div>
   );
 }
