@@ -1,7 +1,6 @@
 "use client";
 
 import { useAuth } from "@/hooks/useAuth";
-import AuthGate from "@/components/competitive-classic/AuthGate";
 import CompetitiveClassicGame from "@/components/competitive-classic/CompetitiveClassicGame";
 
 export default function CompetitiveClassicPage() {
@@ -23,7 +22,5 @@ export default function CompetitiveClassicPage() {
     );
   }
 
-  if (!user) return <AuthGate onLogin={login} />;
-
-  return <CompetitiveClassicGame user={user} onLogout={logout} />;
+  return <CompetitiveClassicGame user={user} onLogin={login} onLogout={logout} />;
 }

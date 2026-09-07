@@ -12,6 +12,8 @@ import {
 import GuessRow from "@/components/ui/GuessRow";
 import { useOutsideClick } from "@/hooks/useOutsideClick";
 import { ApiError } from "@/lib/errors";
+import { API_ENDPOINTS } from "@/app/api/apiEndpoints";
+import { getToken } from "@/hooks/useAuth";
 import {
   authedJson,
   addDays,
@@ -31,6 +33,7 @@ import HeaderStat from "./HeaderStat";
 import LeaderboardModal from "./LeaderboardModal";
 import FinalResultCard from "./FinalResultCard";
 import StartSessionCard from "./StartSessionCard";
+import LoginToPlayCard from "./LoginToPlayCard";
 import type { ApiTalent } from "@/lib/talents";
 import type {
   AuthUser,
@@ -48,9 +51,11 @@ const MIN_MONTH = "2026-06";
 
 export default function CompetitiveClassicGame({
   user,
+  onLogin,
   onLogout,
 }: {
-  user: AuthUser;
+  user: AuthUser | null;
+  onLogin: (redirectTo?: string) => void;
   onLogout: () => void;
 }) {
   const [talents, setTalents] = useState<TalentChoice[]>([]);
@@ -116,46 +121,66 @@ export default function CompetitiveClassicGame({
     [period, week, month]
   );
 
+  const fetchPublicJson = useCallback(
+    async <T,>(path: string): Promise<T> => {
+      const token = getToken();
+      const res = await fetch(`${API_ENDPOINTS.apiUrl}${path}`, {
+        headers: {
+          "Content-Type": "application/json",
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+      });
+      const json = (await res.json().catch(() => null)) as
+        | { success: boolean; data: T; message?: string }
+        | null;
+      if (!res.ok) {
+        throw new ApiError(json?.message ?? `Request failed (${res.status})`, res.status);
+      }
+      if (!json || json.success === false) {
+        throw new ApiError(json?.message ?? "Request failed", res.status);
+      }
+      return json.data;
+    },
+    []
+  );
+
   const fetchLeaderboard = useCallback(async () => {
     setLeaderboardLoading(true);
     setLeaderboardLoadingMore(false);
     setLeaderboard([]);
     setLeaderboardPage(0);
     try {
-      const data = await authedJson<LeaderboardResponse>(buildLeaderboardUrl(1), {
-        method: "GET",
-      });
+      const data = await fetchPublicJson<LeaderboardResponse>(buildLeaderboardUrl(1));
       setLeaderboard(data.entries);
       setLeaderboardTotal(data.total);
       setLeaderboardHasMore(data.has_more);
       setLeaderboardPage(data.page);
     } catch (err) {
-      if (err instanceof ApiError && err.status === 401) return;
       setSessionError(err instanceof Error ? err.message : "Failed to load leaderboard");
     } finally {
       setLeaderboardLoading(false);
     }
-  }, [buildLeaderboardUrl]);
+  }, [buildLeaderboardUrl, fetchPublicJson]);
 
   const loadMoreLeaderboard = useCallback(async () => {
     if (leaderboardLoading || leaderboardLoadingMore || !leaderboardHasMore) return;
     setLeaderboardLoadingMore(true);
     try {
-      const data = await authedJson<LeaderboardResponse>(buildLeaderboardUrl(leaderboardPage + 1), {
-        method: "GET",
-      });
+      const data = await fetchPublicJson<LeaderboardResponse>(
+        buildLeaderboardUrl(leaderboardPage + 1)
+      );
       setLeaderboard((prev) => [...prev, ...data.entries]);
       setLeaderboardTotal(data.total);
       setLeaderboardHasMore(data.has_more);
       setLeaderboardPage(data.page);
     } catch (err) {
-      if (err instanceof ApiError && err.status === 401) return;
       setSessionError(err instanceof Error ? err.message : "Failed to load leaderboard");
     } finally {
       setLeaderboardLoadingMore(false);
     }
   }, [
     buildLeaderboardUrl,
+    fetchPublicJson,
     leaderboardHasMore,
     leaderboardLoading,
     leaderboardLoadingMore,
@@ -357,6 +382,11 @@ export default function CompetitiveClassicGame({
   );
 
   useEffect(() => {
+    if (!user) {
+      setTalentsLoading(false);
+      setSessionLoading(false);
+      return;
+    }
     let alive = true;
 
     const loadTalents = async () => {
@@ -376,7 +406,7 @@ export default function CompetitiveClassicGame({
       }
     };
 
-    if (user) void loadTalents();
+    void loadTalents();
     return () => {
       alive = false;
     };
@@ -431,7 +461,7 @@ export default function CompetitiveClassicGame({
   const displayCurrentHistory = [...currentRoundHistory].reverse();
   const displayPreviousRounds = [...previousRounds].reverse();
 
-  if (sessionLoading || talentsLoading) {
+  if (user && (sessionLoading || talentsLoading)) {
     return (
       <main
         className="min-h-screen flex items-center justify-center"
@@ -449,7 +479,12 @@ export default function CompetitiveClassicGame({
 
   return (
     <main className="min-h-screen" style={{ background: "var(--holo-bg)" }}>
-      <Navbar title="Classic - Competitive" user={user} onLogout={onLogout} />
+      <Navbar
+        title="Classic - Competitive"
+        user={user ?? null}
+        onLogout={onLogout}
+        onLogin={onLogin}
+      />
 
       <div className="max-w-5xl mx-auto px-4 py-8">
         <div className="text-center mb-6">
@@ -520,7 +555,9 @@ export default function CompetitiveClassicGame({
           </div>
         )}
 
-        {sessionEnded && session ? (
+        {!user ? (
+          <LoginToPlayCard onLogin={() => onLogin("/classic/competitive")} />
+        ) : sessionEnded && session ? (
           <FinalResultCard
             session={session}
             historyCount={totalGuessCount}
