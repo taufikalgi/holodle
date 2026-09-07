@@ -6,7 +6,9 @@ import { useEffect, useRef, useState } from "react";
 import { usePathname } from "next/navigation";
 import { GAME_CATEGORIES } from "@/lib/game-modes";
 import ThemeToggle from "@/components/theme/ThemeToggle";
+import GoogleIcon from "@/components/ui/GoogleIcon";
 import { useOutsideClick } from "@/hooks/useOutsideClick";
+import { useAuth } from "@/hooks/useAuth";
 
 interface User {
   name: string;
@@ -15,12 +17,14 @@ interface User {
 
 export default function Navbar({
   title,
-  user,
-  onLogout,
+  user: userProp,
+  onLogout: onLogoutProp,
+  onLogin: onLoginProp,
 }: {
   title: string;
-  user?: User;
+  user?: User | null;
   onLogout?: () => void;
+  onLogin?: (redirectTo?: string) => void;
 }) {
   const [isOpen, setIsOpen] = useState(false);
   const [openCategory, setOpenCategory] = useState<string | null>(null);
@@ -28,6 +32,18 @@ export default function Navbar({
   const pathname = usePathname();
   const isActive = (href: string) => pathname === href;
   const isCategoryActive = (id: string) => pathname.startsWith(`/${id}`);
+  const { user: authUser, loading: authLoading, login: authLogin, logout: authLogout } = useAuth();
+  const hasExternalUser = userProp !== undefined;
+  const user = hasExternalUser ? (userProp as User | null) : authUser;
+  const effectiveLoading = hasExternalUser ? false : authLoading;
+  const onLogout = onLogoutProp ?? authLogout;
+  const handleLogin = () => {
+    if (onLoginProp) {
+      onLoginProp(pathname);
+    } else {
+      authLogin(pathname);
+    }
+  };
 
   const desktopRef = useRef<HTMLDivElement>(null);
   useOutsideClick(desktopRef, () => setOpenCategory(null));
@@ -110,31 +126,48 @@ export default function Navbar({
 
         {/* Right-side cluster */}
         <div className="ml-auto flex items-center gap-3">
-          {user && (
-            <div className="hidden md:flex items-center gap-3">
-              {user.picture && (
-                <Image
-                  src={user.picture}
-                  alt={user.name}
-                  width={28}
-                  height={28}
-                  className="rounded-full"
-                  style={{ border: "2px solid var(--holo-border)" }}
-                />
-              )}
-              <span className="text-xs font-semibold" style={{ color: "var(--holo-text)" }}>
-                {user.name}
-              </span>
-              {onLogout && (
+          {!effectiveLoading && (
+            <>
+              {user ? (
+                <div className="hidden md:flex items-center gap-3">
+                  {user.picture && (
+                    <Image
+                      src={user.picture}
+                      alt={user.name}
+                      width={28}
+                      height={28}
+                      className="rounded-full"
+                      style={{ border: "2px solid var(--holo-border)" }}
+                    />
+                  )}
+                  <span className="text-xs font-semibold" style={{ color: "var(--holo-text)" }}>
+                    {user.name}
+                  </span>
+                  {onLogout && (
+                    <button
+                      onClick={onLogout}
+                      className="text-xs font-semibold px-3 py-1 rounded-full transition-opacity hover:opacity-70"
+                      style={{ background: "#ef4444", color: "white", border: "none" }}
+                    >
+                      Sign out
+                    </button>
+                  )}
+                </div>
+              ) : (
                 <button
-                  onClick={onLogout}
-                  className="text-xs font-semibold px-3 py-1 rounded-full transition-opacity hover:opacity-70"
-                  style={{ background: "#ef4444", color: "white", border: "none" }}
+                  onClick={handleLogin}
+                  className="hidden md:inline-flex items-center gap-2 text-xs font-semibold px-3 py-1.5 rounded-full transition-opacity hover:opacity-80"
+                  style={{
+                    border: "1.5px solid var(--holo-border)",
+                    background: "var(--holo-bg-card)",
+                    color: "var(--holo-text)",
+                  }}
                 >
-                  Sign out
+                  <GoogleIcon />
+                  Sign in
                 </button>
               )}
-            </div>
+            </>
           )}
 
           {/* Hamburger button */}
@@ -221,38 +254,60 @@ export default function Navbar({
             </div>
           ))}
 
-          {/* Mobile user info */}
-          {user && (
-            <div
-              className="flex items-center gap-3 pt-2 border-t mt-1"
-              style={{ borderColor: "var(--holo-border)" }}
-            >
-              {user.picture && (
-                <Image
-                  src={user.picture}
-                  alt={user.name}
-                  width={28}
-                  height={28}
-                  className="rounded-full"
-                  style={{ border: "2px solid var(--holo-border)" }}
-                />
-              )}
-              <span className="text-xs font-semibold" style={{ color: "var(--holo-text)" }}>
-                {user.name}
-              </span>
-              {onLogout && (
-                <button
-                  onClick={() => {
-                    onLogout();
-                    setIsOpen(false);
-                  }}
-                  className="ml-auto text-xs font-semibold px-3 py-1 rounded-full transition-opacity hover:opacity-70"
-                  style={{ background: "#ef4444", color: "white", border: "none" }}
+          {/* Mobile auth */}
+          {!effectiveLoading && (
+            <>
+              {user ? (
+                <div
+                  className="flex items-center gap-3 pt-2 border-t mt-1"
+                  style={{ borderColor: "var(--holo-border)" }}
                 >
-                  Sign out
-                </button>
+                  {user.picture && (
+                    <Image
+                      src={user.picture}
+                      alt={user.name}
+                      width={28}
+                      height={28}
+                      className="rounded-full"
+                      style={{ border: "2px solid var(--holo-border)" }}
+                    />
+                  )}
+                  <span className="text-xs font-semibold" style={{ color: "var(--holo-text)" }}>
+                    {user.name}
+                  </span>
+                  {onLogout && (
+                    <button
+                      onClick={() => {
+                        onLogout();
+                        setIsOpen(false);
+                      }}
+                      className="ml-auto text-xs font-semibold px-3 py-1 rounded-full transition-opacity hover:opacity-70"
+                      style={{ background: "#ef4444", color: "white", border: "none" }}
+                    >
+                      Sign out
+                    </button>
+                  )}
+                </div>
+              ) : (
+                <div className="pt-2 border-t mt-1" style={{ borderColor: "var(--holo-border)" }}>
+                  <button
+                    onClick={() => {
+                      handleLogin();
+                      setIsOpen(false);
+                    }}
+                    className="w-full inline-flex items-center justify-center gap-2 text-xs font-semibold px-3 py-2 rounded-full transition-opacity hover:opacity-80"
+                    style={{
+                      border: "1.5px solid var(--holo-border)",
+                      background: "var(--holo-bg-card)",
+                      color: "var(--holo-text)",
+                    }}
+                  >
+                    <GoogleIcon />
+                    Sign in with Google
+                  </button>
+                </div>
               )}
-            </div>
+            </>
           )}
         </div>
       </div>
