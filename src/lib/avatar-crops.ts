@@ -1,6 +1,4 @@
-"use client";
-
-import { authFetch } from "@/hooks/useAuth";
+import { authFetch, readEnvelope } from "./api-client";
 import { ApiError } from "./errors";
 import type { Talent } from "./talent-api";
 
@@ -47,21 +45,6 @@ const roundBox = (box: CropAreaData) => ({
   difficulty: box.difficulty,
 });
 
-interface Envelope<T> {
-  success?: boolean;
-  message?: string;
-  data?: T;
-}
-
-async function read<T>(res: Response): Promise<Envelope<T>> {
-  const json = (await res.json().catch(() => null)) as Envelope<T> | null;
-  if (!res.ok) {
-    const message = (json && "error" in json && (json as { error?: string }).error) || null;
-    throw new ApiError(message ?? `Request failed (${res.status})`, res.status);
-  }
-  return json ?? {};
-}
-
 const areasPath = (talentId: string) =>
   `/api/v1/talent/${encodeURIComponent(talentId)}/areas`;
 const areaPath = (talentId: string, areaId: string) =>
@@ -69,8 +52,8 @@ const areaPath = (talentId: string, areaId: string) =>
 
 export async function fetchAreas(talentId: string): Promise<CropArea[]> {
   const res = await authFetch(areasPath(talentId));
-  const json = await read<{ talent_id: string; areas: CropArea[] }>(res);
-  return json.data?.areas ?? [];
+  const data = await readEnvelope<{ talent_id: string; areas: CropArea[] }>(res);
+  return data?.areas ?? [];
 }
 
 export async function createArea(talentId: string, box: CropAreaData): Promise<CropArea> {
@@ -78,9 +61,9 @@ export async function createArea(talentId: string, box: CropAreaData): Promise<C
     method: "POST",
     body: JSON.stringify(roundBox(box)),
   });
-  const json = await read<CropArea>(res);
-  if (!json.data?.id) throw new ApiError("failed to create crop area", 500);
-  return json.data;
+  const data = await readEnvelope<CropArea>(res);
+  if (!data?.id) throw new ApiError("failed to create crop area", 500);
+  return data;
 }
 
 export async function updateArea(
@@ -92,12 +75,12 @@ export async function updateArea(
     method: "PUT",
     body: JSON.stringify(roundBox(box)),
   });
-  const json = await read<CropArea>(res);
-  if (!json.data?.id) throw new ApiError("failed to update crop area", 500);
-  return json.data;
+  const data = await readEnvelope<CropArea>(res);
+  if (!data?.id) throw new ApiError("failed to update crop area", 500);
+  return data;
 }
 
 export async function deleteArea(talentId: string, areaId: string): Promise<void> {
   const res = await authFetch(areaPath(talentId, areaId), { method: "DELETE" });
-  await read<null>(res);
+  await readEnvelope<null>(res);
 }

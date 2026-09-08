@@ -12,8 +12,7 @@ import {
 import GuessRow from "@/components/ui/GuessRow";
 import { useOutsideClick } from "@/hooks/useOutsideClick";
 import { ApiError } from "@/lib/errors";
-import { API_ENDPOINTS } from "@/app/api/apiEndpoints";
-import { getToken } from "@/hooks/useAuth";
+import { authedJson as publicJson } from "@/lib/api-client";
 import {
   authedJson,
   addDays,
@@ -122,25 +121,7 @@ export default function CompetitiveClassicGame({
   );
 
   const fetchPublicJson = useCallback(
-    async <T,>(path: string): Promise<T> => {
-      const token = getToken();
-      const res = await fetch(`${API_ENDPOINTS.apiUrl}${path}`, {
-        headers: {
-          "Content-Type": "application/json",
-          ...(token ? { Authorization: `Bearer ${token}` } : {}),
-        },
-      });
-      const json = (await res.json().catch(() => null)) as
-        | { success: boolean; data: T; message?: string }
-        | null;
-      if (!res.ok) {
-        throw new ApiError(json?.message ?? `Request failed (${res.status})`, res.status);
-      }
-      if (!json || json.success === false) {
-        throw new ApiError(json?.message ?? "Request failed", res.status);
-      }
-      return json.data;
-    },
+    async <T,>(path: string): Promise<T> => publicJson<T>(path),
     []
   );
 

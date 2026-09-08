@@ -1,4 +1,10 @@
+import { apiBaseUrl, googleAuthUrl } from "./api-client";
+
 export const config = {
-  googleAuthUrl: process.env.NEXT_PUBLIC_GOOGLE_AUTH_URL!,
-  apiUrl: process.env.NEXT_PUBLIC_API_URL!,
+  get googleAuthUrl() {
+    return googleAuthUrl();
+  },
+  get apiUrl() {
+    return apiBaseUrl();
+  },
 };

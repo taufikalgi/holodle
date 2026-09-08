@@ -1,7 +1,9 @@
 import { ApiError } from "@/lib/errors";
-import { getToken } from "@/hooks/useAuth";
-import { API_ENDPOINTS } from "@/app/api/apiEndpoints";
-import type { SessionHistoryState, GuessEntry, ApiResponse } from "./types";
+import {
+  authedJson as sharedAuthedJson,
+  googleAuthUrl,
+} from "@/lib/api-client";
+import type { SessionHistoryState, GuessEntry } from "./types";
 
 const AUTH_REDIRECT_KEY = "auth_redirect_to";
 const HISTORY_KEY_PREFIX = "competitive-classic-history:";
@@ -111,35 +113,17 @@ export function redirectToLogin(path?: string) {
   ]);
   const redirectPath = path && validPaths.has(path) ? path : "/classic/competitive";
   sessionStorage.setItem(AUTH_REDIRECT_KEY, redirectPath);
-  window.location.href = API_ENDPOINTS.googleAuthUrl;
+  window.location.href = googleAuthUrl();
 }
 
 export async function authedJson<T>(path: string, init?: RequestInit): Promise<T> {
-  const token = getToken();
-  const headers = new Headers(init?.headers);
-  headers.set("Content-Type", "application/json");
-  if (token) headers.set("Authorization", `Bearer ${token}`);
-
-  const res = await fetch(`${API_ENDPOINTS.apiUrl}${path}`, {
-    ...init,
-    headers,
-    credentials: "include",
-  });
-
-  if (res.status === 401) {
-    localStorage.removeItem("token");
-    redirectToLogin();
-    throw new ApiError("Unauthorized", 401);
+  try {
+    return await sharedAuthedJson<T>(path, { ...init, credentials: "include" });
+  } catch (err) {
+    if (err instanceof ApiError && err.status === 401) {
+      localStorage.removeItem("token");
+      redirectToLogin();
+    }
+    throw err;
   }
-
-  const json = (await res.json().catch(() => null)) as ApiResponse<T> | null;
-  if (!res.ok) {
-    throw new ApiError(json?.message ?? `Request failed (${res.status})`, res.status);
-  }
-
-  if (!json || json.success === false) {
-    throw new ApiError(json?.message ?? "Request failed", res.status);
-  }
-
-  return json.data;
 }

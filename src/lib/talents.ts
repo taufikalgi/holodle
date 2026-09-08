@@ -1,5 +1,4 @@
-import { config } from "./config";
-import { ApiError } from "./errors";
+import { publicJson } from "./api-client";
 
 export type Branch = "JP" | "EN" | "ID" | "DEV_IS" | "Stars JP" | "Stars EN";
 
@@ -57,24 +56,9 @@ export function normalizeTalent(talent: ApiTalent): Talent {
   };
 }
 
-type ApiResponse<T> = {
-  success: boolean;
-  message: string;
-  data: T;
-};
-
 export const TALENTS: Talent[] = await (async () => {
-  const res = await fetch(`${config.apiUrl}/api/v1/talent/`);
-  const json = (await res.json().catch(() => null)) as ApiResponse<ApiTalent[]> | null;
-  if (!res.ok) {
-    throw new ApiError(json?.message ?? `Request failed (${res.status})`, res.status);
-  }
-
-  if (!json || json.success === false) {
-    throw new ApiError(json?.message ?? "Request failed", res.status);
-  }
-
-  return json.data.map(normalizeTalent);
+  const data = await publicJson<ApiTalent[]>("/api/v1/talent/");
+  return data.map(normalizeTalent);
 })();
 
 export const ALL_TALENTS = TALENTS.filter(

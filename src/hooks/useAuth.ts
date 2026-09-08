@@ -2,7 +2,14 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { parseJwt } from "@/lib/jwt";
-import { API_ENDPOINTS } from "@/app/api/apiEndpoints";
+import {
+  apiBaseUrl,
+  authFetch,
+  getToken,
+  googleAuthUrl,
+} from "@/lib/api-client";
+
+export { authFetch, getToken };
 
 const TOKEN_KEY = "token";
 const AUTH_REDIRECT_KEY = "auth_redirect_to";
@@ -13,26 +20,6 @@ export interface AuthUser {
   email: string;
   name: string;
   picture?: string;
-}
-
-/** Returns the stored JWT or null */
-export function getToken(): string | null {
-  if (typeof window === "undefined") return null;
-  return localStorage.getItem(TOKEN_KEY);
-}
-
-/** Authenticated fetch wrapper */
-export async function authFetch(path: string, init?: RequestInit): Promise<Response> {
-  const token = getToken();
-  const base = API_ENDPOINTS.apiUrl ?? "http://localhost:8080";
-  return fetch(`${base}${path}`, {
-    ...init,
-    headers: {
-      "Content-Type": "application/json",
-      ...(init?.headers ?? {}),
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
-    },
-  });
 }
 
 interface UseAuthOptions {
@@ -81,7 +68,7 @@ export function useAuth({ requireAdmin }: UseAuthOptions = {}) {
         return;
       }
       const name = email.split("@")[0];
-      fetch(`${API_ENDPOINTS.apiUrl}/api/v1/user/${userId}/picture`, {
+      fetch(`${apiBaseUrl()}/api/v1/user/${userId}/picture`, {
         headers: { Authorization: `Bearer ${token}` },
       })
         .then((r) => (r.ok ? r.json() : null))
@@ -135,7 +122,7 @@ export function useAuth({ requireAdmin }: UseAuthOptions = {}) {
         redirectPath = "/classic/competitive";
       }
       sessionStorage.setItem(AUTH_REDIRECT_KEY, redirectPath);
-      window.location.href = API_ENDPOINTS.googleAuthUrl;
+      window.location.href = googleAuthUrl();
     },
     [requireAdmin]
   );
