@@ -1,14 +1,14 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { useAuth, getToken } from "@/hooks/useAuth";
+import { useAuth } from "@/hooks/useAuth";
 import { useRouter } from "next/navigation";
 import type { Talent } from "@/lib/talent-api";
+import { fetchTalentList } from "@/lib/queries";
+import { ApiError } from "@/lib/errors";
 import TalentModal from "@/components/ui/TalentModal";
 import { AdminToolbar, AdminTable, compareTalentsByKey, AdminToast } from "@/components/admin";
 import type { SortKey, SortDirection } from "@/components/admin";
-
-const API_BASE = `${process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8080"}/api/v1`;
 
 export default function AdminPage() {
   const { user, loading: authLoading, login, logout } = useAuth({ requireAdmin: true });
@@ -33,18 +33,12 @@ export default function AdminPage() {
     setLoading(true);
     setError("");
     try {
-      const token = getToken();
-      const res = await fetch(`${API_BASE}/talent/`, {
-        headers: token ? { Authorization: `Bearer ${token}` } : {},
-      });
-      if (res.status === 401) {
+      setTalents(await fetchTalentList());
+    } catch (e: unknown) {
+      if (e instanceof ApiError && e.status === 401) {
         router.push("/admin/login");
         return;
       }
-      const data = await res.json();
-      if (!data.success) throw new Error(data.message);
-      setTalents(data.data ?? []);
-    } catch (e: unknown) {
       setError(e instanceof Error ? e.message : "Failed to fetch talents");
     } finally {
       setLoading(false);
@@ -300,7 +294,6 @@ export default function AdminPage() {
           initial={modal.mode === "edit" ? modal.talent : null}
           onClose={() => setModal(null)}
           onSaved={onSaved}
-          apiBase={API_BASE}
         />
       )}
 

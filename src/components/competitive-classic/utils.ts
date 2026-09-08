@@ -1,8 +1,4 @@
-import { ApiError } from "@/lib/errors";
-import {
-  authedJson as sharedAuthedJson,
-  googleAuthUrl,
-} from "@/lib/api-client";
+import { googleAuthUrl } from "@/lib/api-client";
 import type { AuthUser, GameSession, GuessEntry, SessionHistoryState } from "./types";
 
 const AUTH_REDIRECT_KEY = "auth_redirect_to";
@@ -114,18 +110,6 @@ export function redirectToLogin(path?: string) {
   const redirectPath = path && validPaths.has(path) ? path : "/classic/competitive";
   sessionStorage.setItem(AUTH_REDIRECT_KEY, redirectPath);
   window.location.href = googleAuthUrl();
-}
-
-export async function authedJson<T>(path: string, init?: RequestInit): Promise<T> {
-  try {
-    return await sharedAuthedJson<T>(path, { ...init, credentials: "include" });
-  } catch (err) {
-    if (err instanceof ApiError && err.status === 401) {
-      localStorage.removeItem("token");
-      redirectToLogin();
-    }
-    throw err;
-  }
 }
 
 /** Single deterministic UI state for the competitive session flow. */

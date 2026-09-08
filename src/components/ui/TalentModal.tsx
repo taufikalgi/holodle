@@ -2,14 +2,13 @@
 
 import { useEffect, useRef, useState } from "react";
 import type { Talent, TalentFormData } from "@/lib/talent-api";
-import { getToken } from "@/hooks/useAuth";
+import { saveTalent } from "@/lib/commands";
 
 interface Props {
   mode: "create" | "edit";
   initial?: Talent | null;
   onClose: () => void;
   onSaved: () => void;
-  apiBase: string;
 }
 
 const MONTHS = [
@@ -39,7 +38,7 @@ const EMPTY: TalentFormData = {
   alt_names: [],
 };
 
-export default function TalentModal({ mode, initial, onClose, onSaved, apiBase }: Props) {
+export default function TalentModal({ mode, initial, onClose, onSaved }: Props) {
   const [form, setForm] = useState<TalentFormData>(initial ? { ...initial } : { ...EMPTY });
   const [altInput, setAltInput] = useState(initial?.alt_names?.join(", ") ?? "");
   const [error, setError] = useState("");
@@ -67,31 +66,18 @@ export default function TalentModal({ mode, initial, onClose, onSaved, apiBase }
     }
     setLoading(true);
 
-    const payload = {
-      ...form,
-      alt_names: altInput
-        .split(",")
-        .map((s) => s.trim())
-        .filter(Boolean),
-      debut_year: form.debut_year ? Number(form.debut_year) : null,
-      height: form.height ? Number(form.height) : null,
-      ...(mode === "edit" && initial ? { id: initial.id } : {}),
-    };
-
     try {
-      const url = mode === "create" ? `${apiBase}/talent/create` : `${apiBase}/talent/update`;
-      const token = getToken();
-      const res = await fetch(url, {
-        method: mode === "create" ? "POST" : "PUT",
-        headers: {
-          "Content-Type": "application/json",
-          ...(token ? { Authorization: `Bearer ${token}` } : {}),
-        },
-        body: JSON.stringify(payload),
-        credentials: "include",
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.message ?? "Request failed");
+      const payload = {
+        ...form,
+        alt_names: altInput
+          .split(",")
+          .map((s) => s.trim())
+          .filter(Boolean),
+        debut_year: form.debut_year ? Number(form.debut_year) : null,
+        height: form.height ? Number(form.height) : null,
+        ...(mode === "edit" && initial ? { id: initial.id } : {}),
+      };
+      await saveTalent(mode, payload);
       onSaved();
       onClose();
     } catch (err: unknown) {

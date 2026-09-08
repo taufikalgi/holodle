@@ -12,10 +12,15 @@ import {
 import GuessRow from "@/components/ui/GuessRow";
 import { useOutsideClick } from "@/hooks/useOutsideClick";
 import { ApiError } from "@/lib/errors";
-import { authedJson as publicJson } from "@/lib/api-client";
+import { createGameSession, submitSessionGuess } from "@/lib/commands";
 import {
-  authedJson,
+  fetchLeaderboardPage,
+  fetchSession,
+  fetchSessionTalents,
+} from "@/lib/queries";
+import {
   getSessionStatus,
+  redirectToLogin,
   addDays,
   addMonths,
   clearStoredHistory,
@@ -23,7 +28,6 @@ import {
   getEmptySessionHistoryState,
   getMondayDate,
   getStoredHistoryState,
-  normalizeTalent,
   setStoredHistoryState,
   toIsoDate,
   toMonthString,
@@ -34,15 +38,12 @@ import LeaderboardModal from "./LeaderboardModal";
 import FinalResultCard from "./FinalResultCard";
 import StartSessionCard from "./StartSessionCard";
 import LoginToPlayCard from "./LoginToPlayCard";
-import type { ApiTalent } from "@/lib/talents";
 import type {
   AuthUser,
   TalentChoice,
   GameSession,
   LeaderboardEntry,
   LeaderboardPeriod,
-  LeaderboardResponse,
-  Comparison,
   GuessEntry,
 } from "./types";
 
@@ -121,28 +122,13 @@ export default function CompetitiveClassicGame({
 
   useOutsideClick(dropdownRef, () => setShowDropdown(false), inputRef);
 
-  const buildLeaderboardUrl = useCallback(
-    (page: number) => {
-      const params = new URLSearchParams({ period, page: String(page), page_size: "20" });
-      if (period === "weekly") params.set("week", week);
-      if (period === "monthly") params.set("month", month);
-      return `/api/v1/game-session/leaderboard?${params.toString()}`;
-    },
-    [period, week, month]
-  );
-
-  const fetchPublicJson = useCallback(
-    async <T,>(path: string): Promise<T> => publicJson<T>(path),
-    []
-  );
-
   const fetchLeaderboard = useCallback(async () => {
     setLeaderboardLoading(true);
     setLeaderboardLoadingMore(false);
     setLeaderboard([]);
     setLeaderboardPage(0);
     try {
-      const data = await fetchPublicJson<LeaderboardResponse>(buildLeaderboardUrl(1));
+      const data = await fetchLeaderboardPage({ period, page: 1, week, month });
       setLeaderboard(data.entries);
       setLeaderboardTotal(data.total);
       setLeaderboardHasMore(data.has_more);
@@ -152,15 +138,18 @@ export default function CompetitiveClassicGame({
     } finally {
       setLeaderboardLoading(false);
     }
-  }, [buildLeaderboardUrl, fetchPublicJson]);
+  }, [period, week, month]);
 
   const loadMoreLeaderboard = useCallback(async () => {
     if (leaderboardLoading || leaderboardLoadingMore || !leaderboardHasMore) return;
     setLeaderboardLoadingMore(true);
     try {
-      const data = await fetchPublicJson<LeaderboardResponse>(
-        buildLeaderboardUrl(leaderboardPage + 1)
-      );
+      const data = await fetchLeaderboardPage({
+        period,
+        page: leaderboardPage + 1,
+        week,
+        month,
+      });
       setLeaderboard((prev) => [...prev, ...data.entries]);
       setLeaderboardTotal(data.total);
       setLeaderboardHasMore(data.has_more);
@@ -171,8 +160,9 @@ export default function CompetitiveClassicGame({
       setLeaderboardLoadingMore(false);
     }
   }, [
-    buildLeaderboardUrl,
-    fetchPublicJson,
+    period,
+    week,
+    month,
     leaderboardHasMore,
     leaderboardLoading,
     leaderboardLoadingMore,
@@ -210,6 +200,11 @@ export default function CompetitiveClassicGame({
   const monthPrevDisabled = prevMonth < MIN_MONTH;
   const monthNextDisabled = nextMonth > currentMonth;
 
+  const handleUnauthorized = useCallback(() => {
+    localStorage.removeItem("token");
+    redirectToLogin();
+  }, []);
+
   const loadSession = useCallback(async () => {
     setSessionLoading(true);
     setSessionError("");
@@ -226,9 +221,7 @@ export default function CompetitiveClassicGame({
 
     if (storedSessionId) {
       try {
-        const loaded = await authedJson<GameSession>(`/api/v1/game-session/${storedSessionId}`, {
-          method: "GET",
-        });
+        const loaded = await fetchSession(storedSessionId);
         const expiresAtMs = Date.parse(loaded.expires_at);
         if (Number.isFinite(expiresAtMs) && expiresAtMs <= Date.now()) {
           setSession(loaded);
@@ -249,6 +242,7 @@ export default function CompetitiveClassicGame({
         return;
       } catch (err) {
         if (err instanceof ApiError && err.status === 401) {
+          handleUnauthorized();
           setSessionLoading(false);
           return;
         }
@@ -266,16 +260,14 @@ export default function CompetitiveClassicGame({
         clearStoredHistory(storedSessionId);
       }
     }
-  }, []);
+  }, [handleUnauthorized]);
 
   const createSession = useCallback(async () => {
     setSessionLoading(true);
     setSessionError("");
     setSessionEnded(false);
     try {
-      const created = await authedJson<GameSession>("/api/v1/game-session/create", {
-        method: "POST",
-      });
+      const created = await createGameSession();
       localStorage.setItem(SESSION_KEY, created.id);
       setStoredHistoryState(created.id, getEmptySessionHistoryState());
       setSession(created);
@@ -283,11 +275,16 @@ export default function CompetitiveClassicGame({
       setPreviousRounds([]);
       setHistoryTab("current");
     } catch (err) {
+      if (err instanceof ApiError && err.status === 401) {
+        handleUnauthorized();
+        setSessionLoading(false);
+        return;
+      }
       setSessionError(err instanceof Error ? err.message : "Failed to create session");
     } finally {
       setSessionLoading(false);
     }
-  }, []);
+  }, [handleUnauthorized]);
 
   const startNewSession = useCallback(async () => {
     if (session?.id) {
@@ -311,19 +308,7 @@ export default function CompetitiveClassicGame({
       setSessionError("");
 
       try {
-        const data = await authedJson<{
-          correct: boolean;
-          comparison: Comparison;
-          session: {
-            score: number;
-            correct_guesses: number;
-            wrong_answers: number;
-            round_number: number;
-          };
-        }>(`/api/v1/game-session/${session.id}/answer`, {
-          method: "POST",
-          body: JSON.stringify({ talent_id: talent.id }),
-        });
+        const data = await submitSessionGuess(session.id, talent.id);
 
         const entry: GuessEntry = {
           talent,
@@ -357,7 +342,10 @@ export default function CompetitiveClassicGame({
           type: data.correct ? "ok" : "err",
         });
       } catch (err) {
-        if (err instanceof ApiError && err.status === 401) return;
+        if (err instanceof ApiError && err.status === 401) {
+          handleUnauthorized();
+          return;
+        }
         if (err instanceof ApiError && /expired/i.test(err.message)) {
           setSessionEnded(true);
           setSessionError("Game session expired.");
@@ -370,7 +358,7 @@ export default function CompetitiveClassicGame({
         setShowDropdown(false);
       }
     },
-    [active, currentRoundHistory, guessedIds, session, submittingId]
+    [active, currentRoundHistory, guessedIds, handleUnauthorized, session, submittingId]
   );
 
   useEffect(() => {
@@ -385,9 +373,9 @@ export default function CompetitiveClassicGame({
       setTalentsLoading(true);
       setTalentError("");
       try {
-        const data = await authedJson<ApiTalent[]>("/api/v1/talent/", { method: "GET" });
+        const choices = await fetchSessionTalents();
         if (!alive) return;
-        setTalents(data.map(normalizeTalent));
+        setTalents(choices);
       } catch (err) {
         if (!alive) return;
         if (!(err instanceof ApiError && err.status === 401)) {

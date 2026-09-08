@@ -1,4 +1,5 @@
 import { authFetch, readEnvelope } from "./api-client";
+import { withIdempotency } from "./commands";
 import { ApiError } from "./errors";
 import type { Talent } from "./talent-api";
 
@@ -57,10 +58,13 @@ export async function fetchAreas(talentId: string): Promise<CropArea[]> {
 }
 
 export async function createArea(talentId: string, box: CropAreaData): Promise<CropArea> {
-  const res = await authFetch(areasPath(talentId), {
-    method: "POST",
-    body: JSON.stringify(roundBox(box)),
-  });
+  const res = await authFetch(
+    areasPath(talentId),
+    withIdempotency({
+      method: "POST",
+      body: JSON.stringify(roundBox(box)),
+    })
+  );
   const data = await readEnvelope<CropArea>(res);
   if (!data?.id) throw new ApiError("failed to create crop area", 500);
   return data;
@@ -71,16 +75,22 @@ export async function updateArea(
   areaId: string,
   box: CropAreaData
 ): Promise<CropArea> {
-  const res = await authFetch(areaPath(talentId, areaId), {
-    method: "PUT",
-    body: JSON.stringify(roundBox(box)),
-  });
+  const res = await authFetch(
+    areaPath(talentId, areaId),
+    withIdempotency({
+      method: "PUT",
+      body: JSON.stringify(roundBox(box)),
+    })
+  );
   const data = await readEnvelope<CropArea>(res);
   if (!data?.id) throw new ApiError("failed to update crop area", 500);
   return data;
 }
 
 export async function deleteArea(talentId: string, areaId: string): Promise<void> {
-  const res = await authFetch(areaPath(talentId, areaId), { method: "DELETE" });
+  const res = await authFetch(
+    areaPath(talentId, areaId),
+    withIdempotency({ method: "DELETE" })
+  );
   await readEnvelope<null>(res);
 }

@@ -2,8 +2,9 @@
 
 import { Suspense, useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useAuth, getToken } from "@/hooks/useAuth";
+import { useAuth } from "@/hooks/useAuth";
 import { ApiError } from "@/lib/errors";
+import { fetchTalentList } from "@/lib/queries";
 import { AdminToast } from "@/components/admin";
 import { CropEditor, SavedCropsList, CropsReviewModal } from "@/components/admin/avatar-crops";
 import {
@@ -100,17 +101,12 @@ function AvatarCropsAdminContent() {
   const fetchTalents = useCallback(async () => {
     setTalentsLoading(true);
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8080"}/api/v1/talent/`, {
-        headers: { Authorization: `Bearer ${getToken() ?? ""}` },
-      });
-      if (res.status === 401) {
+      setTalents(await fetchTalentList());
+    } catch (e) {
+      if (e instanceof ApiError && e.status === 401) {
         router.replace("/admin/login");
         return;
       }
-      const json = (await res.json().catch(() => null)) as { success?: boolean; data?: Talent[] } | null;
-      if (!res.ok || !json?.success) throw new Error(json ? "Failed to load talents" : `Request failed (${res.status})`);
-      setTalents(json.data ?? []);
-    } catch (e) {
       showToast(e instanceof Error ? e.message : "Failed to load talents", "err");
     } finally {
       setTalentsLoading(false);
