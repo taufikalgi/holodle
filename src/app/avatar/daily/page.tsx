@@ -12,6 +12,7 @@ import {
   TalentSearchInput,
 } from "@/components/ui";
 import { buildAvatarShareText } from "@/lib/share";
+import { deriveAvatarStatus } from "@/lib/game-status";
 import { useLocalStorageState } from "@/hooks/useLocalStorageState";
 import { useOutsideClick } from "@/hooks/useOutsideClick";
 import { useTalentSearch } from "@/hooks/useTalentSearch";
@@ -151,6 +152,7 @@ export default function AvatarGame() {
   }, [loadRound]);
 
   const guessesLeft = MAX_GUESSES - state.guesses.length;
+  const status = deriveAvatarStatus(roundStatus, state.gameOver, state.won);
   const alreadyGuessed = state.guesses.map((g) => g.talent.name);
   const revealedCount = state.talent ? Math.min(state.guesses.length + 1, state.areas.length) : 0;
   const displayGuessHistory = [...state.guesses].reverse();
@@ -158,8 +160,8 @@ export default function AvatarGame() {
   const makeGuess = useCallback(
     (talent: Talent) => {
       if (state.gameOver || !state.talent) return;
-      if (state.guesses.some((g) => g.talent.name === talent.name)) return;
-      const correct = talent.name === state.talent.name;
+      if (state.guesses.some((g) => g.talent.id === talent.id)) return;
+      const correct = talent.id === state.talent.id;
       const newGuesses = [...state.guesses, { talent, correct }];
       const gameOver = correct || newGuesses.length >= MAX_GUESSES;
       setState({
@@ -197,16 +199,14 @@ export default function AvatarGame() {
               color: "var(--holo-text-muted)",
             }}
           >
-            {state.gameOver ? (
-              state.won ? (
-                <>
-                  <span className="text-green-500">●</span> You found them! 🎉
-                </>
-              ) : (
-                <>
-                  <span className="text-red-400">●</span> Game over — come back tomorrow!
-                </>
-              )
+            {status === "won" ? (
+              <>
+                <span className="text-green-500">●</span> You found them! 🎉
+              </>
+            ) : status === "lost" ? (
+              <>
+                <span className="text-red-400">●</span> Game over — come back tomorrow!
+              </>
             ) : (
               <>
                 <span style={{ color: "var(--holo-blue)" }}>●</span> {guessesLeft} guess
@@ -264,7 +264,7 @@ export default function AvatarGame() {
           totalWon={stats.totalWon}
         />
 
-        {roundStatus === "loading" && (
+        {status === "loading" && (
           <div className="text-center py-14">
             <p
               className="text-sm font-semibold animate-pulse"
@@ -275,7 +275,7 @@ export default function AvatarGame() {
           </div>
         )}
 
-        {roundStatus === "noValid" && (
+        {status === "empty" && (
           <div className="holo-card p-8 text-center">
             <p className="text-sm font-semibold" style={{ color: "var(--holo-text-muted)" }}>
               No playable talents yet.
@@ -291,7 +291,7 @@ export default function AvatarGame() {
           </div>
         )}
 
-        {roundStatus === "error" && (
+        {status === "error" && (
           <div className="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-semibold text-rose-700">
             {roundError}{" "}
             <button
@@ -304,7 +304,7 @@ export default function AvatarGame() {
           </div>
         )}
 
-        {roundStatus === "ready" && state.talent && (
+        {(status === "playing" || status === "won" || status === "lost") && state.talent && (
           <>
             <div className="holo-card p-4 mb-5">
               <CropStage
@@ -317,9 +317,9 @@ export default function AvatarGame() {
               />
             </div>
 
-            {state.gameOver && (
+            {(status === "won" || status === "lost") && (
               <GameOverBanner
-                won={state.won}
+                won={status === "won"}
                 answerName={state.talent.name}
                 guessCount={state.guesses.length}
                 revealed={revealAnswer}
@@ -341,7 +341,7 @@ export default function AvatarGame() {
               />
             )}
 
-            {!state.gameOver && (
+            {status === "playing" && (
               <TalentSearchInput
                 input={input}
                 suggestions={suggestions}
@@ -406,7 +406,7 @@ export default function AvatarGame() {
               </div>
             )}
 
-            {!state.gameOver && state.guesses.length === 0 && (
+            {status === "playing" && state.guesses.length === 0 && (
               <div className="text-center py-6">
                 <p className="text-sm font-semibold" style={{ color: "var(--holo-text-muted)" }}>
                   Start typing to make your first guess!

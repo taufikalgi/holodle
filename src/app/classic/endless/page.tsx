@@ -4,11 +4,11 @@ import { Suspense, useState, useRef, useCallback, useMemo, useEffect } from "rea
 import { useRouter, useSearchParams } from "next/navigation";
 import {
   ALL_BRANCHES,
-  compareTalents,
   filterTalentsByBranch,
   type Talent,
   type CompareResult,
 } from "@/lib/talents";
+import { applyClassicGuess, deriveGameStatus } from "@/lib/game-status";
 import { useTalents } from "@/hooks/useTalents";
 import {
   BranchFilterModal,
@@ -225,6 +225,13 @@ function EndlessGameContent({
   const { input, suggestions, showDropdown, handleInput, clear, onFocus, setShowDropdown } = useTalentSearch(pool);
 
   const { current, stats, lastRunStreak } = state;
+  const status = deriveGameStatus({
+    loading: false,
+    error: "",
+    empty: pool.length === 0,
+    gameOver: current.gameOver,
+    won: current.won,
+  });
   const guessesLeft = MAX_GUESSES - current.guesses.length;
   const alreadyGuessed = current.guesses.map((g) => g.talent.name);
 
@@ -233,10 +240,9 @@ function EndlessGameContent({
   const makeGuess = useCallback(
     (talent: Talent) => {
       if (current.gameOver) return;
-      const result = compareTalents(talent, current.answer);
-      const won = talent.name === current.answer.name;
-      const newGuesses = [...current.guesses, { talent, result }];
-      const gameOver = won || newGuesses.length >= MAX_GUESSES;
+      const transition = applyClassicGuess(current.guesses, talent, current.answer, MAX_GUESSES);
+      if (!transition) return;
+      const { guesses: newGuesses, gameOver, won } = transition;
 
       setState((prev) => ({
         ...prev,
@@ -297,12 +303,10 @@ function EndlessGameContent({
                 color: "var(--holo-text-muted)",
               }}
             >
-              {current.gameOver ? (
-                current.won ? (
-                  "Correct! Ready for the next one?"
-                ) : (
-                  "Wrong — try the next one!"
-                )
+              {status === "won" ? (
+                "Correct! Ready for the next one?"
+              ) : status === "lost" ? (
+                "Wrong — try the next one!"
               ) : (
                 <>
                   <span style={{ color: "var(--holo-blue)" }}>●</span> {guessesLeft} guess
@@ -348,9 +352,9 @@ function EndlessGameContent({
           totalWon={stats.totalWon}
         />
 
-        {current.gameOver && (
+        {(status === "won" || status === "lost") && (
           <GameOverBanner
-            won={current.won}
+            won={status === "won"}
             answerName={current.answer.name}
             guessCount={current.guesses.length}
             actions={
@@ -378,7 +382,7 @@ function EndlessGameContent({
           </GameOverBanner>
         )}
 
-        {!current.gameOver && (
+        {status === "playing" && (
           <TalentSearchInput
             input={input}
             suggestions={suggestions}
@@ -401,7 +405,7 @@ function EndlessGameContent({
           ))}
         </div>
 
-        {pool.length === 0 ? (
+        {status === "empty" ? (
           <div className="text-center py-14">
             <p className="text-sm font-semibold" style={{ color: "var(--holo-text-muted)" }}>
               No talents match the selected branches.
@@ -416,7 +420,7 @@ function EndlessGameContent({
               </button>
             </p>
           </div>
-        ) : !current.gameOver && current.guesses.length === 0 && (
+        ) : status === "playing" && current.guesses.length === 0 && (
           <div className="text-center py-14">
             <p className="text-sm font-semibold" style={{ color: "var(--holo-text-muted)" }}>
               Start typing to make your first guess!

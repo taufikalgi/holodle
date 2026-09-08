@@ -4,10 +4,10 @@ import { useState, useRef, useCallback } from "react";
 import {
   getTalentOfTheDay,
   getDateString,
-  compareTalents,
   type Talent,
   type CompareResult,
 } from "@/lib/talents";
+import { applyClassicGuess, deriveGameStatus } from "@/lib/game-status";
 import { useTalents } from "@/hooks/useTalents";
 import {
   ColumnHeaders,
@@ -67,6 +67,13 @@ export default function ClassicGame() {
   const dropdownRef = useRef<HTMLDivElement>(null);
   const { talents, loading: talentsLoading, error: talentsError } = useTalents();
   const todayAnswer = talents ? getTalentOfTheDay(talents) : null;
+  const status = deriveGameStatus({
+    loading: talentsLoading,
+    error: talentsError,
+    empty: !talents || talents.length === 0 || !todayAnswer,
+    gameOver: state.gameOver,
+    won: state.won,
+  });
   const guessesLeft = MAX_GUESSES - state.guesses.length;
 
   const { input, suggestions, showDropdown, handleInput, clear, onFocus, setShowDropdown } = useTalentSearch(talents ?? []);
@@ -75,7 +82,7 @@ export default function ClassicGame() {
 
   useOutsideClick(dropdownRef, () => setShowDropdown(false), inputRef);
 
-  if (talentsLoading) {
+  if (status === "loading") {
     return (
       <main className="min-h-screen" style={{ background: "var(--holo-bg)" }}>
         <Navbar title="CLASSIC" />
@@ -88,7 +95,7 @@ export default function ClassicGame() {
     );
   }
 
-  if (talentsError || !talents || talents.length === 0 || !todayAnswer) {
+  if (status === "error" || status === "empty" || !todayAnswer) {
     return (
       <main className="min-h-screen" style={{ background: "var(--holo-bg)" }}>
         <Navbar title="CLASSIC" />
@@ -111,16 +118,13 @@ export default function ClassicGame() {
 
   const makeGuess = useCallback(
     (talent: Talent) => {
-      if (state.gameOver) return;
-      if (state.guesses.some((g) => g.talent.name === talent.name)) return;
-      const result = compareTalents(talent, todayAnswer);
-      const won = talent.name === todayAnswer.name;
-      const newGuesses = [...state.guesses, { talent, result }];
-      const gameOver = won || newGuesses.length >= MAX_GUESSES;
-      const newState: GameState = { guesses: newGuesses, gameOver, won, date: getDateString() };
+      if (state.gameOver || !todayAnswer) return;
+      const transition = applyClassicGuess(state.guesses, talent, todayAnswer, MAX_GUESSES);
+      if (!transition) return;
+      const newState: GameState = { ...transition, date: getDateString() };
       setState(newState);
-      if (gameOver) {
-        recordDailyGameOver(getDateString(), won);
+      if (transition.gameOver) {
+        recordDailyGameOver(getDateString(), transition.won);
       }
       clear();
     },
@@ -150,16 +154,14 @@ export default function ClassicGame() {
               color: "var(--holo-text-muted)",
             }}
           >
-            {state.gameOver ? (
-              state.won ? (
-                <>
-                  <span className="text-green-500">●</span> You found them! 🎉
-                </>
-              ) : (
-                <>
-                  <span className="text-red-400">●</span> Game over — come back tomorrow!
-                </>
-              )
+            {status === "won" ? (
+              <>
+                <span className="text-green-500">●</span> You found them! 🎉
+              </>
+            ) : status === "lost" ? (
+              <>
+                <span className="text-red-400">●</span> Game over — come back tomorrow!
+              </>
             ) : (
               <>
                 <span style={{ color: "var(--holo-blue)" }}>●</span> {guessesLeft} guess
@@ -217,9 +219,9 @@ export default function ClassicGame() {
           totalWon={stats.totalWon}
         />
 
-        {state.gameOver && (
+        {(status === "won" || status === "lost") && (
           <GameOverBanner
-            won={state.won}
+            won={status === "won"}
             answerName={todayAnswer.name}
             guessCount={state.guesses.length}
             revealed={revealAnswer}
@@ -248,7 +250,7 @@ export default function ClassicGame() {
           />
         )}
 
-        {!state.gameOver && (
+        {status === "playing" && (
           <TalentSearchInput
             input={input}
             suggestions={suggestions}
@@ -271,13 +273,13 @@ export default function ClassicGame() {
           ))}
         </div>
 
-        {!state.gameOver && state.guesses.length === 0 && (
+        {status === "playing" && state.guesses.length === 0 && (
           <div className="text-center py-14">
             <p className="text-sm font-semibold" style={{ color: "var(--holo-text-muted)" }}>
               Start typing above to make your first guess!
             </p>
             <p className="text-xs mt-1 opacity-50" style={{ color: "var(--holo-text-muted)" }}>
-              {talents.length} talents in the pool
+              {(talents ?? []).length} talents in the pool
             </p>
           </div>
         )}

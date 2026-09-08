@@ -3,7 +3,7 @@ import {
   authedJson as sharedAuthedJson,
   googleAuthUrl,
 } from "@/lib/api-client";
-import type { SessionHistoryState, GuessEntry } from "./types";
+import type { AuthUser, GameSession, GuessEntry, SessionHistoryState } from "./types";
 
 const AUTH_REDIRECT_KEY = "auth_redirect_to";
 const HISTORY_KEY_PREFIX = "competitive-classic-history:";
@@ -126,4 +126,33 @@ export async function authedJson<T>(path: string, init?: RequestInit): Promise<T
     }
     throw err;
   }
+}
+
+/** Single deterministic UI state for the competitive session flow. */
+export type SessionStatus =
+  | "loading"
+  | "locked"
+  | "idle"
+  | "active"
+  | "submitting"
+  | "ended"
+  | "expired"
+  | "error";
+
+export function getSessionStatus(args: {
+  user: AuthUser | null;
+  loading: boolean;
+  session: GameSession | null;
+  ended: boolean;
+  expired: boolean;
+  submitting: boolean;
+  error: string;
+}): SessionStatus {
+  if (args.loading) return "loading";
+  if (!args.user) return "locked";
+  if (args.error && !args.session) return "error";
+  if (!args.session) return "idle";
+  if (args.ended) return args.expired ? "expired" : "ended";
+  if (args.submitting) return "submitting";
+  return "active";
 }

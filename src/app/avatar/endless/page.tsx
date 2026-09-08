@@ -12,6 +12,7 @@ import {
   TalentSearchInput,
 } from "@/components/ui";
 import { buildAvatarShareText } from "@/lib/share";
+import { deriveAvatarStatus } from "@/lib/game-status";
 import { useLocalStorageState } from "@/hooks/useLocalStorageState";
 import { useOutsideClick } from "@/hooks/useOutsideClick";
 import { useTalentSearch } from "@/hooks/useTalentSearch";
@@ -157,8 +158,8 @@ function EndlessGamePage() {
     (talent: Talent) => {
       const { round } = roundState;
       if (!round || roundState.gameOver) return;
-      if (roundState.guesses.some((g) => g.talent.name === talent.name)) return;
-      const correct = talent.name === round.talent.name;
+      if (roundState.guesses.some((g) => g.talent.id === talent.id)) return;
+      const correct = talent.id === round.talent.id;
       const newGuesses = [...roundState.guesses, { talent, correct }];
       const gameOver = correct || newGuesses.length >= MAX_GUESSES;
       setRoundState({ ...roundState, guesses: newGuesses, gameOver, won: correct });
@@ -190,6 +191,7 @@ function EndlessGamePage() {
   }, [pool, persisted.recentTalentIds, roundState.round, startRound]);
 
   const { round, guesses } = roundState;
+  const status = deriveAvatarStatus(roundStatus, roundState.gameOver, roundState.won);
   const guessesLeft = MAX_GUESSES - guesses.length;
   const alreadyGuessed = guesses.map((g) => g.talent.name);
   const revealedCount = round ? Math.min(guesses.length + 1, round.areas.length) : 0;
@@ -215,12 +217,10 @@ function EndlessGamePage() {
               color: "var(--holo-text-muted)",
             }}
           >
-            {roundState.gameOver ? (
-              roundState.won ? (
-                "Correct! Ready for the next one?"
-              ) : (
-                "Wrong — try the next one!"
-              )
+            {status === "won" ? (
+              "Correct! Ready for the next one?"
+            ) : status === "lost" ? (
+              "Wrong — try the next one!"
             ) : (
               <>
                 <span style={{ color: "var(--holo-blue)" }}>●</span> {guessesLeft} guess
@@ -239,7 +239,7 @@ function EndlessGamePage() {
           totalWon={persisted.stats.totalWon}
         />
 
-        {roundStatus === "loading" && (
+        {status === "loading" && (
           <div className="text-center py-14">
             <p
               className="text-sm font-semibold animate-pulse"
@@ -250,7 +250,7 @@ function EndlessGamePage() {
           </div>
         )}
 
-        {roundStatus === "noValid" && (
+        {status === "empty" && (
           <div className="holo-card p-8 text-center">
             <p className="text-sm font-semibold" style={{ color: "var(--holo-text-muted)" }}>
               No playable talents yet.
@@ -266,7 +266,7 @@ function EndlessGamePage() {
           </div>
         )}
 
-        {roundStatus === "error" && (
+        {status === "error" && (
           <div className="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-semibold text-rose-700">
             {roundError}{" "}
             <button
@@ -279,7 +279,7 @@ function EndlessGamePage() {
           </div>
         )}
 
-        {roundStatus === "ready" && round && (
+        {(status === "playing" || status === "won" || status === "lost") && round && (
           <>
             <div className="holo-card p-4 mb-5">
               <CropStage
@@ -292,9 +292,9 @@ function EndlessGamePage() {
               />
             </div>
 
-            {roundState.gameOver && (
+            {(status === "won" || status === "lost") && (
               <GameOverBanner
-                won={roundState.won}
+                won={status === "won"}
                 answerName={round.talent.name}
                 guessCount={guesses.length}
                 actions={
@@ -324,7 +324,7 @@ function EndlessGamePage() {
               </GameOverBanner>
             )}
 
-            {!roundState.gameOver && (
+            {status === "playing" && (
               <TalentSearchInput
                 input={input}
                 suggestions={suggestions}
@@ -389,7 +389,7 @@ function EndlessGamePage() {
               </div>
             )}
 
-            {!roundState.gameOver && guesses.length === 0 && (
+            {status === "playing" && guesses.length === 0 && (
               <div className="text-center py-6">
                 <p className="text-sm font-semibold" style={{ color: "var(--holo-text-muted)" }}>
                   Start typing to make your first guess!

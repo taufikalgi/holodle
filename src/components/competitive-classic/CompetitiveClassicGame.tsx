@@ -15,6 +15,7 @@ import { ApiError } from "@/lib/errors";
 import { authedJson as publicJson } from "@/lib/api-client";
 import {
   authedJson,
+  getSessionStatus,
   addDays,
   addMonths,
   clearStoredHistory,
@@ -103,8 +104,18 @@ export default function CompetitiveClassicGame({
       .slice(0, 12);
   }, [search, talents, guessedIds]);
 
-  const active = Boolean(session) && !sessionEnded;
   const expiresAt = session ? Date.parse(session.expires_at) : null;
+  const expired = expiresAt !== null && expiresAt <= now;
+  const sessionStatus = getSessionStatus({
+    user,
+    loading: sessionLoading || talentsLoading,
+    session,
+    ended: sessionEnded,
+    expired,
+    submitting: submittingId !== null,
+    error: sessionError,
+  });
+  const active = sessionStatus === "active" || sessionStatus === "submitting";
   const timeLeftMs = expiresAt ? Math.max(0, expiresAt - now) : 0;
   const timeLeftText = session ? formatTimer(timeLeftMs) : "--:--";
 
@@ -482,7 +493,7 @@ export default function CompetitiveClassicGame({
 
         {session ? (
           <div className="flex gap-3 justify-center mb-6">
-            <HeaderStat label="Time left" value={sessionEnded ? "Expired" : timeLeftText} />
+            <HeaderStat label="Time left" value={sessionStatus === "ended" || sessionStatus === "expired" ? "Expired" : timeLeftText} />
             <HeaderStat label="Score" value={session.score} />
             <HeaderStat label="Round" value={session.round_number} />
             <HeaderStat label="Wrong" value={session.wrong_answers} />
@@ -530,21 +541,25 @@ export default function CompetitiveClassicGame({
           onClose={() => setShowLeaderboard(false)}
         />
 
-        {sessionError && !sessionEnded && (
+        {sessionError && sessionStatus !== "ended" && sessionStatus !== "expired" && (
           <div className="mx-auto mt-5 max-w-3xl rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm font-semibold text-amber-800">
             {sessionError}
           </div>
         )}
 
-        {!user ? (
+        {sessionStatus === "locked" ? (
           <LoginToPlayCard onLogin={() => onLogin("/classic/competitive")} />
-        ) : sessionEnded && session ? (
-          <FinalResultCard
-            session={session}
-            historyCount={totalGuessCount}
-            onNewSession={startNewSession}
-          />
-        ) : !session ? (
+        ) : sessionStatus === "ended" || sessionStatus === "expired" ? (
+          session ? (
+            <FinalResultCard
+              session={session}
+              historyCount={totalGuessCount}
+              onNewSession={startNewSession}
+            />
+          ) : (
+            <StartSessionCard onStart={startNewSession} loading={sessionLoading} />
+          )
+        ) : sessionStatus === "idle" || sessionStatus === "error" ? (
           <StartSessionCard onStart={startNewSession} loading={sessionLoading} />
         ) : (
           <>
@@ -565,7 +580,7 @@ export default function CompetitiveClassicGame({
               showDropdown={showDropdown}
               dropdownRef={dropdownRef}
               inputRef={inputRef}
-              disabled={!active || Boolean(submittingId)}
+              disabled={sessionStatus !== "active"}
             />
 
             {session && (
