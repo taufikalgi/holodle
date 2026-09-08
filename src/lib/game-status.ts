@@ -39,10 +39,27 @@ export interface ClassicTransition {
 }
 
 /**
+ * Stored-guess shape check for persisted classic games. Corrupt entries fail
+ * validation so the hook falls back to a fresh state instead of crashing render.
+ */
+export function isStoredClassicGuess(x: unknown): boolean {
+  if (typeof x !== "object" || x === null) return false;
+  const g = x as Record<string, unknown>;
+  const t = g.talent;
+  return (
+    typeof t === "object" &&
+    t !== null &&
+    typeof (t as Record<string, unknown>).id === "string" &&
+    typeof (t as Record<string, unknown>).name === "string" &&
+    typeof g.result === "object" &&
+    g.result !== null
+  );
+}
+
+/**
  * Pure classic guess transition. Returns null when the guess changes nothing
  * (duplicate talent) so callers stay idempotent.
- */
-export function applyClassicGuess(
+ */export function applyClassicGuess(
   guesses: { talent: Talent; result: CompareResult }[],
   talent: Talent,
   answer: Talent,

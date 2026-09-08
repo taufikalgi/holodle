@@ -7,7 +7,7 @@ import {
   type Talent,
   type CompareResult,
 } from "@/lib/talents";
-import { applyClassicGuess, deriveGameStatus } from "@/lib/game-status";
+import { applyClassicGuess, deriveGameStatus, isStoredClassicGuess } from "@/lib/game-status";
 import { useTalents } from "@/hooks/useTalents";
 import {
   ColumnHeaders,
@@ -47,6 +47,7 @@ function isValidGameState(data: unknown): data is GameState {
   const c = data as Record<string, unknown>;
   return (
     Array.isArray(c.guesses) &&
+    c.guesses.every(isStoredClassicGuess) &&
     typeof c.gameOver === "boolean" &&
     typeof c.won === "boolean" &&
     typeof c.date === "string" &&

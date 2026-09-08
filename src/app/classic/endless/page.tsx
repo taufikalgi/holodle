@@ -8,7 +8,7 @@ import {
   type Talent,
   type CompareResult,
 } from "@/lib/talents";
-import { applyClassicGuess, deriveGameStatus } from "@/lib/game-status";
+import { applyClassicGuess, deriveGameStatus, isStoredClassicGuess } from "@/lib/game-status";
 import { useTalents } from "@/hooks/useTalents";
 import {
   BranchFilterModal,
@@ -58,6 +58,7 @@ function isValidEndlessState(data: unknown): data is EndlessState {
     typeof curr === "object" && curr !== null &&
     typeof curr.answer === "object" && curr.answer !== null &&
     Array.isArray(curr.guesses) &&
+    curr.guesses.every(isStoredClassicGuess) &&
     typeof curr.gameOver === "boolean" &&
     typeof curr.won === "boolean" &&
     typeof st === "object" && st !== null &&

@@ -13,6 +13,28 @@ export function getEmptySessionHistoryState(): SessionHistoryState {
   };
 }
 
+function isRecord(x: unknown): x is Record<string, unknown> {
+  return typeof x === "object" && x !== null;
+}
+
+/** Corrupt entries are dropped so one bad write never kills history. */
+function isHistoryEntry(x: unknown): x is GuessEntry {
+  return (
+    isRecord(x) &&
+    isRecord(x.talent) &&
+    typeof x.talent.id === "string" &&
+    typeof x.talent.name === "string" &&
+    typeof x.correct === "boolean"
+  );
+}
+
+function cleanRounds(rounds: unknown): GuessEntry[][] {
+  if (!Array.isArray(rounds)) return [];
+  return rounds
+    .filter(Array.isArray)
+    .map((round) => round.filter(isHistoryEntry));
+}
+
 export function getStoredHistoryState(sessionId: string): SessionHistoryState {
   if (typeof window === "undefined") return getEmptySessionHistoryState();
   try {
@@ -21,14 +43,14 @@ export function getStoredHistoryState(sessionId: string): SessionHistoryState {
     const parsed = JSON.parse(raw) as SessionHistoryState | GuessEntry[];
     if (Array.isArray(parsed)) {
       return {
-        currentRound: parsed,
+        currentRound: parsed.filter(isHistoryEntry),
         previousRounds: [],
       };
     }
     if (parsed && Array.isArray(parsed.currentRound) && Array.isArray(parsed.previousRounds)) {
       return {
-        currentRound: parsed.currentRound,
-        previousRounds: parsed.previousRounds,
+        currentRound: parsed.currentRound.filter(isHistoryEntry),
+        previousRounds: cleanRounds(parsed.previousRounds),
       };
     }
     return getEmptySessionHistoryState();
