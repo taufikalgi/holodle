@@ -1,7 +1,7 @@
 "use client";
 
 import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { ALL_TALENTS, type Talent } from "@/lib/talents";
+import { loadTalents, type Talent } from "@/lib/talents";
 import {
   Footer,
   GameOverBanner,
@@ -58,7 +58,7 @@ function EndlessGamePage() {
     roundState.round ? "ready" : "loading"
   );
   const [roundError, setRoundError] = useState("");
-  const [validTalents, setValidTalents] = useState<Talent[]>(ALL_TALENTS);
+  const [validTalents, setValidTalents] = useState<Talent[]>([]);
   const [showHowTo, setShowHowTo] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -117,10 +117,13 @@ function EndlessGamePage() {
 
     const load = async () => {
       try {
-        const avatarTalents = await fetchAvatarTalents();
+        const [talents, avatarTalents] = await Promise.all([
+          loadTalents(),
+          fetchAvatarTalents(),
+        ]);
         if (!alive) return;
 
-        const playableTalents = getAvatarTalentPool(avatarTalents);
+        const playableTalents = getAvatarTalentPool(avatarTalents, talents);
         setValidTalents(playableTalents);
 
         if (hasStoredRoundRef.current) {

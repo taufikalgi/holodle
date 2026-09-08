@@ -1,15 +1,6 @@
-export interface Talent {
-  id: string;
-  name: string;
-  branch: string;
-  debut_year: number | null;
-  lore_archetype: string;
-  height: number | null;
-  birth_month: string;
-  image_url: string;
-  avatar_url: string;
-  alt_names: string[];
-}
+import type { ApiTalent } from "./talents";
+
+export type Talent = ApiTalent;
 
 export interface TalentsResponse {
   success: boolean;
@@ -17,4 +8,8 @@ export interface TalentsResponse {
   data: Talent[];
 }
 
-export type TalentFormData = Omit<Talent, "id"> & { id?: string };
+export type TalentFormData = Omit<Talent, "id" | "branch"> & {
+  id?: string;
+  // Draft strings — validated on submit (branch must be a valid Branch).
+  branch: string;
+};

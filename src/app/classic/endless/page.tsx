@@ -3,13 +3,13 @@
 import { Suspense, useState, useRef, useCallback, useMemo, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import {
-  ALL_TALENTS,
   ALL_BRANCHES,
   compareTalents,
   filterTalentsByBranch,
   type Talent,
   type CompareResult,
 } from "@/lib/talents";
+import { useTalents } from "@/hooks/useTalents";
 import {
   BranchFilterModal,
   ColumnHeaders,
@@ -102,6 +102,7 @@ function EndlessGamePage() {
   const [hydrated, setHydrated] = useState(false);
   const [selectedBranches, setSelectedBranches] = useState<string[] | null>(null);
   const [showFilter, setShowFilter] = useState(true);
+  const { talents, loading: talentsLoading, error: talentsError } = useTalents();
 
   useEffect(() => {
     let branches: string[] | null = null;
@@ -148,10 +149,45 @@ function EndlessGamePage() {
 
   const storageKey = getEndlessStorageKey(selectedBranches);
 
+  if (talentsLoading || !talents) {
+    return (
+      <main className="min-h-screen" style={{ background: "var(--holo-bg)" }}>
+        <Navbar title="ENDLESS" />
+        <div className="max-w-5xl mx-auto px-4 py-8 text-center">
+          <p className="text-sm font-semibold" style={{ color: "var(--holo-text-muted)" }}>
+            Loading talents…
+          </p>
+        </div>
+      </main>
+    );
+  }
+
+  if (talentsError || talents.length === 0) {
+    return (
+      <main className="min-h-screen" style={{ background: "var(--holo-bg)" }}>
+        <Navbar title="ENDLESS" />
+        <div className="max-w-5xl mx-auto px-4 py-8 text-center">
+          <p className="text-sm font-semibold" style={{ color: "var(--holo-text-muted)" }}>
+            {talentsError || "Failed to load talents."}
+          </p>
+          <button
+            type="button"
+            onClick={() => window.location.reload()}
+            className="mt-4 px-6 py-2 rounded-full text-sm font-bold text-white transition-opacity hover:opacity-80"
+            style={{ background: "var(--holo-blue)" }}
+          >
+            Retry
+          </button>
+        </div>
+      </main>
+    );
+  }
+
   return (
     <EndlessGameContent
       key={storageKey}
       storageKey={storageKey}
+      talents={talents}
       selectedBranches={selectedBranches}
       onChangeBranches={() => setShowFilter(true)}
     />
@@ -160,19 +196,21 @@ function EndlessGamePage() {
 
 function EndlessGameContent({
   storageKey,
+  talents,
   selectedBranches,
   onChangeBranches,
 }: {
   storageKey: string;
+  talents: Talent[];
   selectedBranches: string[] | null;
   onChangeBranches: () => void;
 }) {
   const pool = useMemo(
     () =>
       selectedBranches
-        ? filterTalentsByBranch(ALL_TALENTS, selectedBranches)
-        : ALL_TALENTS,
-    [selectedBranches?.join(",")]
+        ? filterTalentsByBranch(talents, selectedBranches)
+        : talents,
+    [selectedBranches?.join(","), talents]
   );
 
   const [state, setState] = useLocalStorageState<EndlessState>(

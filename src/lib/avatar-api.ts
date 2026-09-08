@@ -1,6 +1,6 @@
 import { apiBaseUrl, publicFetch, readEnvelope } from "./api-client";
 import { ApiError } from "./errors";
-import { ALL_TALENTS, getDateString, normalizeTalent } from "./talents";
+import { getDateString, normalizeTalent } from "./talents";
 import type { ApiTalent, Talent } from "./talents";
 import type { CropArea } from "./avatar-crops";
 
@@ -71,12 +71,12 @@ export async function fetchAvatarAreas(talentId: string): Promise<CropArea[]> {
   return areas;
 }
 
-export function getAvatarTalentPool(validTalents: AvatarTalentRecord[]): Talent[] {
+export function getAvatarTalentPool(validTalents: AvatarTalentRecord[], pool: Talent[]): Talent[] {
   const joined = validTalents.flatMap((entry) => {
     if (entry.talent) return [normalizeTalent(entry.talent)];
     const id = entry.talent_id ?? entry.id;
     if (!id) return [];
-    const match = ALL_TALENTS.find((talent) => talent.id === id);
+    const match = pool.find((talent) => talent.id === id);
     return match ? [match] : [];
   });
 

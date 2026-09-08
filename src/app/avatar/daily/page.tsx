@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { ALL_TALENTS, getDateString, type Talent } from "@/lib/talents";
+import { getDateString, loadTalents, type Talent } from "@/lib/talents";
 import {
   Footer,
   GameOverBanner,
@@ -52,7 +52,7 @@ export default function AvatarGame() {
     useDailyStreak(STATS_KEY, emptyStats);
   const [roundStatus, setRoundStatus] = useState<RoundStatus>(state.talent ? "ready" : "loading");
   const [roundError, setRoundError] = useState("");
-  const [validTalents, setValidTalents] = useState<Talent[]>(ALL_TALENTS);
+  const [validTalents, setValidTalents] = useState<Talent[]>([]);
   const [showHowTo, setShowHowTo] = useState(false);
   const [revealAnswer, setRevealAnswer] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -114,10 +114,13 @@ export default function AvatarGame() {
 
     const load = async () => {
       try {
-        const avatarTalents = await fetchAvatarTalents();
+        const [talents, avatarTalents] = await Promise.all([
+          loadTalents(),
+          fetchAvatarTalents(),
+        ]);
         if (!alive) return;
 
-        const pool = getAvatarTalentPool(avatarTalents);
+        const pool = getAvatarTalentPool(avatarTalents, talents);
         setValidTalents(pool);
 
         if (hasStoredRoundRef.current) {

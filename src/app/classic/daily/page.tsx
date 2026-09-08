@@ -2,13 +2,13 @@
 
 import { useState, useRef, useCallback } from "react";
 import {
-  ALL_TALENTS,
   getTalentOfTheDay,
   getDateString,
   compareTalents,
   type Talent,
   type CompareResult,
 } from "@/lib/talents";
+import { useTalents } from "@/hooks/useTalents";
 import {
   ColumnHeaders,
   DEFAULT_COLUMN_HEADERS,
@@ -65,14 +65,49 @@ export default function ClassicGame() {
   const [revealAnswer, setRevealAnswer] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
-  const todayAnswer = getTalentOfTheDay();
+  const { talents, loading: talentsLoading, error: talentsError } = useTalents();
+  const todayAnswer = talents ? getTalentOfTheDay(talents) : null;
   const guessesLeft = MAX_GUESSES - state.guesses.length;
 
-  const { input, suggestions, showDropdown, handleInput, clear, onFocus, setShowDropdown } = useTalentSearch();
+  const { input, suggestions, showDropdown, handleInput, clear, onFocus, setShowDropdown } = useTalentSearch(talents ?? []);
 
   const alreadyGuessed = state.guesses.map((g) => g.talent.name);
 
   useOutsideClick(dropdownRef, () => setShowDropdown(false), inputRef);
+
+  if (talentsLoading) {
+    return (
+      <main className="min-h-screen" style={{ background: "var(--holo-bg)" }}>
+        <Navbar title="CLASSIC" />
+        <div className="max-w-5xl mx-auto px-4 py-8 text-center">
+          <p className="text-sm font-semibold" style={{ color: "var(--holo-text-muted)" }}>
+            Loading talents…
+          </p>
+        </div>
+      </main>
+    );
+  }
+
+  if (talentsError || !talents || talents.length === 0 || !todayAnswer) {
+    return (
+      <main className="min-h-screen" style={{ background: "var(--holo-bg)" }}>
+        <Navbar title="CLASSIC" />
+        <div className="max-w-5xl mx-auto px-4 py-8 text-center">
+          <p className="text-sm font-semibold" style={{ color: "var(--holo-text-muted)" }}>
+            {talentsError || "Failed to load talents."}
+          </p>
+          <button
+            type="button"
+            onClick={() => window.location.reload()}
+            className="mt-4 px-6 py-2 rounded-full text-sm font-bold text-white transition-opacity hover:opacity-80"
+            style={{ background: "var(--holo-blue)" }}
+          >
+            Retry
+          </button>
+        </div>
+      </main>
+    );
+  }
 
   const makeGuess = useCallback(
     (talent: Talent) => {
@@ -242,7 +277,7 @@ export default function ClassicGame() {
               Start typing above to make your first guess!
             </p>
             <p className="text-xs mt-1 opacity-50" style={{ color: "var(--holo-text-muted)" }}>
-              {ALL_TALENTS.length} talents in the pool
+              {talents.length} talents in the pool
             </p>
           </div>
         )}
