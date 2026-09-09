@@ -11,24 +11,12 @@ import {
 } from "@/components/ui";
 import GuessRow from "@/components/ui/GuessRow";
 import { useOutsideClick } from "@/hooks/useOutsideClick";
-import { ApiError } from "@/lib/errors";
-import { createGameSession, submitSessionGuess } from "@/lib/commands";
+import { useCompetitiveSession } from "@/hooks/useCompetitiveSession";
+import { fetchLeaderboardPage } from "@/lib/queries";
 import {
-  fetchLeaderboardPage,
-  fetchSession,
-  fetchSessionTalents,
-} from "@/lib/queries";
-import {
-  getSessionStatus,
-  redirectToLogin,
   addDays,
   addMonths,
-  clearStoredHistory,
-  formatTimer,
-  getEmptySessionHistoryState,
   getMondayDate,
-  getStoredHistoryState,
-  setStoredHistoryState,
   toIsoDate,
   toMonthString,
 } from "./utils";
@@ -41,13 +29,10 @@ import LoginToPlayCard from "./LoginToPlayCard";
 import type {
   AuthUser,
   TalentChoice,
-  GameSession,
   LeaderboardEntry,
   LeaderboardPeriod,
-  GuessEntry,
 } from "./types";
 
-const SESSION_KEY = "competitive-classic-session-id";
 const MIN_MONTH = "2026-06";
 
 export default function CompetitiveClassicGame({
@@ -59,15 +44,8 @@ export default function CompetitiveClassicGame({
   onLogin: (redirectTo?: string) => void;
   onLogout: () => void;
 }) {
-  const [talents, setTalents] = useState<TalentChoice[]>([]);
-  const [talentsLoading, setTalentsLoading] = useState(true);
-  const [talentError, setTalentError] = useState("");
-  const [session, setSession] = useState<GameSession | null>(null);
-  const [sessionLoading, setSessionLoading] = useState(true);
-  const [sessionError, setSessionError] = useState("");
-  const [sessionEnded, setSessionEnded] = useState(false);
-  const [currentRoundHistory, setCurrentRoundHistory] = useState<GuessEntry[]>([]);
-  const [previousRounds, setPreviousRounds] = useState<GuessEntry[][]>([]);
+  const s = useCompetitiveSession(user);
+
   const [historyTab, setHistoryTab] = useState<"current" | "previous">("current");
   const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
   const [leaderboardLoading, setLeaderboardLoading] = useState(true);
@@ -82,43 +60,38 @@ export default function CompetitiveClassicGame({
   const [showDropdown, setShowDropdown] = useState(false);
   const [showHowTo, setShowHowTo] = useState(false);
   const [showLeaderboard, setShowLeaderboard] = useState(false);
-  const [submittingId, setSubmittingId] = useState<string | null>(null);
-  const [toast, setToast] = useState<{ message: string; type: "ok" | "err" } | null>(null);
-  const [now, setNow] = useState(Date.now());
   const dropdownRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  const guessedIds = useMemo(
-    () => new Set(currentRoundHistory.map((item) => item.talent.id)),
-    [currentRoundHistory]
+  // Search/dropdown/tab UI stays in the page; the hook owns session state, so
+  // these same-named wrappers apply the UI resets the moved code did inline.
+  const startNewSession = useCallback(() => {
+    setSearch("");
+    setHistoryTab("current");
+    return s.startNewSession();
+  }, [s.startNewSession]);
+
+  const submitGuess = useCallback(
+    (talent: TalentChoice) => {
+      void Promise.resolve(s.submitGuess(talent)).finally(() => {
+        setSearch("");
+        setShowDropdown(false);
+      });
+    },
+    [s.submitGuess]
   );
 
   const suggestions = useMemo(() => {
     const query = search.trim().toLowerCase();
     if (!query) return [];
-    return talents
-      .filter((talent) => !guessedIds.has(talent.id))
+    return s.talents
+      .filter((talent) => !s.guessedIds.has(talent.id))
       .filter((talent) => {
         const haystack = [talent.name, ...talent.altNames].join(" ").toLowerCase();
         return haystack.includes(query);
       })
       .slice(0, 12);
-  }, [search, talents, guessedIds]);
-
-  const expiresAt = session ? Date.parse(session.expires_at) : null;
-  const expired = expiresAt !== null && expiresAt <= now;
-  const sessionStatus = getSessionStatus({
-    user,
-    loading: sessionLoading || talentsLoading,
-    session,
-    ended: sessionEnded,
-    expired,
-    submitting: submittingId !== null,
-    error: sessionError,
-  });
-  const active = sessionStatus === "active" || sessionStatus === "submitting";
-  const timeLeftMs = expiresAt ? Math.max(0, expiresAt - now) : 0;
-  const timeLeftText = session ? formatTimer(timeLeftMs) : "--:--";
+  }, [search, s.talents, s.guessedIds]);
 
   useOutsideClick(dropdownRef, () => setShowDropdown(false), inputRef);
 
@@ -134,7 +107,7 @@ export default function CompetitiveClassicGame({
       setLeaderboardHasMore(data.has_more);
       setLeaderboardPage(data.page);
     } catch (err) {
-      setSessionError(err instanceof Error ? err.message : "Failed to load leaderboard");
+      s.setSessionError(err instanceof Error ? err.message : "Failed to load leaderboard");
     } finally {
       setLeaderboardLoading(false);
     }
@@ -155,7 +128,7 @@ export default function CompetitiveClassicGame({
       setLeaderboardHasMore(data.has_more);
       setLeaderboardPage(data.page);
     } catch (err) {
-      setSessionError(err instanceof Error ? err.message : "Failed to load leaderboard");
+      s.setSessionError(err instanceof Error ? err.message : "Failed to load leaderboard");
     } finally {
       setLeaderboardLoadingMore(false);
     }
@@ -200,248 +173,18 @@ export default function CompetitiveClassicGame({
   const monthPrevDisabled = prevMonth < MIN_MONTH;
   const monthNextDisabled = nextMonth > currentMonth;
 
-  const handleUnauthorized = useCallback(() => {
-    localStorage.removeItem("token");
-    redirectToLogin();
-  }, []);
-
-  const loadSession = useCallback(async () => {
-    setSessionLoading(true);
-    setSessionError("");
-    setSessionEnded(false);
-    const storedSessionId = localStorage.getItem(SESSION_KEY);
-
-    if (!storedSessionId) {
-      setSession(null);
-      setCurrentRoundHistory([]);
-      setPreviousRounds([]);
-      setSessionLoading(false);
-      return;
-    }
-
-    if (storedSessionId) {
-      try {
-        const loaded = await fetchSession(storedSessionId);
-        const expiresAtMs = Date.parse(loaded.expires_at);
-        if (Number.isFinite(expiresAtMs) && expiresAtMs <= Date.now()) {
-          setSession(loaded);
-          setSessionEnded(true);
-          const stored = getStoredHistoryState(loaded.id);
-          setCurrentRoundHistory(stored.currentRound);
-          setPreviousRounds(stored.previousRounds);
-          setSessionLoading(false);
-          return;
-        }
-
-        setSession(loaded);
-        const stored = getStoredHistoryState(loaded.id);
-        setCurrentRoundHistory(stored.currentRound);
-        setPreviousRounds(stored.previousRounds);
-        setStoredHistoryState(loaded.id, stored);
-        setSessionLoading(false);
-        return;
-      } catch (err) {
-        if (err instanceof ApiError && err.status === 401) {
-          handleUnauthorized();
-          setSessionLoading(false);
-          return;
-        }
-        if (err instanceof ApiError && (err.status === 404 || err.status === 410)) {
-          localStorage.removeItem(SESSION_KEY);
-          clearStoredHistory(storedSessionId);
-          setSession(null);
-          setSessionEnded(false);
-          setSessionError("");
-          setSessionLoading(false);
-          return;
-        }
-
-        localStorage.removeItem(SESSION_KEY);
-        clearStoredHistory(storedSessionId);
-      }
-    }
-  }, [handleUnauthorized]);
-
-  const createSession = useCallback(async () => {
-    setSessionLoading(true);
-    setSessionError("");
-    setSessionEnded(false);
-    try {
-      const created = await createGameSession();
-      localStorage.setItem(SESSION_KEY, created.id);
-      setStoredHistoryState(created.id, getEmptySessionHistoryState());
-      setSession(created);
-      setCurrentRoundHistory([]);
-      setPreviousRounds([]);
-      setHistoryTab("current");
-    } catch (err) {
-      if (err instanceof ApiError && err.status === 401) {
-        handleUnauthorized();
-        setSessionLoading(false);
-        return;
-      }
-      setSessionError(err instanceof Error ? err.message : "Failed to create session");
-    } finally {
-      setSessionLoading(false);
-    }
-  }, [handleUnauthorized]);
-
-  const startNewSession = useCallback(async () => {
-    if (session?.id) {
-      localStorage.removeItem(SESSION_KEY);
-      clearStoredHistory(session.id);
-    }
-    setSession(null);
-    setCurrentRoundHistory([]);
-    setPreviousRounds([]);
-    setSearch("");
-    setHistoryTab("current");
-    await createSession();
-  }, [createSession, session?.id]);
-
-  const submitGuess = useCallback(
-    async (talent: TalentChoice) => {
-      if (!session || !active || submittingId) return;
-      if (guessedIds.has(talent.id)) return;
-
-      setSubmittingId(talent.id);
-      setSessionError("");
-
-      try {
-        const data = await submitSessionGuess(session.id, talent.id);
-
-        const entry: GuessEntry = {
-          talent,
-          comparison: data.comparison,
-          correct: data.correct,
-          submittedAt: new Date().toISOString(),
-        };
-
-        if (data.correct) {
-          const completedRound = [...currentRoundHistory, entry];
-          setPreviousRounds((prevRounds) => [...prevRounds, completedRound]);
-          setCurrentRoundHistory([]);
-        } else {
-          setCurrentRoundHistory((prev) => [...prev, entry]);
-        }
-
-        setSession((prev) =>
-          prev
-            ? {
-                ...prev,
-                score: data.session.score,
-                correct_guesses: data.session.correct_guesses,
-                wrong_answers: data.session.wrong_answers,
-                round_number: data.session.round_number,
-                updated_at: new Date().toISOString(),
-              }
-            : prev
-        );
-        setToast({
-          message: data.correct ? "Correct guess." : "Wrong answer.",
-          type: data.correct ? "ok" : "err",
-        });
-      } catch (err) {
-        if (err instanceof ApiError && err.status === 401) {
-          handleUnauthorized();
-          return;
-        }
-        if (err instanceof ApiError && /expired/i.test(err.message)) {
-          setSessionEnded(true);
-          setSessionError("Game session expired.");
-          return;
-        }
-        setSessionError(err instanceof Error ? err.message : "Failed to submit guess");
-      } finally {
-        setSubmittingId(null);
-        setSearch("");
-        setShowDropdown(false);
-      }
-    },
-    [active, currentRoundHistory, guessedIds, handleUnauthorized, session, submittingId]
-  );
-
-  useEffect(() => {
-    if (!user) {
-      setTalentsLoading(false);
-      setSessionLoading(false);
-      return;
-    }
-    let alive = true;
-
-    const loadTalents = async () => {
-      setTalentsLoading(true);
-      setTalentError("");
-      try {
-        const choices = await fetchSessionTalents();
-        if (!alive) return;
-        setTalents(choices);
-      } catch (err) {
-        if (!alive) return;
-        if (!(err instanceof ApiError && err.status === 401)) {
-          setTalentError(err instanceof Error ? err.message : "Failed to fetch talents");
-        }
-      } finally {
-        if (alive) setTalentsLoading(false);
-      }
-    };
-
-    void loadTalents();
-    return () => {
-      alive = false;
-    };
-  }, [user]);
-
-  useEffect(() => {
-    if (!user || talentsLoading) return;
-    void loadSession();
-  }, [loadSession, talentsLoading, user]);
-
-  useEffect(() => {
-    const timer = window.setInterval(() => setNow(Date.now()), 1000);
-    return () => window.clearInterval(timer);
-  }, []);
-
-  useEffect(() => {
-    if (!session || sessionEnded) return;
-    const expiresAtMs = Date.parse(session.expires_at);
-    if (Number.isFinite(expiresAtMs) && expiresAtMs <= now) {
-      setSessionEnded(true);
-      setSessionError("Game session expired.");
-    }
-  }, [now, session, sessionEnded]);
-
-  useEffect(() => {
-    if (!session?.id) return;
-    localStorage.setItem(SESSION_KEY, session.id);
-  }, [session?.id]);
-
-  useEffect(() => {
-    if (!session?.id) return;
-    setStoredHistoryState(session.id, {
-      currentRound: currentRoundHistory,
-      previousRounds,
-    });
-  }, [currentRoundHistory, previousRounds, session?.id]);
-
-  useEffect(() => {
-    if (!toast) return;
-    const timer = window.setTimeout(() => setToast(null), 2500);
-    return () => window.clearInterval(timer);
-  }, [toast]);
-
   useEffect(() => {
     if (!showLeaderboard) return;
     void fetchLeaderboard();
   }, [fetchLeaderboard, showLeaderboard]);
 
   const totalGuessCount =
-    currentRoundHistory.length + previousRounds.reduce((count, round) => count + round.length, 0);
-  const latestGuess = currentRoundHistory[currentRoundHistory.length - 1] ?? null;
-  const displayCurrentHistory = [...currentRoundHistory].reverse();
-  const displayPreviousRounds = [...previousRounds].reverse();
+    s.currentRoundHistory.length + s.previousRounds.reduce((count, round) => count + round.length, 0);
+  const latestGuess = s.currentRoundHistory[s.currentRoundHistory.length - 1] ?? null;
+  const displayCurrentHistory = [...s.currentRoundHistory].reverse();
+  const displayPreviousRounds = [...s.previousRounds].reverse();
 
-  if (user && (sessionLoading || talentsLoading)) {
+  if (user && (s.sessionLoading || s.talentsLoading)) {
     return (
       <main
         className="min-h-screen flex items-center justify-center"
@@ -479,36 +222,36 @@ export default function CompetitiveClassicGame({
           />
         </div>
 
-        {session ? (
+        {s.session ? (
           <div className="flex gap-3 justify-center mb-6">
-            <HeaderStat label="Time left" value={sessionStatus === "ended" || sessionStatus === "expired" ? "Expired" : timeLeftText} />
-            <HeaderStat label="Score" value={session.score} />
-            <HeaderStat label="Round" value={session.round_number} />
-            <HeaderStat label="Wrong" value={session.wrong_answers} />
+            <HeaderStat label="Time left" value={s.sessionStatus === "ended" || s.sessionStatus === "expired" ? "Expired" : s.timeLeftText} />
+            <HeaderStat label="Score" value={s.session.score} />
+            <HeaderStat label="Round" value={s.session.round_number} />
+            <HeaderStat label="Wrong" value={s.session.wrong_answers} />
           </div>
         ) : (
           <div
             className="mb-6 rounded-2xl border border-dashed px-4 py-3 text-center text-sm font-semibold"
             style={{ borderColor: "var(--holo-border)", color: "var(--holo-text-muted)" }}
           >
-            No active session. Start one to begin playing.
+            No active s.session. Start one to begin playing.
           </div>
         )}
 
         {showHowTo && <HowToPlay maxGuesses={999} classic={false} />}
 
-        {toast && (
+        {s.toast && (
           <div
-            className={`fixed top-4 inset-x-0 mx-auto w-full max-w-5xl rounded-2xl px-4 py-3 text-center text-sm font-bold z-50 animate-slide-down ${toast.type === "ok" ? "win-banner" : "lose-banner"}`}
+            className={`fixed top-4 inset-x-0 mx-auto w-full max-w-5xl rounded-2xl px-4 py-3 text-center text-sm font-bold z-50 animate-slide-down ${s.toast.type === "ok" ? "win-banner" : "lose-banner"}`}
             style={{ boxShadow: "0 4px 20px rgba(0,0,0,0.1)" }}
           >
-            {toast.message}
+            {s.toast.message}
           </div>
         )}
 
-        {talentError && (
+        {s.talentError && (
           <div className="mx-auto mt-5 max-w-3xl rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-semibold text-rose-700">
-            {talentError}
+            {s.talentError}
           </div>
         )}
 
@@ -529,30 +272,30 @@ export default function CompetitiveClassicGame({
           onClose={() => setShowLeaderboard(false)}
         />
 
-        {sessionError && sessionStatus !== "ended" && sessionStatus !== "expired" && (
+        {s.sessionError && s.sessionStatus !== "ended" && s.sessionStatus !== "expired" && (
           <div className="mx-auto mt-5 max-w-3xl rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm font-semibold text-amber-800">
-            {sessionError}
+            {s.sessionError}
           </div>
         )}
 
-        {sessionStatus === "locked" ? (
+        {s.sessionStatus === "locked" ? (
           <LoginToPlayCard onLogin={() => onLogin("/classic/competitive")} />
-        ) : sessionStatus === "ended" || sessionStatus === "expired" ? (
-          session ? (
+        ) : s.sessionStatus === "ended" || s.sessionStatus === "expired" ? (
+          s.session ? (
             <FinalResultCard
-              session={session}
+              session={s.session}
               historyCount={totalGuessCount}
               onNewSession={startNewSession}
             />
           ) : (
-            <StartSessionCard onStart={startNewSession} loading={sessionLoading} />
+            <StartSessionCard onStart={startNewSession} loading={s.sessionLoading} />
           )
-        ) : sessionStatus === "idle" || sessionStatus === "error" ? (
-          <StartSessionCard onStart={startNewSession} loading={sessionLoading} />
+        ) : s.sessionStatus === "idle" || s.sessionStatus === "error" ? (
+          <StartSessionCard onStart={startNewSession} loading={s.sessionLoading} />
         ) : (
           <>
             <TalentSearch
-              talents={talents}
+              talents={s.talents}
               input={search}
               onInput={(value) => {
                 setSearch(value);
@@ -568,10 +311,10 @@ export default function CompetitiveClassicGame({
               showDropdown={showDropdown}
               dropdownRef={dropdownRef}
               inputRef={inputRef}
-              disabled={sessionStatus !== "active"}
+              disabled={s.sessionStatus !== "active"}
             />
 
-            {session && (
+            {s.session && (
               <div className="holo-card p-4 md:p-5">
                 <div className="flex flex-wrap items-center justify-between gap-3">
                   <div>
@@ -582,8 +325,8 @@ export default function CompetitiveClassicGame({
                       Session state
                     </p>
                     <p className="mt-1 text-sm" style={{ color: "var(--holo-text-muted)" }}>
-                      {session.correct_guesses} correct, {session.wrong_answers} wrong, round{" "}
-                      {session.round_number}
+                      {s.session.correct_guesses} correct, {s.session.wrong_answers} wrong, round{" "}
+                      {s.session.round_number}
                     </p>
                   </div>
                   <button
@@ -622,7 +365,7 @@ export default function CompetitiveClassicGame({
                     </button>
                   </div>
 
-                  {historyTab === "current" && currentRoundHistory.length > 0 ? (
+                  {historyTab === "current" && s.currentRoundHistory.length > 0 ? (
                     <div className="space-y-2">
                       <ColumnHeaders headers={DEFAULT_COLUMN_HEADERS} />
 
@@ -648,7 +391,7 @@ export default function CompetitiveClassicGame({
                   ) : displayPreviousRounds.length > 0 ? (
                     <div className="space-y-3">
                       {displayPreviousRounds.map((round, roundIndex) => {
-                        const roundNumber = previousRounds.length - roundIndex;
+                        const roundNumber = s.previousRounds.length - roundIndex;
                         const roundLatest = round[round.length - 1] ?? null;
                         return (
                           <div
