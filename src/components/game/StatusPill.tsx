@@ -1,0 +1,51 @@
+import type { ReactNode } from "react";
+
+const WON_COPY = { daily: "You found them! 🎉", endless: "Correct! Ready for the next one?" } as const;
+const LOST_COPY = { daily: "Game over — come back tomorrow!", endless: "Wrong — try the next one!" } as const;
+
+export default function StatusPill({
+  status,
+  guessesLeft,
+  variant,
+  extra,
+}: {
+  status: "won" | "lost" | "playing";
+  guessesLeft: number;
+  variant: "daily" | "endless";
+  extra?: ReactNode;
+}) {
+  return (
+    <div
+      className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-xs font-bold border"
+      style={{
+        background: "var(--holo-bg-card)",
+        borderColor: "var(--holo-border)",
+        color: "var(--holo-text-muted)",
+      }}
+    >
+      {status === "won" ? (
+        variant === "daily" ? (
+          <>
+            <span className="text-green-500">●</span> {WON_COPY.daily}
+          </>
+        ) : (
+          WON_COPY.endless
+        )
+      ) : status === "lost" ? (
+        variant === "daily" ? (
+          <>
+            <span className="text-red-400">●</span> {LOST_COPY.daily}
+          </>
+        ) : (
+          LOST_COPY.endless
+        )
+      ) : (
+        <>
+          <span style={{ color: "var(--holo-blue)" }}>●</span> {guessesLeft} guess
+          {guessesLeft !== 1 ? "es" : ""} remaining
+        </>
+      )}
+      {extra}
+    </div>
+  );
+}
