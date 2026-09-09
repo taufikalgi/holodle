@@ -78,7 +78,7 @@ assert.equal(applyClassicGuess(first.guesses, other, base, 6), null);
 const won = applyClassicGuess([], base, base, 6);
 assert.ok(won?.gameOver && won.won);
 // 6th wrong guess ends game as loss
-let g = applyClassicGuess([], other, base, 1);
+const g = applyClassicGuess([], other, base, 1);
 assert.ok(g?.gameOver && !g.won);
 
 // compareTalents never throws on unknown month

@@ -43,7 +43,7 @@ function clampBox(box: CropBox, nat: { w: number; h: number }): CropBox {
 }
 
 function resizeBox(orig: CropBox, corner: Corner, dx: number, dy: number) {
-  let b = { ...orig };
+  const b = { ...orig };
   if (corner.includes("e")) b.w = orig.w + dx;
   if (corner.includes("s")) b.h = orig.h + dy;
   if (corner.includes("w")) {
@@ -94,10 +94,13 @@ export default function CropEditor({
   const naturalRef = useRef(natural);
 
   const propsRef = useRef({ onAdd, onUpdate, onSelect, onRemove });
+  // eslint-disable-next-line react-hooks/refs -- latest-callback ref for pointer-event handlers; effect timing would lag by a paint
   propsRef.current = { onAdd, onUpdate, onSelect, onRemove };
 
   const scale = natural.w ? disp.w / natural.w : 0;
+  // eslint-disable-next-line react-hooks/refs -- render-derived values mirrored for handlers; read-only between renders
   scaleRef.current = scale;
+  // eslint-disable-next-line react-hooks/refs -- see above
   naturalRef.current = natural;
 
   useEffect(() => {

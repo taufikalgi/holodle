@@ -35,6 +35,7 @@ export default function AuthCallbackContent() {
     const error = searchParams.get("error");
 
     if (error || !token) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- auth callback syncs external auth state (sessionStorage/localStorage/router) once per searchParams change
       setStatus("error");
       setMessage(
         error === "google_oauth_failed"

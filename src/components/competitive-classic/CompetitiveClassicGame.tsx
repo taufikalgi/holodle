@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   Navbar,
   PageHeader,
@@ -39,22 +39,20 @@ export default function CompetitiveClassicGame({
   const inputRef = useRef<HTMLInputElement>(null);
 
   // Search/dropdown UI stays in the page; the hook owns session state, so
-  // this same-named wrapper applies the UI reset the moved code did inline.
+  // these plain wrappers apply the UI reset the moved code did inline
+  // (compiler cannot preserve manual memoization here; identity churn is harmless).
   // (History tab resets via <SessionHistorySection key={session.id}> remount.)
-  const startNewSession = useCallback(() => {
+  function startNewSession() {
     setSearch("");
     return s.startNewSession();
-  }, [s.startNewSession]);
+  }
 
-  const submitGuess = useCallback(
-    (talent: TalentChoice) => {
-      void Promise.resolve(s.submitGuess(talent)).finally(() => {
-        setSearch("");
-        setShowDropdown(false);
-      });
-    },
-    [s.submitGuess]
-  );
+  function submitGuess(talent: TalentChoice) {
+    void Promise.resolve(s.submitGuess(talent)).finally(() => {
+      setSearch("");
+      setShowDropdown(false);
+    });
+  }
 
   const suggestions = useMemo(() => {
     const query = search.trim().toLowerCase();

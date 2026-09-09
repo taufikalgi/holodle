@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { GoogleIcon, PageHeader } from "@/components/ui";
 
 export default function AuthGate({ onLogin }: { onLogin: () => void }) {
@@ -12,13 +13,13 @@ export default function AuthGate({ onLogin }: { onLogin: () => void }) {
         className="bg-[var(--holo-bg-card)] rounded-3xl shadow-xl p-10 flex flex-col items-center gap-5 text-center justify-center"
         style={{ maxWidth: 400, width: "100%", border: "1px solid var(--holo-border)" }}
       >
-        <a
+        <Link
           href="/"
           className="text-sm font-bold transition-colors hover:opacity-70"
           style={{ color: "var(--holo-blue)" }}
         >
           ← Back to Home
-        </a>
+        </Link>
         <PageHeader
           subtitle="Daily Hololive Talent Guessing Game"
           onHowTo={() => {}}

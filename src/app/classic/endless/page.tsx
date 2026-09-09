@@ -115,6 +115,7 @@ function EndlessGamePage() {
         if (last) branches = JSON.parse(last);
       } catch {}
     }
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- mount-only hydration from URL/localStorage must stay in an effect (SSR has no localStorage)
     setSelectedBranches(branches);
     setShowFilter(!branches);
     setHydrated(true);
@@ -206,12 +207,14 @@ function EndlessGameContent({
   selectedBranches: string[] | null;
   onChangeBranches: () => void;
 }) {
+  const branchKey = selectedBranches?.join(",");
   const pool = useMemo(
     () =>
       selectedBranches
         ? filterTalentsByBranch(talents, selectedBranches)
         : talents,
-    [selectedBranches?.join(","), talents]
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- branchKey carries the branch dep; selectedBranches array identity churns
+    [branchKey, talents]
   );
 
   const [state, setState] = useLocalStorageState<EndlessState>(
