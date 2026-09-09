@@ -22,6 +22,8 @@ export interface GameCategory {
   variants: GameVariant[];
 }
 
+const THUMB_BASE = "https://hololive.hololivepro.com";
+
 export const GAME_CATEGORIES: GameCategory[] = [
   {
     id: "classic",
@@ -29,7 +31,7 @@ export const GAME_CATEGORIES: GameCategory[] = [
     variants: [
       {
         href: "/classic/daily",
-        logo: "https://hololive.hololivepro.com/wp-content/uploads/2020/07/Airani-Iofifteen_list_thumb.png",
+        logo: `${THUMB_BASE}/wp-content/uploads/2020/07/Airani-Iofifteen_list_thumb.png`,
         alt: "classic logo",
         title: "Classic",
         label: "Daily",
@@ -38,7 +40,7 @@ export const GAME_CATEGORIES: GameCategory[] = [
       },
       {
         href: "/classic/endless",
-        logo: "https://hololive.hololivepro.com/wp-content/uploads/2023/07/Cecilia-Immergreen_list_thumb.png",
+        logo: `${THUMB_BASE}/wp-content/uploads/2023/07/Cecilia-Immergreen_list_thumb.png`,
         alt: "endless classic logo",
         title: "Endless Classic",
         label: "Endless",
@@ -47,7 +49,7 @@ export const GAME_CATEGORIES: GameCategory[] = [
       },
       {
         href: "/classic/competitive",
-        logo: "https://hololive.hololivepro.com/wp-content/uploads/2020/07/Anya-Melfissa_list_thumb.png",
+        logo: `${THUMB_BASE}/wp-content/uploads/2020/07/Anya-Melfissa_list_thumb.png`,
         alt: "competitive classic logo",
         title: "Competitive Classic",
         label: "Competitive",
@@ -62,7 +64,7 @@ export const GAME_CATEGORIES: GameCategory[] = [
     variants: [
       {
         href: "/avatar/daily",
-        logo: "https://hololive.hololivepro.com/wp-content/uploads/2023/09/Isaki-Riona_list_thumb.png",
+        logo: `${THUMB_BASE}/wp-content/uploads/2023/09/Isaki-Riona_list_thumb.png`,
         alt: "avatar logo",
         title: "Avatar",
         label: "Daily",
@@ -71,7 +73,7 @@ export const GAME_CATEGORIES: GameCategory[] = [
       },
       {
         href: "/avatar/endless",
-        logo: "https://hololive.hololivepro.com/wp-content/uploads/2020/07/Nanashi-Mumei_list_thumb.png",
+        logo: `${THUMB_BASE}/wp-content/uploads/2020/07/Nanashi-Mumei_list_thumb.png`,
         alt: "avatar endless logo",
         title: "Avatar Endless",
         label: "Endless",

@@ -51,6 +51,8 @@ export default function CategoryDropdown({ category }: { category: GameCategory 
         <img
           src={category.variants[0]?.logo ?? ""}
           alt=""
+          loading="lazy"
+          referrerPolicy="no-referrer"
           className="w-8 h-8 rounded-full object-cover flex-shrink-0"
           style={{ border: "1.5px solid var(--holo-border)" }}
         />

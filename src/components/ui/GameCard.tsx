@@ -15,6 +15,8 @@ export default function GameCard({ href, logo, alt, title, description, onPlay }
       <img
         src={logo}
         alt={alt}
+        loading="lazy"
+        referrerPolicy="no-referrer"
         className="w-20 h-20 rounded-full object-cover mr-1 flex-shrink-0"
       />
       <h2 className="text-xl font-black" style={{ color: "var(--holo-text)" }}>
