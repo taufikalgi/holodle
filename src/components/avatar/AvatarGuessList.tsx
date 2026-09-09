@@ -7,10 +7,7 @@ export default function AvatarGuessList({ guesses }: { guesses: AvatarGuessItem[
   if (guesses.length === 0) return null;
   return (
     <div className="holo-card p-4 mb-5 space-y-2">
-      <p
-        className="text-xs font-bold uppercase tracking-widest mb-3"
-        style={{ color: "var(--holo-text-muted)" }}
-      >
+      <p className="text-xs font-bold uppercase tracking-widest mb-3 text-[var(--holo-text-muted)]">
         Your guesses
       </p>
       {guesses.map((g, i) => (

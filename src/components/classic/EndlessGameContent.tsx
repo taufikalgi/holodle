@@ -56,7 +56,7 @@ export function EndlessGameContent({
     .reverse();
 
   return (
-    <main className="min-h-screen" style={{ background: "var(--holo-bg)" }}>
+    <main className="min-h-screen bg-[var(--holo-bg)]">
       <Navbar title="ENDLESS" />
 
       <div className="max-w-5xl mx-auto px-4 py-8">
@@ -82,11 +82,7 @@ export function EndlessGameContent({
                     {selectedBranches.map((b) => (
                       <span
                         key={b}
-                        className="rounded px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wider"
-                        style={{
-                          background: "var(--holo-off-white)",
-                          color: "var(--holo-text-muted)",
-                        }}
+                        className="rounded px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wider bg-[var(--holo-off-white)] text-[var(--holo-text-muted)]"
                       >
                         {b}
                       </span>
@@ -98,8 +94,7 @@ export function EndlessGameContent({
             <button
               type="button"
               onClick={onChangeBranches}
-              className="rounded-full border px-3 py-1.5 text-[11px] font-bold transition-colors hover:bg-[var(--holo-off-white)]"
-              style={{ borderColor: "var(--holo-border)", color: "var(--holo-text-muted)" }}
+              className="rounded-full border px-3 py-1.5 text-[11px] font-bold transition-colors hover:bg-[var(--holo-off-white)] border-[var(--holo-border)] text-[var(--holo-text-muted)]"
             >
               Change branches
             </button>
@@ -137,8 +132,7 @@ export function EndlessGameContent({
           >
             <button
               onClick={handleNextRound}
-              className="mt-4 px-6 py-2 rounded-full text-sm font-bold text-white transition-opacity hover:opacity-80"
-              style={{ background: "var(--holo-blue)" }}
+              className="mt-4 px-6 py-2 rounded-full text-sm font-bold text-white transition-opacity hover:opacity-80 bg-[var(--holo-blue)]"
             >
               {current.won ? "Next talent →" : "New run →"}
             </button>
@@ -170,10 +164,10 @@ export function EndlessGameContent({
 
         {g.pool.length === 0 ? (
           <div className="text-center py-14">
-            <p className="text-sm font-semibold" style={{ color: "var(--holo-text-muted)" }}>
+            <p className="text-sm font-semibold text-[var(--holo-text-muted)]">
               No talents match the selected branches.
             </p>
-            <p className="text-xs mt-1 opacity-50" style={{ color: "var(--holo-text-muted)" }}>
+            <p className="text-xs mt-1 opacity-50 text-[var(--holo-text-muted)]">
               <button
                 type="button"
                 onClick={onChangeBranches}

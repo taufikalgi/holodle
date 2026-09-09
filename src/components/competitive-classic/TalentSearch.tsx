@@ -41,18 +41,16 @@ export default function TalentSearch({
       <div className="flex items-center justify-between gap-3">
         <div>
           <p
-            className="text-xs font-black uppercase tracking-[0.24em]"
-            style={{ color: "var(--holo-text-muted)" }}
+            className="text-xs font-black uppercase tracking-[0.24em] text-[var(--holo-text-muted)]"
           >
             Guess a talent
           </p>
-          <p className="mt-1 text-sm" style={{ color: "var(--holo-text-muted)" }}>
+          <p className="mt-1 text-sm text-[var(--holo-text-muted)]">
             Search the fetched catalog and submit one name per round.
           </p>
         </div>
         <div
-          className="rounded-full border px-3 py-1 text-xs font-bold"
-          style={{ borderColor: "var(--holo-border)", color: "var(--holo-text-muted)" }}
+          className="rounded-full border px-3 py-1 text-xs font-bold border-[var(--holo-border)] text-[var(--holo-text-muted)]"
         >
           {talents.length} talents
         </div>
@@ -72,8 +70,7 @@ export default function TalentSearch({
         {input && !disabled && (
           <button
             onClick={onClear}
-            className="absolute right-3 top-1/2 -translate-y-1/2 text-sm font-bold"
-            style={{ color: "var(--holo-text-muted)" }}
+            className="absolute right-3 top-1/2 -translate-y-1/2 text-sm font-bold text-[var(--holo-text-muted)]"
           >
             ✕
           </button>
@@ -83,16 +80,14 @@ export default function TalentSearch({
       {showDropdown && !disabled && (
         <div
           ref={dropdownRef}
-          className="mt-3 max-h-72 overflow-auto rounded-2xl border bg-[var(--holo-bg-card)] shadow-sm"
-          style={{ borderColor: "var(--holo-border)" }}
+          className="mt-3 max-h-72 overflow-auto rounded-2xl border bg-[var(--holo-bg-card)] shadow-sm border-[var(--holo-border)]"
         >
           {suggestions.length > 0 ? (
             suggestions.map((talent) => (
               <button
                 key={talent.id}
                 onClick={() => onSelect(talent)}
-                className="flex w-full items-center gap-3 border-b px-4 py-3 text-left transition-colors last:border-0 hover:bg-[var(--holo-off-white)]"
-                style={{ borderColor: "var(--holo-border)" }}
+                className="flex w-full items-center gap-3 border-b px-4 py-3 text-left transition-colors last:border-0 hover:bg-[var(--holo-off-white)] border-[var(--holo-border)]"
               >
                 <img
                   src={talent.photoUrl}
@@ -100,14 +95,14 @@ export default function TalentSearch({
                   className="h-10 w-10 rounded-full object-cover"
                 />
                 <div className="min-w-0">
-                  <div className="truncate text-sm font-bold" style={{ color: "var(--holo-text)" }}>
+                  <div className="truncate text-sm font-bold text-[var(--holo-text)]">
                     {talent.name}
                   </div>
                 </div>
               </button>
             ))
           ) : (
-            <div className="px-4 py-4 text-sm" style={{ color: "var(--holo-text-muted)" }}>
+            <div className="px-4 py-4 text-sm text-[var(--holo-text-muted)]">
               No talents found.
             </div>
           )}

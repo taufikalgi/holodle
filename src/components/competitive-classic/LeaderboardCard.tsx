@@ -18,8 +18,7 @@ export default function LeaderboardCard({
     <div className="space-y-2">
       {loading ? (
         <div
-          className="rounded-2xl border border-dashed px-4 py-8 text-center text-sm"
-          style={{ borderColor: "var(--holo-border)", color: "var(--holo-text-muted)" }}
+          className="rounded-2xl border border-dashed px-4 py-8 text-center text-sm border-[var(--holo-border)] text-[var(--holo-text-muted)]"
         >
           Loading leaderboard...
         </div>
@@ -27,17 +26,11 @@ export default function LeaderboardCard({
         entries.map((entry) => (
           <div
             key={entry.session_id}
-            className="rounded-2xl border bg-[var(--holo-bg-card)] px-4 py-3 shadow-sm"
-            style={{ borderColor: "var(--holo-border)" }}
+            className="rounded-2xl border bg-[var(--holo-bg-card)] px-4 py-3 shadow-sm border-[var(--holo-border)]"
           >
             <div className="flex items-start gap-3">
               <div
-                className="flex h-10 w-10 items-center justify-center rounded-xl border text-sm font-black"
-                style={{
-                  borderColor: "var(--holo-border)",
-                  background: "var(--holo-off-white)",
-                  color: "var(--holo-text)",
-                }}
+                className="flex h-10 w-10 items-center justify-center rounded-xl border text-sm font-black border-[var(--holo-border)] bg-[var(--holo-off-white)] text-[var(--holo-text)]"
               >
                 #{entry.rank}
               </div>
@@ -52,12 +45,11 @@ export default function LeaderboardCard({
                 />
               </div>
               <div className="min-w-0 flex-1">
-                <div className="truncate text-sm font-black" style={{ color: "var(--holo-text)" }}>
+                <div className="truncate text-sm font-black text-[var(--holo-text)]">
                   {entry.user_name}
                 </div>
                 <div
-                  className="mt-1 flex flex-wrap gap-2 text-[11px] font-bold uppercase tracking-[0.16em]"
-                  style={{ color: "var(--holo-text-muted)" }}
+                  className="mt-1 flex flex-wrap gap-2 text-[11px] font-bold uppercase tracking-[0.16em] text-[var(--holo-text-muted)]"
                 >
                   <span>{entry.score} pts</span>
                   <span>•</span>
@@ -71,8 +63,7 @@ export default function LeaderboardCard({
         ))
       ) : (
         <div
-          className="rounded-2xl border border-dashed px-4 py-8 text-center text-sm"
-          style={{ borderColor: "var(--holo-border)", color: "var(--holo-text-muted)" }}
+          className="rounded-2xl border border-dashed px-4 py-8 text-center text-sm border-[var(--holo-border)] text-[var(--holo-text-muted)]"
         >
           No leaderboard data yet.
         </div>
@@ -82,8 +73,7 @@ export default function LeaderboardCard({
           type="button"
           onClick={onLoadMore}
           disabled={loadingMore}
-          className="w-full rounded-2xl border px-4 py-3 text-sm font-bold transition-colors hover:bg-[var(--holo-off-white)] disabled:opacity-50"
-          style={{ borderColor: "var(--holo-border)", color: "var(--holo-text)" }}
+          className="w-full rounded-2xl border px-4 py-3 text-sm font-bold transition-colors hover:bg-[var(--holo-off-white)] disabled:opacity-50 border-[var(--holo-border)] text-[var(--holo-text)]"
         >
           {loadingMore ? "Loading..." : "Load more"}
         </button>

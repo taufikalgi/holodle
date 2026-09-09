@@ -33,12 +33,11 @@ export default function PageHeader({
           className="text-3xl md:text-5xl font-black tracking-widest"
           style={{ fontFamily: "var(--font-albert-sans), sans-serif" }}
         >
-          <span style={{ color: "var(--holo-blue)" }}>HOLO</span>
-          <span style={{ color: "var(--holo-text)" }}>DLE</span>
+          <span className="text-[var(--holo-blue)]">HOLO</span>
+          <span className="text-[var(--holo-text)]">DLE</span>
         </h1>
         <p
-          className="text-xs tracking-[0.25em] uppercase mt-1"
-          style={{ color: "var(--holo-text-muted)" }}
+          className="text-xs tracking-[0.25em] uppercase mt-1 text-[var(--holo-text-muted)]"
         >
           {subtitle}
         </p>
@@ -48,11 +47,9 @@ export default function PageHeader({
           <button
             onClick={onLeaderboard}
             title="Leaderboard"
-            className="w-8 h-8 rounded-full border-2 flex items-center justify-center text-sm font-bold transition-colors"
+            className="w-8 h-8 rounded-full border-2 flex items-center justify-center text-sm font-bold transition-colors text-[var(--holo-blue)] bg-[var(--holo-bg-card)]"
             style={{
               borderColor: "var(--holo-blue)",
-              color: "var(--holo-blue)",
-              background: "var(--holo-bg-card)",
             }}
           >
             {showLeaderboard ? "x" : "🏆"}
@@ -62,11 +59,9 @@ export default function PageHeader({
           <button
             onClick={onHowTo}
             title="How to play"
-            className="w-8 h-8 rounded-full border-2 flex items-center justify-center text-sm font-bold transition-colors"
+            className="w-8 h-8 rounded-full border-2 flex items-center justify-center text-sm font-bold transition-colors text-[var(--holo-blue)] bg-[var(--holo-bg-card)]"
             style={{
               borderColor: "var(--holo-blue)",
-              color: "var(--holo-blue)",
-              background: "var(--holo-bg-card)",
             }}
           >
             {showHowTo ? "x" : "?"}

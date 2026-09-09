@@ -51,7 +51,7 @@ function EndlessGamePage() {
     // Keep inline: transient hydration shell — GameShell would add an empty
     // container div + footer around bare Navbar output.
     return (
-      <main className="min-h-screen" style={{ background: "var(--holo-bg)" }}>
+      <main className="min-h-screen bg-[var(--holo-bg)]">
         <Navbar title="ENDLESS" />
       </main>
     );
@@ -59,7 +59,7 @@ function EndlessGamePage() {
 
   if (showFilter) {
     return (
-      <main className="min-h-screen" style={{ background: "var(--holo-bg)" }}>
+      <main className="min-h-screen bg-[var(--holo-bg)]">
         <Navbar title="ENDLESS" />
         <BranchFilterModal
           initialBranches={selectedBranches ?? undefined}

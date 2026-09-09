@@ -59,7 +59,7 @@ function EndlessGamePage() {
   const { round, guesses } = roundState;
 
   return (
-    <main className="min-h-screen" style={{ background: "var(--holo-bg)" }}>
+    <main className="min-h-screen bg-[var(--holo-bg)]">
       <Navbar title="AVATAR ENDLESS" />
 
       <div className="max-w-3xl mx-auto px-4 py-8">
@@ -136,8 +136,7 @@ function EndlessGamePage() {
                 <button
                   type="button"
                   onClick={() => void nextRound()}
-                  className="mt-4 px-6 py-2 rounded-full text-sm font-bold text-white transition-opacity hover:opacity-80"
-                  style={{ background: "var(--holo-blue)" }}
+                  className="mt-4 px-6 py-2 rounded-full text-sm font-bold text-white transition-opacity hover:opacity-80 bg-[var(--holo-blue)]"
                 >
                   {roundState.won ? "Next talent →" : "New run →"}
                 </button>

@@ -61,7 +61,7 @@ export default function AvatarGame() {
   };
 
   return (
-    <main className="min-h-screen" style={{ background: "var(--holo-bg)" }}>
+    <main className="min-h-screen bg-[var(--holo-bg)]">
       <Navbar title="AVATAR" />
 
       <div className="max-w-3xl mx-auto px-4 py-8">

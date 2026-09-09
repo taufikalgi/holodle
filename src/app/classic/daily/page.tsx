@@ -52,7 +52,7 @@ export default function ClassicGame() {
     .reverse();
 
   return (
-    <main className="min-h-screen" style={{ background: "var(--holo-bg)" }}>
+    <main className="min-h-screen bg-[var(--holo-bg)]">
       <Navbar title="CLASSIC" />
       <div className="max-w-5xl mx-auto px-4 py-8">
         <header className="text-center mb-8">

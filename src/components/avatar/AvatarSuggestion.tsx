@@ -13,10 +13,10 @@ export default function AvatarSuggestion({ talent: t }: { talent: Talent }) {
         <span className="text-xl">🖼️</span>
       )}
       <div>
-        <div className="text-sm font-bold" style={{ color: "var(--holo-text)" }}>
+        <div className="text-sm font-bold text-[var(--holo-text)]">
           {t.name}
         </div>
-        <div className="text-xs" style={{ color: "var(--holo-text-muted)" }}>
+        <div className="text-xs text-[var(--holo-text-muted)]">
           {t.branch} • {t.debutYear}
         </div>
       </div>

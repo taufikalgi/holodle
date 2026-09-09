@@ -155,10 +155,7 @@ export default function CropStage({
             className="absolute inset-0 flex items-end justify-center pb-4"
             style={{ background: "linear-gradient(to top, rgba(0,0,0,0.55), transparent)" }}
           >
-            <span
-              className="rounded-full px-4 py-1.5 text-sm font-black"
-              style={{ background: "var(--holo-bg-card)", color: "var(--holo-text)" }}
-            >
+            <span className="rounded-full px-4 py-1.5 text-sm font-black bg-[var(--holo-bg-card)] text-[var(--holo-text)]">
               {answerName}
             </span>
           </div>

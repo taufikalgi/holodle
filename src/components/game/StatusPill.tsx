@@ -15,14 +15,7 @@ export default function StatusPill({
   extra?: ReactNode;
 }) {
   return (
-    <div
-      className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-xs font-bold border"
-      style={{
-        background: "var(--holo-bg-card)",
-        borderColor: "var(--holo-border)",
-        color: "var(--holo-text-muted)",
-      }}
-    >
+    <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-xs font-bold border bg-[var(--holo-bg-card)] border-[var(--holo-border)] text-[var(--holo-text-muted)]">
       {status === "won" ? (
         variant === "daily" ? (
           <>
@@ -41,7 +34,7 @@ export default function StatusPill({
         )
       ) : (
         <>
-          <span style={{ color: "var(--holo-blue)" }}>●</span> {guessesLeft} guess
+          <span className="text-[var(--holo-blue)]">●</span> {guessesLeft} guess
           {guessesLeft !== 1 ? "es" : ""} remaining
         </>
       )}
