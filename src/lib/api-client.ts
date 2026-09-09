@@ -52,13 +52,21 @@ function jsonHeaders(token: string | null, init?: RequestInit): Headers {
   return headers;
 }
 
+function assertPath(path: string): void {
+  if (/^https?:\/\//.test(path)) {
+    throw new Error(`api-client expects a path, got a full URL: ${path}`);
+  }
+}
+
 /** Unauthenticated request against API base. */
 export function publicFetch(path: string, init?: RequestInit): Promise<Response> {
+  assertPath(path);
   return fetch(`${apiBaseUrl()}${path}`, init);
 }
 
 /** Authenticated request — adds Bearer token when present. */
 export function authFetch(path: string, init?: RequestInit): Promise<Response> {
+  assertPath(path);
   const token = getToken();
   return fetch(`${apiBaseUrl()}${path}`, {
     ...init,

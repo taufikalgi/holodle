@@ -84,6 +84,27 @@ export default function ClassicGame() {
 
   useOutsideClick(dropdownRef, () => setShowDropdown(false), inputRef);
 
+  const makeGuess = useCallback(
+    (talent: Talent) => {
+      if (state.gameOver || !todayAnswer) return;
+      const transition = applyClassicGuess(state.guesses, talent, todayAnswer, MAX_GUESSES);
+      if (!transition) return;
+      const newState: GameState = { ...transition, date: getDateString() };
+      setState(newState);
+      if (transition.gameOver) {
+        const today = getDateString();
+        recordDailyGameOver(today, transition.won);
+        emitAppEvent("holodle:game-over", { mode: "classic", won: transition.won, date: today });
+      }
+      clear();
+    },
+    [state, todayAnswer, setState, recordDailyGameOver, clear]
+  );
+
+  const displayCurrentHistory = state.guesses
+    .map((g) => ({ talent: g.talent, result: g.result }))
+    .reverse();
+
   if (status === "loading") {
     return (
       <main className="min-h-screen" style={{ background: "var(--holo-bg)" }}>
@@ -117,27 +138,6 @@ export default function ClassicGame() {
       </main>
     );
   }
-
-  const makeGuess = useCallback(
-    (talent: Talent) => {
-      if (state.gameOver || !todayAnswer) return;
-      const transition = applyClassicGuess(state.guesses, talent, todayAnswer, MAX_GUESSES);
-      if (!transition) return;
-      const newState: GameState = { ...transition, date: getDateString() };
-      setState(newState);
-      if (transition.gameOver) {
-        const today = getDateString();
-        recordDailyGameOver(today, transition.won);
-        emitAppEvent("holodle:game-over", { mode: "classic", won: transition.won, date: today });
-      }
-      clear();
-    },
-    [state, todayAnswer, setState, recordDailyGameOver, clear]
-  );
-
-  const displayCurrentHistory = state.guesses
-    .map((g) => ({ talent: g.talent, result: g.result }))
-    .reverse();
 
   return (
     <main className="min-h-screen" style={{ background: "var(--holo-bg)" }}>

@@ -1,4 +1,4 @@
-import { apiBaseUrl, publicFetch, readEnvelope } from "./api-client";
+import { publicFetch, readEnvelope } from "./api-client";
 import { ApiError } from "./errors";
 import { getDateString, normalizeTalent } from "./talents";
 import type { ApiTalent, Talent } from "./talents";
@@ -28,12 +28,8 @@ function isRecord(x: unknown): x is Record<string, unknown> {
   return typeof x === "object" && x !== null;
 }
 
-function base(): string {
-  return `${apiBaseUrl()}/api/v1`;
-}
-
 export async function fetchAvatarTalents(): Promise<AvatarTalentRecord[]> {
-  const res = await publicFetch(`${base()}/avatar/talents`);
+  const res = await publicFetch("/api/v1/avatar/talents");
   const data = await readEnvelope<
     AvatarTalentRecord[] | { talents?: AvatarTalentRecord[] }
   >(res);
@@ -56,7 +52,7 @@ export async function fetchAvatarTalents(): Promise<AvatarTalentRecord[]> {
 }
 
 export async function fetchAvatarAreas(talentId: string): Promise<CropArea[]> {
-  const res = await publicFetch(`${base()}/avatar/${encodeURIComponent(talentId)}`);
+  const res = await publicFetch(`/api/v1/avatar/${encodeURIComponent(talentId)}`);
   const data = await readEnvelope<
     { talent_id?: string; id?: string; avatar_url?: string; areas?: CropArea[] } | CropArea[]
   >(res);
