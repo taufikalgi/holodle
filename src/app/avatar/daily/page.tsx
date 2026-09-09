@@ -12,6 +12,7 @@ import {
   TalentSearchInput,
 } from "@/components/ui";
 import { buildAvatarShareText } from "@/lib/share";
+import { emitAppEvent } from "@/lib/events";
 import { deriveAvatarStatus } from "@/lib/game-status";
 import { useLocalStorageState } from "@/hooks/useLocalStorageState";
 import { useOutsideClick } from "@/hooks/useOutsideClick";
@@ -172,7 +173,9 @@ export default function AvatarGame() {
         date: getDateString(),
       });
       if (gameOver) {
-        recordDailyGameOver(getDateString(), correct);
+        const today = getDateString();
+        recordDailyGameOver(today, correct);
+        emitAppEvent("holodle:game-over", { mode: "avatar", won: correct, date: today });
       }
       clear();
     },

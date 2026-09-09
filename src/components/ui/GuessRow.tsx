@@ -1,3 +1,4 @@
+import { memo } from "react";
 import { getLoreArchetypeCategory } from "@/lib/talents";
 import Cell from "./Cell";
 import type { ReactNode } from "react";
@@ -60,7 +61,7 @@ const ATTRIBUTES: { key: AttrKey; delay: number }[] = [
   { key: "birthMonth", delay: 480 },
 ];
 
-export default function GuessRow({
+export default memo(function GuessRow({
   guess,
   result,
   index,
@@ -106,4 +107,4 @@ export default function GuessRow({
       </div>
     </>
   );
-}
+});

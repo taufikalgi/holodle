@@ -23,6 +23,7 @@ import {
   TalentSearchInput,
 } from "@/components/ui";
 import { buildGridShareText } from "@/lib/share";
+import { emitAppEvent } from "@/lib/events";
 import { useLocalStorageState } from "@/hooks/useLocalStorageState";
 import { useOutsideClick } from "@/hooks/useOutsideClick";
 import { useTalentSearch } from "@/hooks/useTalentSearch";
@@ -125,7 +126,9 @@ export default function ClassicGame() {
       const newState: GameState = { ...transition, date: getDateString() };
       setState(newState);
       if (transition.gameOver) {
-        recordDailyGameOver(getDateString(), transition.won);
+        const today = getDateString();
+        recordDailyGameOver(today, transition.won);
+        emitAppEvent("holodle:game-over", { mode: "classic", won: transition.won, date: today });
       }
       clear();
     },

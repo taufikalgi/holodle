@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { parseJwt } from "@/lib/jwt";
+import { emitAppEvent, onAppEvent } from "@/lib/events";
 import {
   apiBaseUrl,
   authFetch,
@@ -93,10 +94,10 @@ export function useAuth({ requireAdmin }: UseAuthOptions = {}) {
     const onStorage = (e: StorageEvent) => {
       if (e.key === TOKEN_KEY) syncFromStorage();
     };
-    window.addEventListener("holodle:auth-change", onAuthChange);
+    const offAuthChange = onAppEvent("holodle:auth-change", onAuthChange);
     window.addEventListener("storage", onStorage);
     return () => {
-      window.removeEventListener("holodle:auth-change", onAuthChange);
+      offAuthChange();
       window.removeEventListener("storage", onStorage);
     };
   }, [requireAdmin]);
@@ -134,7 +135,7 @@ export function useAuth({ requireAdmin }: UseAuthOptions = {}) {
     setLoading(false);
     setUnauthorized(false);
     // Notify other useAuth instances (e.g. Navbar) in same tab
-    window.dispatchEvent(new Event("holodle:auth-change"));
+    emitAppEvent("holodle:auth-change", undefined);
   }, []);
 
   return { user, loading, unauthorized, login, logout };
