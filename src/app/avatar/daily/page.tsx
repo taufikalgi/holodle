@@ -23,6 +23,16 @@ import {
 } from "@/lib/avatar-api";
 import CropStage from "@/components/avatar/CropStage";
 import AvatarHowToPlay from "@/components/avatar/AvatarHowToPlay";
+import AvatarGuessList from "@/components/avatar/AvatarGuessList";
+import AvatarSuggestion from "@/components/avatar/AvatarSuggestion";
+import StatusPill from "@/components/game/StatusPill";
+import StreakResetModal from "@/components/game/StreakResetModal";
+import {
+  AvatarEmptyBlock,
+  AvatarErrorBlock,
+  LoadingBlock,
+  ZeroGuessHint,
+} from "@/components/game/GameShell";
 import { isValidDailyState, type DailyState } from "@/components/avatar/types";
 import type { DailyStreakStats } from "@/lib/daily-streak";
 import { useDailyStreak } from "@/hooks/useDailyStreak";
@@ -186,73 +196,16 @@ export default function AvatarGame() {
             showHowTo={showHowTo}
           />
 
-          <div
-            className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-xs font-bold border"
-            style={{
-              background: "var(--holo-bg-card)",
-              borderColor: "var(--holo-border)",
-              color: "var(--holo-text-muted)",
-            }}
-          >
-            {state.gameOver ? (
-              state.won ? (
-                <>
-                  <span className="text-green-500">●</span> You found them! 🎉
-                </>
-              ) : (
-                <>
-                  <span className="text-red-400">●</span> Game over — come back tomorrow!
-                </>
-              )
-            ) : (
-              <>
-                <span style={{ color: "var(--holo-blue)" }}>●</span> {guessesLeft} guess
-                {guessesLeft !== 1 ? "es" : ""} remaining
-              </>
-            )}
-          </div>
+          <StatusPill
+            status={state.gameOver ? (state.won ? "won" : "lost") : "playing"}
+            guessesLeft={guessesLeft}
+            variant="daily"
+          />
         </header>
 
         {showHowTo && <AvatarHowToPlay daily />}
 
-        {streakResetToast && (
-          <div
-            className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4"
-            onClick={dismissStreakResetPopup}
-            role="dialog"
-            aria-modal="true"
-            aria-label="Streak reset"
-          >
-            <div
-              className="holo-card w-full max-w-sm p-6 text-center relative"
-              onClick={(e) => e.stopPropagation()}
-            >
-              <button
-                type="button"
-                onClick={dismissStreakResetPopup}
-                aria-label="Close"
-                className="absolute top-3 right-3 w-7 h-7 rounded-full flex items-center justify-center text-sm font-bold"
-                style={{ background: "var(--holo-off-white)", color: "var(--holo-text-muted)" }}
-              >
-                ✕
-              </button>
-              <h3 className="font-black text-sm tracking-widest uppercase" style={{ color: "var(--holo-text)" }}>
-                Streak reset
-              </h3>
-              <p className="text-sm mt-2 font-semibold" style={{ color: "var(--holo-text-muted)" }}>
-                You missed a day. Your streak was reset to 0. Win today to start a new streak!
-              </p>
-              <button
-                type="button"
-                onClick={dismissStreakResetPopup}
-                className="mt-4 px-6 py-2 rounded-full text-sm font-bold text-white transition-opacity hover:opacity-80"
-                style={{ background: "var(--holo-blue)" }}
-              >
-                Got it
-              </button>
-            </div>
-          </div>
-        )}
+        <StreakResetModal open={streakResetToast} onClose={dismissStreakResetPopup} />
 
         <StatsBar
           streak={stats.streak}
@@ -261,44 +214,14 @@ export default function AvatarGame() {
           totalWon={stats.totalWon}
         />
 
-        {roundStatus === "loading" && (
-          <div className="text-center py-14">
-            <p
-              className="text-sm font-semibold animate-pulse"
-              style={{ color: "var(--holo-text-muted)" }}
-            >
-              Loading today&apos;s avatar…
-            </p>
-          </div>
-        )}
+        {roundStatus === "loading" && <LoadingBlock text="Loading today's avatar…" />}
 
         {roundStatus === "noValid" && (
-          <div className="holo-card p-8 text-center">
-            <p className="text-sm font-semibold" style={{ color: "var(--holo-text-muted)" }}>
-              No playable talents yet.
-            </p>
-            <button
-              type="button"
-              onClick={() => void loadRound(validTalents)}
-              className="mt-4 px-6 py-2 rounded-full text-sm font-bold text-white transition-opacity hover:opacity-80"
-              style={{ background: "var(--holo-blue)" }}
-            >
-              Retry
-            </button>
-          </div>
+          <AvatarEmptyBlock onRetry={() => void loadRound(validTalents)} />
         )}
 
         {roundStatus === "error" && (
-          <div className="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-semibold text-rose-700">
-            {roundError}{" "}
-            <button
-              type="button"
-              onClick={() => void loadRound(validTalents)}
-              className="underline font-black"
-            >
-              Retry
-            </button>
-          </div>
+          <AvatarErrorBlock message={roundError} onRetry={() => void loadRound(validTalents)} />
         )}
 
         {roundStatus === "ready" && state.talent && (
@@ -348,75 +271,22 @@ export default function AvatarGame() {
                 onClear={clear}
                 onFocus={onFocus}
                 dropdownRef={dropdownRef}
-                renderSuggestion={(t) => (
-                  <>
-                    {t.avatarUrl ? (
-                      <img
-                        src={t.avatarUrl}
-                        alt={t.name}
-                        className="w-10 h-10 rounded-full object-cover flex-shrink-0"
-                      />
-                    ) : (
-                      <span className="text-xl">🖼️</span>
-                    )}
-                    <div>
-                      <div className="text-sm font-bold" style={{ color: "var(--holo-text)" }}>
-                        {t.name}
-                      </div>
-                      <div className="text-xs" style={{ color: "var(--holo-text-muted)" }}>
-                        {t.branch} • {t.debutYear}
-                      </div>
-                    </div>
-                  </>
-                )}
+                renderSuggestion={(t) => <AvatarSuggestion talent={t} />}
               />
             )}
 
-            {state.guesses.length > 0 && (
-              <div className="holo-card p-4 mb-5 space-y-2">
-                <p
-                  className="text-xs font-bold uppercase tracking-widest mb-3"
-                  style={{ color: "var(--holo-text-muted)" }}
-                >
-                  Your guesses
-                </p>
-                {displayGuessHistory.map((g, i) => (
-                  <div
-                    key={i}
-                    className={`flex items-center gap-3 px-3 py-2 rounded-xl text-sm font-semibold ${
-                      g.correct ? "cell-correct" : "cell-wrong"
-                    }`}
-                  >
-                    {g.talent.avatarUrl ? (
-                      <img
-                        src={g.talent.avatarUrl}
-                        alt={g.talent.name}
-                        className="w-7 h-7 rounded-full object-cover"
-                      />
-                    ) : (
-                      <span className="text-lg">🖼️</span>
-                    )}
-                    <span>{g.talent.name}</span>
-                    <span className="ml-auto">{g.correct ? "✓ Correct!" : "✗ Wrong"}</span>
-                  </div>
-                ))}
-              </div>
-            )}
+            {state.guesses.length > 0 && <AvatarGuessList guesses={displayGuessHistory} />}
 
             {!state.gameOver && state.guesses.length === 0 && (
-              <div className="text-center py-6">
-                <p className="text-sm font-semibold" style={{ color: "var(--holo-text-muted)" }}>
-                  Start typing to make your first guess!
-                </p>
-                {searchPool.length > 0 && (
-                  <p
-                    className="text-xs mt-1 opacity-50"
-                    style={{ color: "var(--holo-text-muted)" }}
-                  >
-                    {searchPool.length} playable talent{searchPool.length !== 1 ? "s" : ""}
-                  </p>
-                )}
-              </div>
+              <ZeroGuessHint
+                compact
+                line1="Start typing to make your first guess!"
+                line2={
+                  searchPool.length > 0
+                    ? `${searchPool.length} playable talent${searchPool.length !== 1 ? "s" : ""}`
+                    : undefined
+                }
+              />
             )}
           </>
         )}

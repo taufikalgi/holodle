@@ -23,6 +23,15 @@ import {
 } from "@/lib/avatar-api";
 import CropStage from "@/components/avatar/CropStage";
 import AvatarHowToPlay from "@/components/avatar/AvatarHowToPlay";
+import AvatarGuessList from "@/components/avatar/AvatarGuessList";
+import AvatarSuggestion from "@/components/avatar/AvatarSuggestion";
+import StatusPill from "@/components/game/StatusPill";
+import {
+  AvatarEmptyBlock,
+  AvatarErrorBlock,
+  LoadingBlock,
+  ZeroGuessHint,
+} from "@/components/game/GameShell";
 import {
   isValidEndlessPersisted,
   isValidEndlessRoundState,
@@ -204,27 +213,11 @@ function EndlessGamePage() {
             showHowTo={showHowTo}
           />
 
-          <div
-            className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-xs font-bold border"
-            style={{
-              background: "var(--holo-bg-card)",
-              borderColor: "var(--holo-border)",
-              color: "var(--holo-text-muted)",
-            }}
-          >
-            {roundState.gameOver ? (
-              roundState.won ? (
-                "Correct! Ready for the next one?"
-              ) : (
-                "Wrong — try the next one!"
-              )
-            ) : (
-              <>
-                <span style={{ color: "var(--holo-blue)" }}>●</span> {guessesLeft} guess
-                {guessesLeft !== 1 ? "es" : ""} remaining
-              </>
-            )}
-          </div>
+          <StatusPill
+            status={roundState.gameOver ? (roundState.won ? "won" : "lost") : "playing"}
+            guessesLeft={guessesLeft}
+            variant="endless"
+          />
         </div>
 
         {showHowTo && <AvatarHowToPlay />}
@@ -236,44 +229,17 @@ function EndlessGamePage() {
           totalWon={persisted.stats.totalWon}
         />
 
-        {roundStatus === "loading" && (
-          <div className="text-center py-14">
-            <p
-              className="text-sm font-semibold animate-pulse"
-              style={{ color: "var(--holo-text-muted)" }}
-            >
-              Loading a new avatar…
-            </p>
-          </div>
-        )}
+        {roundStatus === "loading" && <LoadingBlock text="Loading a new avatar…" />}
 
         {roundStatus === "noValid" && (
-          <div className="holo-card p-8 text-center">
-            <p className="text-sm font-semibold" style={{ color: "var(--holo-text-muted)" }}>
-              No playable talents yet.
-            </p>
-            <button
-              type="button"
-              onClick={() => void startRound(pool, persisted.recentTalentIds)}
-              className="mt-4 px-6 py-2 rounded-full text-sm font-bold text-white transition-opacity hover:opacity-80"
-              style={{ background: "var(--holo-blue)" }}
-            >
-              Retry
-            </button>
-          </div>
+          <AvatarEmptyBlock onRetry={() => void startRound(pool, persisted.recentTalentIds)} />
         )}
 
         {roundStatus === "error" && (
-          <div className="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-semibold text-rose-700">
-            {roundError}{" "}
-            <button
-              type="button"
-              onClick={() => void startRound(pool, persisted.recentTalentIds)}
-              className="underline font-black"
-            >
-              Retry
-            </button>
-          </div>
+          <AvatarErrorBlock
+            message={roundError}
+            onRetry={() => void startRound(pool, persisted.recentTalentIds)}
+          />
         )}
 
         {roundStatus === "ready" && round && (
@@ -331,75 +297,22 @@ function EndlessGamePage() {
                 onClear={clear}
                 onFocus={onFocus}
                 dropdownRef={dropdownRef}
-                renderSuggestion={(t) => (
-                  <>
-                    {t.avatarUrl ? (
-                      <img
-                        src={t.avatarUrl}
-                        alt={t.name}
-                        className="w-10 h-10 rounded-full object-cover flex-shrink-0"
-                      />
-                    ) : (
-                      <span className="text-xl">🖼️</span>
-                    )}
-                    <div>
-                      <div className="text-sm font-bold" style={{ color: "var(--holo-text)" }}>
-                        {t.name}
-                      </div>
-                      <div className="text-xs" style={{ color: "var(--holo-text-muted)" }}>
-                        {t.branch} • {t.debutYear}
-                      </div>
-                    </div>
-                  </>
-                )}
+                renderSuggestion={(t) => <AvatarSuggestion talent={t} />}
               />
             )}
 
-            {guesses.length > 0 && (
-              <div className="holo-card p-4 mb-5 space-y-2">
-                <p
-                  className="text-xs font-bold uppercase tracking-widest mb-3"
-                  style={{ color: "var(--holo-text-muted)" }}
-                >
-                  Your guesses
-                </p>
-                {displayGuessHistory.map((g, i) => (
-                  <div
-                    key={i}
-                    className={`flex items-center gap-3 px-3 py-2 rounded-xl text-sm font-semibold ${
-                      g.correct ? "cell-correct" : "cell-wrong"
-                    }`}
-                  >
-                    {g.talent.avatarUrl ? (
-                      <img
-                        src={g.talent.avatarUrl}
-                        alt={g.talent.name}
-                        className="w-7 h-7 rounded-full object-cover"
-                      />
-                    ) : (
-                      <span className="text-lg">🖼️</span>
-                    )}
-                    <span>{g.talent.name}</span>
-                    <span className="ml-auto">{g.correct ? "✓ Correct!" : "✗ Wrong"}</span>
-                  </div>
-                ))}
-              </div>
-            )}
+            {guesses.length > 0 && <AvatarGuessList guesses={displayGuessHistory} />}
 
             {!roundState.gameOver && guesses.length === 0 && (
-              <div className="text-center py-6">
-                <p className="text-sm font-semibold" style={{ color: "var(--holo-text-muted)" }}>
-                  Start typing to make your first guess!
-                </p>
-                {pool.length > 0 && (
-                  <p
-                    className="text-xs mt-1 opacity-50"
-                    style={{ color: "var(--holo-text-muted)" }}
-                  >
-                    {pool.length} playable talent{pool.length !== 1 ? "s" : ""}
-                  </p>
-                )}
-              </div>
+              <ZeroGuessHint
+                compact
+                line1="Start typing to make your first guess!"
+                line2={
+                  pool.length > 0
+                    ? `${pool.length} playable talent${pool.length !== 1 ? "s" : ""}`
+                    : undefined
+                }
+              />
             )}
           </>
         )}
