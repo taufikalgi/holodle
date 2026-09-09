@@ -234,7 +234,7 @@ export default function CompetitiveClassicGame({
             className="mb-6 rounded-2xl border border-dashed px-4 py-3 text-center text-sm font-semibold"
             style={{ borderColor: "var(--holo-border)", color: "var(--holo-text-muted)" }}
           >
-            No active s.session. Start one to begin playing.
+            No active session. Start one to begin playing.
           </div>
         )}
 
