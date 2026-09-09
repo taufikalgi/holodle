@@ -24,8 +24,7 @@ export default function AuthCluster({
     if (mobile) {
       return (
         <div
-          className="flex items-center gap-3 pt-2 border-t mt-1"
-          style={{ borderColor: "var(--holo-border)" }}
+          className="flex items-center gap-3 pt-2 border-t mt-1 border-[var(--holo-border)]"
         >
           {user.picture && (
             <Image
@@ -37,7 +36,7 @@ export default function AuthCluster({
               style={{ border: "2px solid var(--holo-border)" }}
             />
           )}
-          <span className="text-xs font-semibold" style={{ color: "var(--holo-text)" }}>
+          <span className="text-xs font-semibold text-[var(--holo-text)]">
             {user.name}
           </span>
           {onLogout && (
@@ -67,7 +66,7 @@ export default function AuthCluster({
             style={{ border: "2px solid var(--holo-border)" }}
           />
         )}
-        <span className="text-xs font-semibold" style={{ color: "var(--holo-text)" }}>
+        <span className="text-xs font-semibold text-[var(--holo-text)]">
           {user.name}
         </span>
         {onLogout && (
@@ -84,18 +83,13 @@ export default function AuthCluster({
   }
   if (mobile) {
     return (
-      <div className="pt-2 border-t mt-1" style={{ borderColor: "var(--holo-border)" }}>
+      <div className="pt-2 border-t mt-1 border-[var(--holo-border)]">
         <button
           onClick={() => {
             onLogin();
             onNavigate?.();
           }}
-          className="w-full inline-flex items-center justify-center gap-2 text-xs font-semibold px-3 py-2 rounded-full transition-opacity hover:opacity-80"
-          style={{
-            border: "1.5px solid var(--holo-border)",
-            background: "var(--holo-bg-card)",
-            color: "var(--holo-text)",
-          }}
+          className="w-full inline-flex items-center justify-center gap-2 text-xs font-semibold px-3 py-2 rounded-full transition-opacity hover:opacity-80 border-[1.5px] border-solid border-[var(--holo-border)] bg-[var(--holo-bg-card)] text-[var(--holo-text)]"
         >
           <GoogleIcon />
           Sign in with Google
@@ -106,12 +100,7 @@ export default function AuthCluster({
   return (
     <button
       onClick={onLogin}
-      className="hidden md:inline-flex items-center gap-2 text-xs font-semibold px-3 py-1.5 rounded-full transition-opacity hover:opacity-80"
-      style={{
-        border: "1.5px solid var(--holo-border)",
-        background: "var(--holo-bg-card)",
-        color: "var(--holo-text)",
-      }}
+      className="hidden md:inline-flex items-center gap-2 text-xs font-semibold px-3 py-1.5 rounded-full transition-opacity hover:opacity-80 border-[1.5px] border-solid border-[var(--holo-border)] bg-[var(--holo-bg-card)] text-[var(--holo-text)]"
     >
       <GoogleIcon />
       Sign in

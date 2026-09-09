@@ -51,20 +51,18 @@ export default function LeaderboardModal({
           <div className="flex items-center justify-between border-b px-5 py-4 md:px-6">
             <div>
               <p
-                className="text-xs font-black uppercase tracking-[0.24em]"
-                style={{ color: "var(--holo-text-muted)" }}
+                className="text-xs font-black uppercase tracking-[0.24em] text-[var(--holo-text-muted)]"
               >
                 Leaderboard
               </p>
-              <p className="mt-1 text-sm" style={{ color: "var(--holo-text-muted)" }}>
+              <p className="mt-1 text-sm text-[var(--holo-text-muted)]">
                 Sorted by score, correct guesses, then fewer mistakes.
               </p>
             </div>
             <button
               type="button"
               onClick={onClose}
-              className="rounded-full border px-3 py-2 text-sm font-bold transition-colors hover:bg-[var(--holo-off-white)]"
-              style={{ borderColor: "var(--holo-border)", color: "var(--holo-text)" }}
+              className="rounded-full border px-3 py-2 text-sm font-bold transition-colors hover:bg-[var(--holo-off-white)] border-[var(--holo-border)] text-[var(--holo-text)]"
             >
               Close
             </button>
@@ -73,8 +71,7 @@ export default function LeaderboardModal({
           <div className="p-4 md:p-6">
             <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
               <div
-                className="flex rounded-2xl border p-1"
-                style={{ borderColor: "var(--holo-border)" }}
+                className="flex rounded-2xl border p-1 border-[var(--holo-border)]"
               >
                 {PERIOD_OPTIONS.map((option) => (
                   <button
@@ -97,7 +94,7 @@ export default function LeaderboardModal({
                 {period !== "all" && (
                   <div className="flex items-center gap-2">
                     {period === "monthly" && (
-                      <span className="text-xs font-bold" style={{ color: "var(--holo-text)" }}>
+                      <span className="text-xs font-bold text-[var(--holo-text)]">
                         {monthLabel}
                       </span>
                     )}
@@ -107,27 +104,24 @@ export default function LeaderboardModal({
                         onClick={() => onNavigate(-1)}
                         disabled={prevDisabled}
                         aria-label="Previous period"
-                        className="rounded-full border px-2 py-1 text-sm font-bold transition-colors hover:bg-[var(--holo-off-white)] disabled:opacity-40 disabled:hover:bg-transparent"
-                        style={{ borderColor: "var(--holo-border)", color: "var(--holo-text)" }}
-                      >
-                        ‹
+                        className="rounded-full border px-2 py-1 text-sm font-bold transition-colors hover:bg-[var(--holo-off-white)] disabled:opacity-40 disabled:hover:bg-transparent border-[var(--holo-border)] text-[var(--holo-text)]"
+                        >
+                          ‹
                       </button>
                       <button
                         type="button"
                         onClick={() => onNavigate(1)}
                         disabled={nextDisabled}
                         aria-label="Next period"
-                        className="rounded-full border px-2 py-1 text-sm font-bold transition-colors hover:bg-[var(--holo-off-white)] disabled:opacity-40 disabled:hover:bg-transparent"
-                        style={{ borderColor: "var(--holo-border)", color: "var(--holo-text)" }}
-                      >
-                        ›
+                        className="rounded-full border px-2 py-1 text-sm font-bold transition-colors hover:bg-[var(--holo-off-white)] disabled:opacity-40 disabled:hover:bg-transparent border-[var(--holo-border)] text-[var(--holo-text)]"
+                        >
+                          ›
                       </button>
                     </div>
                   </div>
                 )}
                 <span
-                  className="rounded-full border px-3 py-1 text-xs font-bold"
-                  style={{ borderColor: "var(--holo-border)", color: "var(--holo-text-muted)" }}
+                  className="rounded-full border px-3 py-1 text-xs font-bold border-[var(--holo-border)] text-[var(--holo-text-muted)]"
                 >
                   Top {total}
                 </span>

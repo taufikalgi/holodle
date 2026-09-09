@@ -51,14 +51,13 @@ export default function CategoryDropdown({ category }: { category: GameCategory 
         <img
           src={category.variants[0]?.logo ?? ""}
           alt=""
-          className="w-8 h-8 rounded-full object-cover flex-shrink-0"
-          style={{ border: "1.5px solid var(--holo-border)" }}
+          className="w-8 h-8 rounded-full object-cover flex-shrink-0 border-[1.5px] border-solid border-[var(--holo-border)]"
         />
         <div className="flex flex-col min-w-0">
-          <h2 className="text-sm font-black tracking-widest leading-none" style={{ color: "var(--holo-text)" }}>
+          <h2 className="text-sm font-black tracking-widest leading-none text-[var(--holo-text)]">
             {category.label.toUpperCase()}
           </h2>
-          <p className="text-xs leading-tight mt-1" style={{ color: "var(--holo-text-muted)" }}>
+          <p className="text-xs leading-tight mt-1 text-[var(--holo-text-muted)]">
             {category.id === "classic" ? "Guess by attributes — branch, debut, lore & more" : "Guess by cropped avatar — zoom reveals hints"}
           </p>
         </div>
@@ -66,8 +65,7 @@ export default function CategoryDropdown({ category }: { category: GameCategory 
 
       {open && (
         <div
-          className="grid gap-4 p-4 border-t animate-slide-down"
-          style={{ borderColor: "var(--holo-border)", background: "var(--holo-off-white)" }}
+          className="grid gap-4 p-4 border-t animate-slide-down border-[var(--holo-border)] bg-[var(--holo-off-white)]"
         >
           {category.variants.map((variant) => (
             <GameCard

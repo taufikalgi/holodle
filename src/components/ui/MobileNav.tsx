@@ -34,20 +34,19 @@ export default function MobileNav({
             <span>{category.label.toUpperCase()}</span>
             <span className={`transition-transform ${expandedCategory === category.id ? "rotate-180" : ""}`}>▾</span>
           </button>
-          <div className={`overflow-hidden transition-all duration-200 ${expandedCategory === category.id ? "max-h-64 border-t" : "max-h-0"}`} style={{ borderColor: "var(--holo-border)" }}>
+          <div className={`overflow-hidden transition-all duration-200 border-[var(--holo-border)] ${expandedCategory === category.id ? "max-h-64 border-t" : "max-h-0"}`}>
             <div className="flex flex-col p-2 gap-1">
               {category.variants.map((variant) => (
                 <Link
                   key={variant.href}
                   href={variant.href}
-                  className={`flex items-center gap-2 px-2 py-1.5 rounded-lg text-sm font-bold ${isActive(variant.href) ? "bg-[var(--holo-off-white)]" : ""}`}
-                  style={{ color: "var(--holo-text)" }}
+                  className={`flex items-center gap-2 px-2 py-1.5 rounded-lg text-sm font-bold text-[var(--holo-text)] ${isActive(variant.href) ? "bg-[var(--holo-off-white)]" : ""}`}
                   onClick={onNavigate}
                 >
                   <img src={variant.logo} alt={variant.alt} className="w-6 h-6 rounded-full object-cover" />
                   {variant.label.toUpperCase()}
                   {isActive(variant.href) && (
-                    <span className="ml-auto text-xs" style={{ color: "var(--holo-blue)" }}>
+                    <span className="ml-auto text-xs text-[var(--holo-blue)]">
                       ●
                     </span>
                   )}

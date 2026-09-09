@@ -48,14 +48,12 @@ export default function Navbar({
 
   return (
     <nav
-      className="w-full border-b"
-      style={{ background: "var(--holo-bg-card)", borderColor: "var(--holo-border)" }}
+      className="w-full border-b bg-[var(--holo-bg-card)] border-[var(--holo-border)]"
     >
       <div className="px-4 py-3 flex items-center gap-4">
         <Link
           href="/"
-          className="flex items-center gap-1 text-sm font-bold transition-colors hover:opacity-70"
-          style={{ color: "var(--holo-blue)" }}
+          className="flex items-center gap-1 text-sm font-bold transition-colors hover:opacity-70 text-[var(--holo-blue)]"
         >
           ← Home
         </Link>
@@ -108,10 +106,9 @@ export default function Navbar({
 
       {/* Mobile dropdown */}
       <div
-        className={`md:hidden overflow-hidden transition-all duration-300 ease-in-out ${
+        className={`md:hidden overflow-hidden transition-all duration-300 ease-in-out border-[var(--holo-border)] ${
           isOpen ? "max-h-[500px] border-t" : "max-h-0"
         }`}
-        style={{ borderColor: "var(--holo-border)" }}
       >
         <div className="px-4 py-3 flex flex-col gap-2">
           <MobileNav

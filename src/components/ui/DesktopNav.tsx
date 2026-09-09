@@ -45,10 +45,9 @@ export default function DesktopNav({
             {category.label.toUpperCase()}
             <span className={`inline-block text-xs transition-transform ${openCategory === category.id ? "rotate-180" : ""}`}>▾</span>
             <span
-              className={`absolute bottom-0 left-0 h-0.5 transition-all duration-300 ease-in-out ${
+              className={`absolute bottom-0 left-0 h-0.5 transition-all duration-300 ease-in-out bg-[var(--holo-blue)] ${
                 isCategoryActive(category.id) ? "w-full" : "w-0"
               }`}
-              style={{ background: "var(--holo-blue)" }}
             />
           </button>
 
@@ -63,15 +62,14 @@ export default function DesktopNav({
                   href={variant.href}
                   role="menuitem"
                   onClick={onClose}
-                  className={`flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-bold transition-colors hover:bg-[var(--holo-off-white)] ${
+                  className={`flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-bold transition-colors hover:bg-[var(--holo-off-white)] text-[var(--holo-text)] ${
                     isActive(variant.href) ? "bg-[var(--holo-off-white)]" : ""
                   }`}
-                  style={{ color: "var(--holo-text)" }}
                 >
                   <img src={variant.logo} alt={variant.alt} className="w-6 h-6 rounded-full object-cover flex-shrink-0" />
                   <span>{variant.label.toUpperCase()}</span>
                   {isActive(variant.href) && (
-                    <span className="ml-auto text-xs" style={{ color: "var(--holo-blue)" }}>
+                    <span className="ml-auto text-xs text-[var(--holo-blue)]">
                       ●
                     </span>
                   )}

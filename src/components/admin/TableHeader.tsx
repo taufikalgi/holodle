@@ -20,7 +20,7 @@ interface TableHeaderProps {
 export default function TableHeader({ sortKey, sortDirection, onSortToggle }: TableHeaderProps) {
   return (
     <thead>
-      <tr style={{ background: "var(--holo-off-white)" }}>
+      <tr className="bg-[var(--holo-off-white)]">
         {SORTABLE_HEADERS.map(({ key, label }) => {
           const active = sortKey === key;
           const indicator = active ? (sortDirection === "asc" ? "↑" : "↓") : "↕";
