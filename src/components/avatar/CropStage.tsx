@@ -71,6 +71,7 @@ export default function CropStage({
   const past = areas.slice(0, count - 1);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- external-sync effect: resets state and loads Image for new src
     setError(false);
     setNatural({ w: 0, h: 0 });
     if (!src) return;

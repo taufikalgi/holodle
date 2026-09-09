@@ -22,6 +22,7 @@ export function useDailyStreak(storageKey: string, emptyStats: DailyStreakStats)
     const today = getDateString();
     if (shouldResetDailyStreakForMissedDay(stats.lastPlayedDate, today, stats.streak)) {
       setStats((prev) => ({ ...prev, streak: 0 }));
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- external-sync effect: eager streak reset from localStorage on mount only
       setStreakResetToast(true);
     }
   }, []); // Wordle-style: eager reset on mount only

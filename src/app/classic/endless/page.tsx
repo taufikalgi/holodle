@@ -113,6 +113,7 @@ function EndlessGamePage() {
         if (last) branches = JSON.parse(last);
       } catch {}
     }
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- SSR-safe hydration: reads URL/localStorage once on mount
     setSelectedBranches(branches);
     setShowFilter(!branches);
     setHydrated(true);
@@ -172,6 +173,7 @@ function EndlessGameContent({
       selectedBranches
         ? filterTalentsByBranch(ALL_TALENTS, selectedBranches)
         : ALL_TALENTS,
+    // eslint-disable-next-line react-hooks/use-memo -- preserve-manual-memoization: joined key avoids recompute on array identity change
     [selectedBranches?.join(",")]
   );
 
