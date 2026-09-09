@@ -1,7 +1,7 @@
 "use client";
 
-import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { loadTalents, type Talent } from "@/lib/talents";
+import { Suspense, useRef, useState } from "react";
+import type { Talent } from "@/lib/talents";
 import {
   Footer,
   GameOverBanner,
@@ -12,193 +12,54 @@ import {
   TalentSearchInput,
 } from "@/components/ui";
 import { buildAvatarShareText } from "@/lib/share";
-import { deriveAvatarStatus } from "@/lib/game-status";
-import { useLocalStorageState } from "@/hooks/useLocalStorageState";
 import { useOutsideClick } from "@/hooks/useOutsideClick";
 import { useTalentSearch } from "@/hooks/useTalentSearch";
-import {
-  fetchAvatarAreas,
-  fetchAvatarTalents,
-  getAvatarTalentPool,
-  pickRandomAvatarTalent,
-} from "@/lib/avatar-api";
 import CropStage from "@/components/avatar/CropStage";
 import AvatarHowToPlay from "@/components/avatar/AvatarHowToPlay";
+import AvatarGuessList from "@/components/avatar/AvatarGuessList";
+import AvatarSuggestion from "@/components/avatar/AvatarSuggestion";
+import StatusPill from "@/components/game/StatusPill";
 import {
-  isValidEndlessPersisted,
-  isValidEndlessRoundState,
-  type EndlessPersisted,
-  type EndlessRoundState,
-} from "@/components/avatar/types";
-
-const MAX_GUESSES = 5;
-const ROUND_KEY = "holodle-avatar-endless-round";
-const STATS_KEY = "holodle-avatar-endless-stats";
-
-const emptyRound: EndlessRoundState = { round: null, guesses: [], gameOver: false, won: false };
-const emptyPersisted: EndlessPersisted = {
-  stats: { streak: 0, bestStreak: 0, totalPlayed: 0, totalWon: 0 },
-  recentTalentIds: [],
-  lastRunStreak: 0,
-};
-
-type RoundStatus = "loading" | "ready" | "noValid" | "error";
+  AvatarEmptyBlock,
+  AvatarErrorBlock,
+  LoadingBlock,
+  ZeroGuessHint,
+} from "@/components/game/GameShell";
+import { MAX_GUESSES, useAvatarEndlessRound } from "@/hooks/useAvatarEndlessRound";
 
 function EndlessGamePage() {
-  const [roundState, setRoundState] = useLocalStorageState<EndlessRoundState>(
-    ROUND_KEY,
-    emptyRound,
-    isValidEndlessRoundState
-  );
-  const [persisted, setPersisted] = useLocalStorageState<EndlessPersisted>(
-    STATS_KEY,
-    emptyPersisted,
-    isValidEndlessPersisted
-  );
-  const [roundStatus, setRoundStatus] = useState<RoundStatus>(
-    roundState.round ? "ready" : "loading"
-  );
-  const [roundError, setRoundError] = useState("");
-  const [validTalents, setValidTalents] = useState<Talent[]>([]);
+  const {
+    roundState,
+    persisted,
+    roundStatus,
+    roundError,
+    pool,
+    status,
+    guessesLeft,
+    alreadyGuessed,
+    revealedCount,
+    displayGuessHistory,
+    startRound,
+    makeGuess,
+    nextRound,
+  } = useAvatarEndlessRound();
   const [showHowTo, setShowHowTo] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
-  const hasStoredRoundRef = useRef(Boolean(roundState.round));
-  const recentTalentIdsRef = useRef(persisted.recentTalentIds);
-
-  const pool = useMemo(() => {
-    const round = roundState.round;
-    if (!round) return validTalents;
-    return validTalents.some((t) => t.id === round.talent.id)
-      ? validTalents
-      : [...validTalents, round.talent];
-  }, [validTalents, roundState.round]);
 
   const { input, suggestions, showDropdown, handleInput, clear, onFocus, setShowDropdown } =
     useTalentSearch(pool);
 
   useOutsideClick(dropdownRef, () => setShowDropdown(false), inputRef);
 
-  const startRound = useCallback(
-    async (talentPool: Talent[], avoid: string[]) => {
-      setRoundStatus("loading");
-      setRoundError("");
-
-      if (talentPool.length === 0) {
-        setRoundStatus("noValid");
-        return null;
-      }
-
-      try {
-        const talent = pickRandomAvatarTalent(talentPool, avoid);
-        if (!talent) {
-          setRoundStatus("noValid");
-          return null;
-        }
-        const areas = await fetchAvatarAreas(talent.id);
-        const round = { talent, areas };
-        setRoundState({ round, guesses: [], gameOver: false, won: false });
-        setPersisted((prev) => ({
-          ...prev,
-          recentTalentIds: [...prev.recentTalentIds, talent.id].slice(-20),
-        }));
-        setRoundStatus("ready");
-        return round;
-      } catch (e) {
-        setRoundError(e instanceof Error ? e.message : "Failed to load round");
-        setRoundStatus("error");
-        return null;
-      }
-    },
-    [setRoundState, setPersisted]
-  );
-
-  useEffect(() => {
-    let alive = true;
-
-    const load = async () => {
-      try {
-        const [talents, avatarTalents] = await Promise.all([
-          loadTalents(),
-          fetchAvatarTalents(),
-        ]);
-        if (!alive) return;
-
-        const playableTalents = getAvatarTalentPool(avatarTalents, talents);
-        setValidTalents(playableTalents);
-
-        if (hasStoredRoundRef.current) {
-          setRoundStatus("ready");
-          return;
-        }
-
-        await startRound(playableTalents, recentTalentIdsRef.current);
-      } catch {
-        if (!alive) return;
-
-        setValidTalents([]);
-        if (hasStoredRoundRef.current) {
-          setRoundStatus("ready");
-          return;
-        }
-
-        setRoundStatus("error");
-        setRoundError("Failed to load avatar talents");
-      }
-    };
-
-    void load();
-
-    return () => {
-      alive = false;
-    };
-  }, [startRound]);
-
-  const makeGuess = useCallback(
-    (talent: Talent) => {
-      const { round } = roundState;
-      if (!round || roundState.gameOver) return;
-      if (roundState.guesses.some((g) => g.talent.id === talent.id)) return;
-      const correct = talent.id === round.talent.id;
-      const newGuesses = [...roundState.guesses, { talent, correct }];
-      const gameOver = correct || newGuesses.length >= MAX_GUESSES;
-      setRoundState({ ...roundState, guesses: newGuesses, gameOver, won: correct });
-      if (gameOver) {
-        setPersisted((prev) => ({
-          ...prev,
-          stats: {
-            streak: correct ? prev.stats.streak + 1 : 0,
-            bestStreak: correct
-              ? Math.max(prev.stats.bestStreak, prev.stats.streak + 1)
-              : prev.stats.bestStreak,
-            totalPlayed: prev.stats.totalPlayed + 1,
-            totalWon: correct ? prev.stats.totalWon + 1 : prev.stats.totalWon,
-          },
-          lastRunStreak: correct ? prev.stats.streak + 1 : prev.stats.streak,
-        }));
-      }
-      clear();
-    },
-    [roundState, setRoundState, setPersisted, clear]
-  );
-
-  const nextRound = useCallback(async () => {
-    const finishedId = roundState.round?.talent.id;
-    const avoid = finishedId
-      ? [...persisted.recentTalentIds, finishedId]
-      : persisted.recentTalentIds;
-    await startRound(pool, avoid);
-  }, [pool, persisted.recentTalentIds, roundState.round, startRound]);
+  const handleGuess = (talent: Talent) => {
+    if (makeGuess(talent)) clear();
+  };
 
   const { round, guesses } = roundState;
-  const status = deriveAvatarStatus(roundStatus, roundState.gameOver, roundState.won);
-  const guessesLeft = MAX_GUESSES - guesses.length;
-  const alreadyGuessed = guesses.map((g) => g.talent.name);
-  const revealedCount = round ? Math.min(guesses.length + 1, round.areas.length) : 0;
-  const displayGuessHistory = [...guesses].reverse();
 
   return (
-    <main className="min-h-screen" style={{ background: "var(--holo-bg)" }}>
+    <main className="min-h-screen bg-[var(--holo-bg)]">
       <Navbar title="AVATAR ENDLESS" />
 
       <div className="max-w-3xl mx-auto px-4 py-8">
@@ -209,25 +70,11 @@ function EndlessGamePage() {
             showHowTo={showHowTo}
           />
 
-          <div
-            className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-xs font-bold border"
-            style={{
-              background: "var(--holo-bg-card)",
-              borderColor: "var(--holo-border)",
-              color: "var(--holo-text-muted)",
-            }}
-          >
-            {status === "won" ? (
-              "Correct! Ready for the next one?"
-            ) : status === "lost" ? (
-              "Wrong — try the next one!"
-            ) : (
-              <>
-                <span style={{ color: "var(--holo-blue)" }}>●</span> {guessesLeft} guess
-                {guessesLeft !== 1 ? "es" : ""} remaining
-              </>
-            )}
-          </div>
+          <StatusPill
+            status={status}
+            guessesLeft={guessesLeft}
+            variant="endless"
+          />
         </div>
 
         {showHowTo && <AvatarHowToPlay />}
@@ -239,47 +86,20 @@ function EndlessGamePage() {
           totalWon={persisted.stats.totalWon}
         />
 
-        {status === "loading" && (
-          <div className="text-center py-14">
-            <p
-              className="text-sm font-semibold animate-pulse"
-              style={{ color: "var(--holo-text-muted)" }}
-            >
-              Loading a new avatar…
-            </p>
-          </div>
+        {roundStatus === "loading" && <LoadingBlock text="Loading a new avatar…" />}
+
+        {roundStatus === "noValid" && (
+          <AvatarEmptyBlock onRetry={() => void startRound(pool, persisted.recentTalentIds)} />
         )}
 
-        {status === "empty" && (
-          <div className="holo-card p-8 text-center">
-            <p className="text-sm font-semibold" style={{ color: "var(--holo-text-muted)" }}>
-              No playable talents yet.
-            </p>
-            <button
-              type="button"
-              onClick={() => void startRound(pool, persisted.recentTalentIds)}
-              className="mt-4 px-6 py-2 rounded-full text-sm font-bold text-white transition-opacity hover:opacity-80"
-              style={{ background: "var(--holo-blue)" }}
-            >
-              Retry
-            </button>
-          </div>
+        {roundStatus === "error" && (
+          <AvatarErrorBlock
+            message={roundError}
+            onRetry={() => void startRound(pool, persisted.recentTalentIds)}
+          />
         )}
 
-        {status === "error" && (
-          <div className="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-semibold text-rose-700">
-            {roundError}{" "}
-            <button
-              type="button"
-              onClick={() => void startRound(pool, persisted.recentTalentIds)}
-              className="underline font-black"
-            >
-              Retry
-            </button>
-          </div>
-        )}
-
-        {(status === "playing" || status === "won" || status === "lost") && round && (
+        {roundStatus === "ready" && round && (
           <>
             <div className="holo-card p-4 mb-5">
               <CropStage
@@ -292,9 +112,9 @@ function EndlessGamePage() {
               />
             </div>
 
-            {(status === "won" || status === "lost") && (
+            {roundState.gameOver && (
               <GameOverBanner
-                won={status === "won"}
+                won={roundState.won}
                 answerName={round.talent.name}
                 guessCount={guesses.length}
                 actions={
@@ -316,93 +136,39 @@ function EndlessGamePage() {
                 <button
                   type="button"
                   onClick={() => void nextRound()}
-                  className="mt-4 px-6 py-2 rounded-full text-sm font-bold text-white transition-opacity hover:opacity-80"
-                  style={{ background: "var(--holo-blue)" }}
+                  className="mt-4 px-6 py-2 rounded-full text-sm font-bold text-white transition-opacity hover:opacity-80 bg-[var(--holo-blue)]"
                 >
                   {roundState.won ? "Next talent →" : "New run →"}
                 </button>
               </GameOverBanner>
             )}
 
-            {status === "playing" && (
+            {!roundState.gameOver && (
               <TalentSearchInput
                 input={input}
                 suggestions={suggestions}
                 showDropdown={showDropdown}
                 onInput={(val) => handleInput(val, alreadyGuessed)}
-                onGuess={makeGuess}
+                onGuess={handleGuess}
                 onClear={clear}
                 onFocus={onFocus}
                 dropdownRef={dropdownRef}
-                renderSuggestion={(t) => (
-                  <>
-                    {t.avatarUrl ? (
-                      <img
-                        src={t.avatarUrl}
-                        alt={t.name}
-                        className="w-10 h-10 rounded-full object-cover flex-shrink-0"
-                      />
-                    ) : (
-                      <span className="text-xl">🖼️</span>
-                    )}
-                    <div>
-                      <div className="text-sm font-bold" style={{ color: "var(--holo-text)" }}>
-                        {t.name}
-                      </div>
-                      <div className="text-xs" style={{ color: "var(--holo-text-muted)" }}>
-                        {t.branch} • {t.debutYear}
-                      </div>
-                    </div>
-                  </>
-                )}
+                renderSuggestion={(t) => <AvatarSuggestion talent={t} />}
               />
             )}
 
-            {guesses.length > 0 && (
-              <div className="holo-card p-4 mb-5 space-y-2">
-                <p
-                  className="text-xs font-bold uppercase tracking-widest mb-3"
-                  style={{ color: "var(--holo-text-muted)" }}
-                >
-                  Your guesses
-                </p>
-                {displayGuessHistory.map((g, i) => (
-                  <div
-                    key={i}
-                    className={`flex items-center gap-3 px-3 py-2 rounded-xl text-sm font-semibold ${
-                      g.correct ? "cell-correct" : "cell-wrong"
-                    }`}
-                  >
-                    {g.talent.avatarUrl ? (
-                      <img
-                        src={g.talent.avatarUrl}
-                        alt={g.talent.name}
-                        className="w-7 h-7 rounded-full object-cover"
-                      />
-                    ) : (
-                      <span className="text-lg">🖼️</span>
-                    )}
-                    <span>{g.talent.name}</span>
-                    <span className="ml-auto">{g.correct ? "✓ Correct!" : "✗ Wrong"}</span>
-                  </div>
-                ))}
-              </div>
-            )}
+            {guesses.length > 0 && <AvatarGuessList guesses={displayGuessHistory} />}
 
-            {status === "playing" && guesses.length === 0 && (
-              <div className="text-center py-6">
-                <p className="text-sm font-semibold" style={{ color: "var(--holo-text-muted)" }}>
-                  Start typing to make your first guess!
-                </p>
-                {pool.length > 0 && (
-                  <p
-                    className="text-xs mt-1 opacity-50"
-                    style={{ color: "var(--holo-text-muted)" }}
-                  >
-                    {pool.length} playable talent{pool.length !== 1 ? "s" : ""}
-                  </p>
-                )}
-              </div>
+            {!roundState.gameOver && guesses.length === 0 && (
+              <ZeroGuessHint
+                compact
+                line1="Start typing to make your first guess!"
+                line2={
+                  pool.length > 0
+                    ? `${pool.length} playable talent${pool.length !== 1 ? "s" : ""}`
+                    : undefined
+                }
+              />
             )}
           </>
         )}

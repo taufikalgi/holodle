@@ -15,8 +15,7 @@ import HeaderStat from "./HeaderStat";
 import SessionHistorySection from "./SessionHistorySection";
 import LeaderboardModal from "./LeaderboardModal";
 import FinalResultCard from "./FinalResultCard";
-import StartSessionCard from "./StartSessionCard";
-import LoginToPlayCard from "./LoginToPlayCard";
+import SessionStateCard from "./SessionStateCard";
 import type { AuthUser, TalentChoice } from "./types";
 
 export default function CompetitiveClassicGame({
@@ -171,7 +170,7 @@ export default function CompetitiveClassicGame({
         )}
 
         {s.sessionStatus === "locked" ? (
-          <LoginToPlayCard onLogin={() => onLogin("/classic/competitive")} />
+          <SessionStateCard variant="login" onLogin={() => onLogin("/classic/competitive")} />
         ) : s.sessionStatus === "ended" || s.sessionStatus === "expired" ? (
           s.session ? (
             <FinalResultCard
@@ -180,10 +179,10 @@ export default function CompetitiveClassicGame({
               onNewSession={startNewSession}
             />
           ) : (
-            <StartSessionCard onStart={startNewSession} loading={s.sessionLoading} />
+            <SessionStateCard variant="start" onStart={startNewSession} loading={s.sessionLoading} />
           )
         ) : s.sessionStatus === "idle" || s.sessionStatus === "error" ? (
-          <StartSessionCard onStart={startNewSession} loading={s.sessionLoading} />
+          <SessionStateCard variant="start" onStart={startNewSession} loading={s.sessionLoading} />
         ) : (
           <>
             <TalentSearch

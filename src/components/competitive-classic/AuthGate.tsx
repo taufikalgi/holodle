@@ -6,8 +6,7 @@ import { GoogleIcon, PageHeader } from "@/components/ui";
 export default function AuthGate({ onLogin }: { onLogin: () => void }) {
   return (
     <main
-      className="min-h-screen flex flex-col items-center justify-center"
-      style={{ background: "var(--holo-bg)" }}
+      className="min-h-screen flex flex-col items-center justify-center bg-[var(--holo-bg)]"
     >
       <div
         className="bg-[var(--holo-bg-card)] rounded-3xl shadow-xl p-10 flex flex-col items-center gap-5 text-center justify-center"
@@ -15,8 +14,7 @@ export default function AuthGate({ onLogin }: { onLogin: () => void }) {
       >
         <Link
           href="/"
-          className="text-sm font-bold transition-colors hover:opacity-70"
-          style={{ color: "var(--holo-blue)" }}
+          className="text-sm font-bold transition-colors hover:opacity-70 text-[var(--holo-blue)]"
         >
           ← Back to Home
         </Link>
@@ -30,7 +28,7 @@ export default function AuthGate({ onLogin }: { onLogin: () => void }) {
           showLeaderboardButton={false}
         />
 
-        <hr className="w-full" style={{ borderColor: "var(--holo-border)" }} />
+        <hr className="w-full border-[var(--holo-border)]" />
 
         <p className="text-sm" style={{ color: "var(--holo-text-muted)", lineHeight: 1.6 }}>
           Sign in untuk ikut <strong>Competitive Classic</strong> bang.

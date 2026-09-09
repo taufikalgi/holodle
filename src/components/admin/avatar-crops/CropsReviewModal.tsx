@@ -1,5 +1,6 @@
 "use client";
 
+import Modal from "@/components/ui/Modal";
 import { DIFFICULTY_META, type CropAreaData, type Talent } from "@/lib/avatar-crops";
 
 interface CropsReviewModalProps {
@@ -23,25 +24,8 @@ export default function CropsReviewModal({
   const height = maxW;
 
   return (
-    <div
-      style={{
-        position: "fixed",
-        inset: 0,
-        background: "rgba(10,15,35,0.55)",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        zIndex: 200,
-        padding: "1rem",
-        animation: "slideDown 0.2s ease forwards",
-      }}
-      onClick={onClose}
-    >
-      <div
-        className="holo-card"
-        style={{ padding: "1.25rem", maxWidth: 480, width: "100%" }}
-        onClick={(e) => e.stopPropagation()}
-      >
+    <Modal onClose={onClose} label="Review crop area">
+      <div style={{ padding: "1.25rem" }}>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
           <span style={{ fontSize: 16, fontWeight: 800, color: "var(--holo-text)" }}>
             {label} — {talent.name}
@@ -147,6 +131,6 @@ export default function CropsReviewModal({
           Close
         </button>
       </div>
-    </div>
+    </Modal>
   );
 }

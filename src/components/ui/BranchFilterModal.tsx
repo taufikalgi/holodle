@@ -1,7 +1,8 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { ALL_BRANCHES } from "@/lib/talents";
+import Modal from "./Modal";
 
 interface BranchFilterModalProps {
   onStart: (branches: string[]) => void;
@@ -17,19 +18,6 @@ export default function BranchFilterModal({
   const [selected, setSelected] = useState<Set<string>>(
     new Set(initialBranches ?? ALL_BRANCHES)
   );
-
-  useEffect(() => {
-    const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Escape") onClose();
-    };
-    document.addEventListener("keydown", handleKeyDown);
-    const previousOverflow = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
-    return () => {
-      document.removeEventListener("keydown", handleKeyDown);
-      document.body.style.overflow = previousOverflow;
-    };
-  }, [onClose]);
 
   function toggle(branch: string) {
     setSelected((prev) => {
@@ -53,32 +41,17 @@ export default function BranchFilterModal({
   const canStart = selected.size > 0;
 
   return (
-    <div
-      className="fixed inset-0 z-50 flex items-center justify-center px-4 py-6"
-      role="dialog"
-      aria-modal="true"
-      aria-label="Select talent branches"
-    >
-      <button
-        type="button"
-        className="absolute inset-0 cursor-default bg-black/50 backdrop-blur-sm"
-        aria-label="Close"
-        onClick={onClose}
-      />
-      <div className="relative z-10 w-full max-w-sm">
-        <div className="overflow-hidden rounded-[28px] border bg-[var(--holo-bg)] shadow-2xl">
+    <Modal onClose={onClose} label="Select talent branches">
           <div className="flex items-center justify-between border-b px-5 py-4">
             <p
-              className="text-xs font-black uppercase tracking-[0.24em]"
-              style={{ color: "var(--holo-text-muted)" }}
+              className="text-xs font-black uppercase tracking-[0.24em] text-[var(--holo-text-muted)]"
             >
               Select branches
             </p>
             <button
               type="button"
               onClick={onClose}
-              className="rounded-full border px-3 py-2 text-sm font-bold transition-colors hover:bg-[var(--holo-off-white)]"
-              style={{ borderColor: "var(--holo-border)", color: "var(--holo-text)" }}
+              className="rounded-full border px-3 py-2 text-sm font-bold transition-colors hover:bg-[var(--holo-off-white)] border-[var(--holo-border)] text-[var(--holo-text)]"
             >
               Cancel
             </button>
@@ -88,8 +61,7 @@ export default function BranchFilterModal({
             <button
               type="button"
               onClick={toggleAll}
-              className="mb-3 text-xs font-bold uppercase tracking-wider"
-              style={{ color: "var(--holo-blue)" }}
+              className="mb-3 text-xs font-bold uppercase tracking-wider text-[var(--holo-blue)]"
             >
               {allSelected ? "Deselect all" : "Select all"}
             </button>
@@ -115,8 +87,7 @@ export default function BranchFilterModal({
                     className="h-4 w-4 accent-[var(--holo-blue)]"
                   />
                   <span
-                    className="text-sm font-semibold"
-                    style={{ color: "var(--holo-text)" }}
+                    className="text-sm font-semibold text-[var(--holo-text)]"
                   >
                     {branch}
                   </span>
@@ -128,14 +99,11 @@ export default function BranchFilterModal({
               type="button"
               disabled={!canStart}
               onClick={() => onStart([...selected])}
-              className="mt-5 w-full rounded-full py-3 text-sm font-bold text-white transition-opacity hover:opacity-80 disabled:cursor-not-allowed disabled:opacity-40"
-              style={{ background: "var(--holo-blue)" }}
+              className="mt-5 w-full rounded-full py-3 text-sm font-bold text-white transition-opacity hover:opacity-80 disabled:cursor-not-allowed disabled:opacity-40 bg-[var(--holo-blue)]"
             >
               Start
             </button>
           </div>
-        </div>
-      </div>
-    </div>
+    </Modal>
   );
 }
