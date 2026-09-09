@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { parseJwt } from "@/lib/jwt";
 import { emitAppEvent, onAppEvent } from "@/lib/events";
+import { clearAllCompetitiveHistory } from "@/lib/session-history";
 import {
   apiBaseUrl,
   authFetch,
@@ -131,6 +132,7 @@ export function useAuth({ requireAdmin }: UseAuthOptions = {}) {
   const logout = useCallback(() => {
     localStorage.removeItem(TOKEN_KEY);
     localStorage.removeItem(COMPETITIVE_SESSION_KEY);
+    clearAllCompetitiveHistory();
     setUser(null);
     setLoading(false);
     setUnauthorized(false);
