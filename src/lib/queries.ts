@@ -1,7 +1,7 @@
 import { authedJson, publicJson } from "./api-client";
 import { ApiError } from "./errors";
 import { normalizeTalent, type ApiTalent } from "./talents";
-import type { Talent as AdminTalent } from "./talent-api";
+import type { AdminTalent } from "./talents";
 import type {
   GameSession,
   LeaderboardPeriod,

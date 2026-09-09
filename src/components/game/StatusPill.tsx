@@ -10,7 +10,7 @@ export default function StatusPill({
   variant,
   extra,
 }: {
-  status: GameStatus;
+  status: GameStatus | "idle" | "expired";
   guessesLeft: number;
   variant: "daily" | "endless";
   extra?: ReactNode;

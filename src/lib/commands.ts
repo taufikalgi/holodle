@@ -1,5 +1,5 @@
 import { authedJson } from "./api-client";
-import type { TalentFormData } from "./talent-api";
+import type { TalentFormData } from "./talents";
 import type {
   Comparison,
   GameSession,

@@ -36,8 +36,7 @@ export default function ShareButton({
     <button
       type="button"
       onClick={copy}
-      className="mt-3 px-6 py-2 rounded-full text-sm font-bold text-white transition-opacity hover:opacity-80"
-      style={{ background: "var(--holo-blue)" }}
+      className="mt-3 px-6 py-2 rounded-full text-sm font-bold text-white transition-opacity hover:opacity-80 bg-[var(--holo-blue)]"
     >
       {copied ? "Copied!" : label}
     </button>

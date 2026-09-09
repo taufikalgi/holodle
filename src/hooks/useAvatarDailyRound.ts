@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { getDateString, loadTalents, type Talent } from "@/lib/talents";
 import { emitAppEvent } from "@/lib/events";
-import { deriveAvatarStatus, type GameStatus } from "@/lib/game-status";
+import { useGameMachine } from "@/hooks/useGameMachine";
 import { useLocalStorageState } from "@/hooks/useLocalStorageState";
 import {
   fetchAvatarAreas,
@@ -130,7 +130,13 @@ export function useAvatarDailyRound() {
   }, [loadRound]);
 
   const guessesLeft = MAX_GUESSES - state.guesses.length;
-  const status: GameStatus = deriveAvatarStatus(roundStatus, state.gameOver, state.won);
+  const status = useGameMachine({
+    loading: roundStatus === "loading",
+    error: roundStatus === "error" ? roundError : "",
+    empty: roundStatus === "noValid",
+    gameOver: state.gameOver,
+    won: state.won,
+  });
   const alreadyGuessed = state.guesses.map((g) => g.talent.name);
   const revealedCount = state.talent ? Math.min(state.guesses.length + 1, state.areas.length) : 0;
   const displayGuessHistory = [...state.guesses].reverse();

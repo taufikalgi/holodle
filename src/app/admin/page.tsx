@@ -36,7 +36,7 @@ export default function AdminPage() {
         subtitle="Talent Management"
         meta={`${a.talents.length} talents`}
         userChip={
-          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+          <div className="flex items-center gap-2">
             {a.user.picture ? (
               // eslint-disable-next-line @next/next/no-img-element
               <img

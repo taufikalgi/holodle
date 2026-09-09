@@ -74,7 +74,7 @@ export default function CropEditor({
             onNaturalSize(size);
           }
         }}
-        style={{ display: "none" }}
+        className="hidden"
       />
 
       {!loaded ? (

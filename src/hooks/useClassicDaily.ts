@@ -7,7 +7,8 @@ import {
   type Talent,
   type CompareResult,
 } from "@/lib/talents";
-import { applyClassicGuess, deriveGameStatus, isStoredClassicGuess } from "@/lib/game-status";
+import { applyClassicGuess, isStoredClassicGuess } from "@/lib/game-status";
+import { useGameMachine } from "@/hooks/useGameMachine";
 import { useTalents } from "@/hooks/useTalents";
 import { emitAppEvent } from "@/lib/events";
 import { useLocalStorageState } from "@/hooks/useLocalStorageState";
@@ -49,7 +50,7 @@ export function useClassicDaily() {
     useDailyStreak(STATS_STORAGE_KEY, emptyStats);
   const { talents, loading: talentsLoading, error: talentsError } = useTalents();
   const todayAnswer = talents ? getTalentOfTheDay(talents) : null;
-  const status = deriveGameStatus({
+  const status = useGameMachine({
     loading: talentsLoading,
     error: talentsError,
     empty: !talents || talents.length === 0 || !todayAnswer,

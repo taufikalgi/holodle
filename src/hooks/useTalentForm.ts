@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import type { Talent, TalentFormData } from "@/lib/talent-api";
+import type { AdminTalent as Talent, TalentFormData } from "@/lib/talents";
 import { saveTalent } from "@/lib/commands";
 
 const EMPTY: TalentFormData = {

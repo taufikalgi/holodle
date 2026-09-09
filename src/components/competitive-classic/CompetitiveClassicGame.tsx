@@ -78,12 +78,10 @@ export default function CompetitiveClassicGame({
   if (user && (s.sessionLoading || s.talentsLoading)) {
     return (
       <main
-        className="min-h-screen flex items-center justify-center"
-        style={{ background: "var(--holo-bg)" }}
+        className="min-h-screen flex items-center justify-center bg-[var(--holo-bg)]"
       >
         <span
-          className="text-sm font-semibold animate-pulse"
-          style={{ color: "var(--holo-text-muted)" }}
+          className="text-sm font-semibold animate-pulse text-[var(--holo-text-muted)]"
         >
           Loading game...
         </span>
@@ -92,7 +90,7 @@ export default function CompetitiveClassicGame({
   }
 
   return (
-    <main className="min-h-screen" style={{ background: "var(--holo-bg)" }}>
+    <main className="min-h-screen bg-[var(--holo-bg)]">
       <Navbar
         title="Classic - Competitive"
         user={user ?? null}
@@ -122,8 +120,7 @@ export default function CompetitiveClassicGame({
           </div>
         ) : (
           <div
-            className="mb-6 rounded-2xl border border-dashed px-4 py-3 text-center text-sm font-semibold"
-            style={{ borderColor: "var(--holo-border)", color: "var(--holo-text-muted)" }}
+            className="mb-6 rounded-2xl border border-dashed px-4 py-3 text-center text-sm font-semibold border-[var(--holo-border)] text-[var(--holo-text-muted)]"
           >
             No active session. Start one to begin playing.
           </div>

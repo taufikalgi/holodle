@@ -1,9 +1,10 @@
 "use client";
 
-import type { Talent } from "@/lib/talent-api";
+import type { AdminTalent as Talent } from "@/lib/talents";
+import { ALL_BRANCHES, MONTH_ORDER } from "@/lib/talents";
 import Modal from "./Modal";
 import { useTalentForm } from "@/hooks/useTalentForm";
-import ImageUrlField from "./ImageUrlField";
+import ImageUrlField, { Field, inputStyle } from "./ImageUrlField";
 
 interface Props {
   mode: "create" | "edit";
@@ -12,20 +13,7 @@ interface Props {
   onSaved: () => void;
 }
 
-const MONTHS = [
-  "January",
-  "February",
-  "March",
-  "April",
-  "May",
-  "June",
-  "July",
-  "August",
-  "September",
-  "October",
-  "November",
-  "December",
-];
+const MONTHS = Object.keys(MONTH_ORDER);
 
 export default function TalentModal({ mode, initial, onClose, onSaved }: Props) {
   const { form, set, altInput, setAltInput, error, loading, handleSubmit } = useTalentForm({
@@ -34,22 +22,6 @@ export default function TalentModal({ mode, initial, onClose, onSaved }: Props) 
     onSaved,
     onClose,
   });
-  const inputStyle: React.CSSProperties = {
-    width: "100%",
-    padding: "10px 13px",
-    borderRadius: 10,
-    fontSize: 14,
-  };
-
-  const labelStyle: React.CSSProperties = {
-    display: "block",
-    fontSize: 12,
-    fontWeight: 700,
-    color: "var(--holo-text-muted)",
-    marginBottom: 5,
-    textTransform: "uppercase",
-    letterSpacing: "0.05em",
-  };
 
   return (
     <Modal
@@ -68,14 +40,7 @@ export default function TalentModal({ mode, initial, onClose, onSaved }: Props) 
         }}
       >
         {/* Header */}
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
-            marginBottom: "1.5rem",
-          }}
-        >
+        <div className="mb-6 flex items-center justify-between">
           <h2
             style={{
               fontFamily: "var(--font-albert-sans), sans-serif",
@@ -109,16 +74,9 @@ export default function TalentModal({ mode, initial, onClose, onSaved }: Props) 
         </div>
 
         <form onSubmit={handleSubmit}>
-          <div
-            style={{
-              display: "grid",
-              gridTemplateColumns: "1fr 1fr",
-              gap: "1rem",
-            }}
-          >
+          <div className="grid grid-cols-2 gap-4">
             {/* Name */}
-            <div style={{ gridColumn: "1 / -1" }}>
-              <label style={labelStyle}>Name *</label>
+            <Field label="Name *" span>
               <input
                 className="holo-input"
                 style={inputStyle}
@@ -127,11 +85,10 @@ export default function TalentModal({ mode, initial, onClose, onSaved }: Props) 
                 placeholder="Tokino Sora"
                 required
               />
-            </div>
+            </Field>
 
             {/* Branch */}
-            <div>
-              <label style={labelStyle}>Branch *</label>
+            <Field label="Branch *">
               <select
                 className="holo-input"
                 style={{ ...inputStyle, cursor: "pointer" }}
@@ -140,17 +97,16 @@ export default function TalentModal({ mode, initial, onClose, onSaved }: Props) 
                 required
               >
                 <option value="">Select branch</option>
-                {["JP", "EN", "ID", "DEV_IS", "Stars JP", "Stars EN"].map((b) => (
+                {ALL_BRANCHES.map((b) => (
                   <option key={b} value={b}>
                     {b}
                   </option>
                 ))}
               </select>
-            </div>
+            </Field>
 
             {/* Lore archetype */}
-            <div>
-              <label style={labelStyle}>Lore archetype</label>
+            <Field label="Lore archetype">
               <input
                 className="holo-input"
                 style={inputStyle}
@@ -158,11 +114,10 @@ export default function TalentModal({ mode, initial, onClose, onSaved }: Props) 
                 onChange={(e) => set("lore_archetype", e.target.value)}
                 placeholder="Human"
               />
-            </div>
+            </Field>
 
             {/* Debut year */}
-            <div>
-              <label style={labelStyle}>Debut year</label>
+            <Field label="Debut year">
               <input
                 className="holo-input"
                 style={inputStyle}
@@ -173,11 +128,10 @@ export default function TalentModal({ mode, initial, onClose, onSaved }: Props) 
                 onChange={(e) => set("debut_year", e.target.value ? Number(e.target.value) : null)}
                 placeholder="2017"
               />
-            </div>
+            </Field>
 
             {/* Height */}
-            <div>
-              <label style={labelStyle}>Height (cm)</label>
+            <Field label="Height (cm)">
               <input
                 className="holo-input"
                 style={inputStyle}
@@ -188,11 +142,10 @@ export default function TalentModal({ mode, initial, onClose, onSaved }: Props) 
                 onChange={(e) => set("height", e.target.value ? Number(e.target.value) : null)}
                 placeholder="160"
               />
-            </div>
+            </Field>
 
             {/* Birth month */}
-            <div>
-              <label style={labelStyle}>Birth month</label>
+            <Field label="Birth month">
               <select
                 className="holo-input"
                 style={{ ...inputStyle, cursor: "pointer", gridColumn: "1 / -1" }}
@@ -206,7 +159,7 @@ export default function TalentModal({ mode, initial, onClose, onSaved }: Props) 
                   </option>
                 ))}
               </select>
-            </div>
+            </Field>
 
             {/* Image URL */}
             <ImageUrlField
@@ -214,8 +167,6 @@ export default function TalentModal({ mode, initial, onClose, onSaved }: Props) 
               value={form.image_url}
               onChange={(v) => set("image_url", v)}
               previewAlt="Preview"
-              inputStyle={inputStyle}
-              labelStyle={labelStyle}
             />
 
             {/* Avatar URL */}
@@ -224,13 +175,10 @@ export default function TalentModal({ mode, initial, onClose, onSaved }: Props) 
               value={form.avatar_url}
               onChange={(v) => set("avatar_url", v)}
               previewAlt="Avatar preview"
-              inputStyle={inputStyle}
-              labelStyle={labelStyle}
             />
 
             {/* Alt names */}
-            <div style={{ gridColumn: "1 / -1" }}>
-              <label style={labelStyle}>Alt names (comma-separated)</label>
+            <Field label="Alt names (comma-separated)" span>
               <input
                 className="holo-input"
                 style={inputStyle}
@@ -262,26 +210,16 @@ export default function TalentModal({ mode, initial, onClose, onSaved }: Props) 
                     ))}
                 </div>
               )}
-            </div>
+            </Field>
           </div>
 
           {error && (
-            <div
-              className="cell-wrong"
-              style={{ padding: "10px 14px", borderRadius: 10, fontSize: 13, marginTop: "1rem" }}
-            >
+            <div className="cell-wrong rounded-[10px] px-[14px] py-[10px] text-[13px] mt-4">
               ⚠ {error}
             </div>
           )}
 
-          <div
-            style={{
-              display: "flex",
-              justifyContent: "flex-end",
-              gap: "0.75rem",
-              marginTop: "1.5rem",
-            }}
-          >
+          <div className="mt-6 flex justify-end gap-3">
             <button
               type="button"
               onClick={onClose}

@@ -1,6 +1,6 @@
 "use client";
 
-import type { Talent } from "@/lib/talent-api";
+import type { AdminTalent as Talent } from "@/lib/talents";
 import type { SortDirection, SortKey } from "@/lib/talent-sort";
 import TableHeader from "./TableHeader";
 import TalentRow from "./TalentRow";

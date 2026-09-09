@@ -26,7 +26,7 @@ export default function CropsReviewModal({
   return (
     <Modal onClose={onClose} label="Review crop area">
       <div style={{ padding: "1.25rem" }}>
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+        <div className="flex items-center justify-between">
           <span style={{ fontSize: 16, fontWeight: 800, color: "var(--holo-text)" }}>
             {label} — {talent.name}
           </span>

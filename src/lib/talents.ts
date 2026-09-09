@@ -40,6 +40,20 @@ export type ApiTalent = {
   alt_names: string[];
 };
 
+export type AdminTalent = ApiTalent;
+
+export interface TalentsResponse {
+  success: boolean;
+  message: string;
+  data: AdminTalent[];
+}
+
+export type TalentFormData = Omit<AdminTalent, "id" | "branch"> & {
+  id?: string;
+  // Draft strings — validated on submit (branch must be a valid Branch).
+  branch: string;
+};
+
 export function normalizeTalent(talent: ApiTalent): Talent {
   return {
     id: talent.id,

@@ -9,12 +9,10 @@ export default function CompetitiveClassicPage() {
   if (loading) {
     return (
       <main
-        className="min-h-screen flex items-center justify-center"
-        style={{ background: "var(--holo-bg)" }}
+        className="min-h-screen flex items-center justify-center bg-[var(--holo-bg)]"
       >
         <span
-          className="text-sm font-semibold animate-pulse"
-          style={{ color: "var(--holo-text-muted)" }}
+          className="text-sm font-semibold animate-pulse text-[var(--holo-text-muted)]"
         >
           Loading...
         </span>

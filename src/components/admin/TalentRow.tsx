@@ -1,6 +1,6 @@
 "use client";
 
-import type { Talent } from "@/lib/talent-api";
+import type { AdminTalent as Talent } from "@/lib/talents";
 import { getBranchStyle } from "@/lib/talent-sort";
 
 interface TalentRowProps {
@@ -22,7 +22,7 @@ export default function TalentRow({ talent, index: idx, onEdit, onCrop }: Talent
       }}
     >
       <td style={{ padding: "12px 16px", whiteSpace: "nowrap" }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+        <div className="flex items-center gap-2.5">
           {talent.image_url ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img
@@ -132,7 +132,7 @@ export default function TalentRow({ talent, index: idx, onEdit, onCrop }: Talent
       </td>
 
       <td style={{ padding: "12px 16px" }}>
-        <div style={{ display: "flex", flexWrap: "wrap", gap: 4 }}>
+        <div className="flex flex-wrap gap-1">
           {talent.alt_names.length === 0 ? (
             <span
               style={{

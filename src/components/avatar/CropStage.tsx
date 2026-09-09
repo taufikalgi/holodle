@@ -190,8 +190,8 @@ export default function CropStage({
                 ariaLabel={`Current hint ${count}`}
               />
               <span
-                className="absolute top-2 right-2 rounded-full px-2.5 py-1 text-[10px] font-black uppercase tracking-wider"
-                style={{ background: "rgba(0,0,0,0.55)", color: "#fff" }}
+                className="absolute top-2 right-2 rounded-full px-2.5 py-1 text-[10px] font-black uppercase tracking-wider text-white"
+                style={{ background: "rgba(0,0,0,0.55)" }}
               >
                 {count}/{areas.length} hints
               </span>

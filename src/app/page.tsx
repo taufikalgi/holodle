@@ -5,7 +5,7 @@ import { GAME_CATEGORIES } from "@/lib/game-modes";
 
 export default function Home() {
   return (
-    <div className="min-h-screen flex flex-col" style={{ background: "var(--holo-bg)" }}>
+    <div className="min-h-screen flex flex-col bg-[var(--holo-bg)]">
       <Navbar title="Holodle" />
       <main className="flex-1 flex flex-col items-center pt-8">
       <div className="flex items-center gap-2 mb-1 mt-6">
@@ -17,12 +17,11 @@ export default function Home() {
         className="text-5xl font-black tracking-widest mb-2"
         style={{ fontFamily: "var(--font-albert-sans), sans-serif" }}
       >
-        <span style={{ color: "var(--holo-blue)" }}>HOLO</span>
-        <span style={{ color: "var(--holo-text)" }}>DLE</span>
+        <span className="text-[var(--holo-blue)]">HOLO</span>
+        <span className="text-[var(--holo-text)]">DLE</span>
       </h1>
       <p
-        className="text-sm tracking-widest uppercase mb-12"
-        style={{ color: "var(--holo-text-muted)" }}
+        className="text-sm tracking-widest uppercase mb-12 text-[var(--holo-text-muted)]"
       >
         Prove your LOVE to your OSHI
       </p>

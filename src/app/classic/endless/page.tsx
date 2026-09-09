@@ -51,7 +51,7 @@ function EndlessGamePage() {
 
   if (!hydrated) {
     return (
-      <main className="min-h-screen" style={{ background: "var(--holo-bg)" }}>
+      <main className="min-h-screen bg-[var(--holo-bg)]">
         <Navbar title="ENDLESS" />
       </main>
     );
@@ -59,7 +59,7 @@ function EndlessGamePage() {
 
   if (showFilter) {
     return (
-      <main className="min-h-screen" style={{ background: "var(--holo-bg)" }}>
+      <main className="min-h-screen bg-[var(--holo-bg)]">
         <Navbar title="ENDLESS" />
         <BranchFilterModal
           initialBranches={selectedBranches ?? undefined}
@@ -74,10 +74,10 @@ function EndlessGamePage() {
 
   if (talentsLoading || !talents) {
     return (
-      <main className="min-h-screen" style={{ background: "var(--holo-bg)" }}>
+      <main className="min-h-screen bg-[var(--holo-bg)]">
         <Navbar title="ENDLESS" />
         <div className="max-w-5xl mx-auto px-4 py-8 text-center">
-          <p className="text-sm font-semibold" style={{ color: "var(--holo-text-muted)" }}>
+          <p className="text-sm font-semibold text-[var(--holo-text-muted)]">
             Loading talents…
           </p>
         </div>
@@ -87,17 +87,16 @@ function EndlessGamePage() {
 
   if (talentsError || talents.length === 0) {
     return (
-      <main className="min-h-screen" style={{ background: "var(--holo-bg)" }}>
+      <main className="min-h-screen bg-[var(--holo-bg)]">
         <Navbar title="ENDLESS" />
         <div className="max-w-5xl mx-auto px-4 py-8 text-center">
-          <p className="text-sm font-semibold" style={{ color: "var(--holo-text-muted)" }}>
+          <p className="text-sm font-semibold text-[var(--holo-text-muted)]">
             {talentsError || "Failed to load talents."}
           </p>
           <button
             type="button"
             onClick={() => window.location.reload()}
-            className="mt-4 px-6 py-2 rounded-full text-sm font-bold text-white transition-opacity hover:opacity-80"
-            style={{ background: "var(--holo-blue)" }}
+            className="mt-4 px-6 py-2 rounded-full text-sm font-bold text-white transition-opacity hover:opacity-80 bg-[var(--holo-blue)]"
           >
             Retry
           </button>

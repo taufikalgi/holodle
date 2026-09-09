@@ -32,8 +32,7 @@ export default function AuthCluster({
               alt={user.name}
               width={28}
               height={28}
-              className="rounded-full"
-              style={{ border: "2px solid var(--holo-border)" }}
+              className="rounded-full border-[2px] border-solid border-[var(--holo-border)]"
             />
           )}
           <span className="text-xs font-semibold text-[var(--holo-text)]">
@@ -45,8 +44,8 @@ export default function AuthCluster({
                 onLogout();
                 onNavigate?.();
               }}
-              className="ml-auto text-xs font-semibold px-3 py-1 rounded-full transition-opacity hover:opacity-70"
-              style={{ background: "#ef4444", color: "white", border: "none" }}
+              className="ml-auto text-xs font-semibold px-3 py-1 rounded-full transition-opacity hover:opacity-70 text-white"
+              style={{ background: "#ef4444", border: "none" }}
             >
               Sign out
             </button>
@@ -62,8 +61,7 @@ export default function AuthCluster({
             alt={user.name}
             width={28}
             height={28}
-            className="rounded-full"
-            style={{ border: "2px solid var(--holo-border)" }}
+            className="rounded-full border-[2px] border-solid border-[var(--holo-border)]"
           />
         )}
         <span className="text-xs font-semibold text-[var(--holo-text)]">
@@ -72,8 +70,8 @@ export default function AuthCluster({
         {onLogout && (
           <button
             onClick={onLogout}
-            className="text-xs font-semibold px-3 py-1 rounded-full transition-opacity hover:opacity-70"
-            style={{ background: "#ef4444", color: "white", border: "none" }}
+            className="text-xs font-semibold px-3 py-1 rounded-full transition-opacity hover:opacity-70 text-white"
+            style={{ background: "#ef4444", border: "none" }}
           >
             Sign out
           </button>

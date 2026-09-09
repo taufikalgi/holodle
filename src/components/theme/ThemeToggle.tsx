@@ -16,15 +16,13 @@ export default function ThemeToggle() {
   if (!mounted) {
     return (
       <div
-        className="relative w-14 h-7 rounded-full border-2 flex items-center px-1"
-        style={{ borderColor: "var(--holo-border)", background: "var(--holo-off-white)" }}
+        className="relative w-14 h-7 rounded-full border-2 flex items-center px-1 border-[var(--holo-border)] bg-[var(--holo-off-white)]"
         aria-hidden
       >
         <span className="absolute left-1.5 text-[10px] leading-none">🌙</span>
         <span className="absolute right-1.5 text-[10px] leading-none opacity-60">☀️</span>
         <div
-          className="absolute left-0.5 w-5 h-5 rounded-full shadow-sm"
-          style={{ background: "white", border: "1px solid var(--holo-border)" }}
+          className="absolute left-0.5 w-5 h-5 rounded-full shadow-sm bg-white border-[1px] border-solid border-[var(--holo-border)]"
         />
       </div>
     );

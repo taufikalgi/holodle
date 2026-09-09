@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { useRouter } from "next/navigation";
-import type { Talent } from "@/lib/talent-api";
+import type { AdminTalent as Talent } from "@/lib/talents";
 import { fetchTalentList } from "@/lib/queries";
 import { ApiError } from "@/lib/errors";
 import { compareTalentsByKey } from "@/components/admin";

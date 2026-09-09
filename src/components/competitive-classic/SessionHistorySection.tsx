@@ -27,20 +27,18 @@ export default function SessionHistorySection({
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <p
-            className="text-xs font-black uppercase tracking-[0.24em]"
-            style={{ color: "var(--holo-text-muted)" }}
+            className="text-xs font-black uppercase tracking-[0.24em] text-[var(--holo-text-muted)]"
           >
             Session state
           </p>
-          <p className="mt-1 text-sm" style={{ color: "var(--holo-text-muted)" }}>
+          <p className="mt-1 text-sm text-[var(--holo-text-muted)]">
             {session.correct_guesses} correct, {session.wrong_answers} wrong, round{" "}
             {session.round_number}
           </p>
         </div>
         <button
           onClick={onNewSession}
-          className="rounded-xl border px-4 py-2 text-sm font-bold transition-colors hover:bg-[var(--holo-off-white)]"
-          style={{ borderColor: "var(--holo-border)", color: "var(--holo-text)" }}
+          className="rounded-xl border px-4 py-2 text-sm font-bold transition-colors hover:bg-[var(--holo-off-white)] border-[var(--holo-border)] text-[var(--holo-text)]"
         >
           New session
         </button>
@@ -48,16 +46,14 @@ export default function SessionHistorySection({
 
       <div className="mt-4 overflow-x-auto pb-2">
         <div
-          className="mb-4 flex rounded-2xl border p-1"
-          style={{ borderColor: "var(--holo-border)" }}
+          className="mb-4 flex rounded-2xl border p-1 border-[var(--holo-border)]"
         >
           <button
             type="button"
             onClick={() => setHistoryTab("current")}
             className={`flex-1 rounded-xl px-3 py-2 text-sm font-bold transition-colors ${
               historyTab === "current" ? "bg-[var(--holo-off-white)]" : "bg-transparent"
-            }`}
-            style={{ color: "var(--holo-text)" }}
+            } text-[var(--holo-text)]`}
           >
             Current round
           </button>
@@ -66,8 +62,7 @@ export default function SessionHistorySection({
             onClick={() => setHistoryTab("previous")}
             className={`flex-1 rounded-xl px-3 py-2 text-sm font-bold transition-colors ${
               historyTab === "previous" ? "bg-[var(--holo-off-white)]" : "bg-transparent"
-            }`}
-            style={{ color: "var(--holo-text)" }}
+            } text-[var(--holo-text)]`}
           >
             Previous results
           </button>
@@ -88,11 +83,7 @@ export default function SessionHistorySection({
           </div>
         ) : historyTab === "current" ? (
           <div
-            className="rounded-2xl border border-dashed px-4 py-12 text-center"
-            style={{
-              borderColor: "var(--holo-border)",
-              color: "var(--holo-text-muted)",
-            }}
+            className="rounded-2xl border border-dashed px-4 py-12 text-center border-[var(--holo-border)] text-[var(--holo-text-muted)]"
           >
             Your first guess will appear here.
           </div>
@@ -104,20 +95,17 @@ export default function SessionHistorySection({
               return (
                 <div
                   key={`${roundNumber}-${roundLatest?.submittedAt ?? roundIndex}`}
-                  className="rounded-2xl border bg-[var(--holo-bg-card)] p-4 shadow-sm"
-                  style={{ borderColor: "var(--holo-border)" }}
+                  className="rounded-2xl border bg-[var(--holo-bg-card)] p-4 shadow-sm border-[var(--holo-border)]"
                 >
                   <div className="flex items-center justify-between gap-3">
                     <div>
                       <p
-                        className="text-xs font-black uppercase tracking-[0.24em]"
-                        style={{ color: "var(--holo-text-muted)" }}
+                        className="text-xs font-black uppercase tracking-[0.24em] text-[var(--holo-text-muted)]"
                       >
                         Round {roundNumber}
                       </p>
                       <p
-                        className="mt-1 text-sm"
-                        style={{ color: "var(--holo-text-muted)" }}
+                        className="mt-1 text-sm text-[var(--holo-text-muted)]"
                       >
                         {round.length} guess{round.length === 1 ? "" : "es"}
                       </p>
@@ -154,11 +142,7 @@ export default function SessionHistorySection({
           </div>
         ) : (
           <div
-            className="rounded-2xl border border-dashed px-4 py-12 text-center"
-            style={{
-              borderColor: "var(--holo-border)",
-              color: "var(--holo-text-muted)",
-            }}
+            className="rounded-2xl border border-dashed px-4 py-12 text-center border-[var(--holo-border)] text-[var(--holo-text-muted)]"
           >
             Previous results will appear here after a correct answer.
           </div>
@@ -167,18 +151,16 @@ export default function SessionHistorySection({
 
       {latestGuess && (
         <div
-          className="mt-4 rounded-2xl border bg-[var(--holo-bg-card)] px-4 py-4 shadow-sm"
-          style={{ borderColor: "var(--holo-border)" }}
+          className="mt-4 rounded-2xl border bg-[var(--holo-bg-card)] px-4 py-4 shadow-sm border-[var(--holo-border)]"
         >
           <div className="flex items-center justify-between gap-3">
             <div>
               <p
-                className="text-xs font-black uppercase tracking-[0.24em]"
-                style={{ color: "var(--holo-text-muted)" }}
+                className="text-xs font-black uppercase tracking-[0.24em] text-[var(--holo-text-muted)]"
               >
                 Latest result
               </p>
-              <p className="mt-1 text-sm font-bold" style={{ color: "var(--holo-text)" }}>
+              <p className="mt-1 text-sm font-bold text-[var(--holo-text)]">
                 {latestGuess.talent.name}
               </p>
             </div>

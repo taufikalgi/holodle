@@ -47,10 +47,7 @@ export default function PageHeader({
           <button
             onClick={onLeaderboard}
             title="Leaderboard"
-            className="w-8 h-8 rounded-full border-2 flex items-center justify-center text-sm font-bold transition-colors text-[var(--holo-blue)] bg-[var(--holo-bg-card)]"
-            style={{
-              borderColor: "var(--holo-blue)",
-            }}
+            className="w-8 h-8 rounded-full border-2 flex items-center justify-center text-sm font-bold transition-colors text-[var(--holo-blue)] bg-[var(--holo-bg-card)] border-[var(--holo-blue)]"
           >
             {showLeaderboard ? "x" : "🏆"}
           </button>
@@ -59,10 +56,7 @@ export default function PageHeader({
           <button
             onClick={onHowTo}
             title="How to play"
-            className="w-8 h-8 rounded-full border-2 flex items-center justify-center text-sm font-bold transition-colors text-[var(--holo-blue)] bg-[var(--holo-bg-card)]"
-            style={{
-              borderColor: "var(--holo-blue)",
-            }}
+            className="w-8 h-8 rounded-full border-2 flex items-center justify-center text-sm font-bold transition-colors text-[var(--holo-blue)] bg-[var(--holo-bg-card)] border-[var(--holo-blue)]"
           >
             {showHowTo ? "x" : "?"}
           </button>

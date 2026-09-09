@@ -1,7 +1,7 @@
 import { authFetch, readEnvelope } from "./api-client";
 import { withIdempotency } from "./commands";
 import { ApiError } from "./errors";
-import type { Talent } from "./talent-api";
+import type { AdminTalent as Talent } from "./talents";
 
 export type { Talent };
 

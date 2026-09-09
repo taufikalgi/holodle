@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { loadTalents, type Talent } from "@/lib/talents";
-import { deriveAvatarStatus, type GameStatus } from "@/lib/game-status";
+import { useGameMachine } from "@/hooks/useGameMachine";
 import { useLocalStorageState } from "@/hooks/useLocalStorageState";
 import {
   fetchAvatarAreas,
@@ -169,7 +169,13 @@ export function useAvatarEndlessRound() {
   }, [pool, persisted.recentTalentIds, roundState.round, startRound]);
 
   const { round, guesses } = roundState;
-  const status: GameStatus = deriveAvatarStatus(roundStatus, roundState.gameOver, roundState.won);
+  const status = useGameMachine({
+    loading: roundStatus === "loading",
+    error: roundStatus === "error" ? roundError : "",
+    empty: roundStatus === "noValid",
+    gameOver: roundState.gameOver,
+    won: roundState.won,
+  });
   const guessesLeft = MAX_GUESSES - guesses.length;
   const alreadyGuessed = guesses.map((g) => g.talent.name);
   const revealedCount = round ? Math.min(guesses.length + 1, round.areas.length) : 0;

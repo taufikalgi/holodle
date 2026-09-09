@@ -1,8 +1,8 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { memo, useEffect, useState } from "react";
 
-export default function Cell({
+function CellInner({
   label,
   status,
   delay,
@@ -31,3 +31,5 @@ export default function Cell({
     </div>
   );
 }
+
+export default memo(CellInner);

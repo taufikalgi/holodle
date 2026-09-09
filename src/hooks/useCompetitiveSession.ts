@@ -5,7 +5,6 @@ import { ApiError } from "@/lib/errors";
 import { createGameSession, submitSessionGuess } from "@/lib/commands";
 import { fetchSession, fetchSessionTalents } from "@/lib/queries";
 import {
-  getSessionStatus,
   redirectToLogin,
   clearStoredHistory,
   formatTimer,
@@ -13,6 +12,7 @@ import {
   getStoredHistoryState,
   setStoredHistoryState,
 } from "@/components/competitive-classic/utils";
+import { useSessionMachine } from "@/hooks/useGameMachine";
 import type {
   AuthUser,
   GameSession,
@@ -43,7 +43,7 @@ export function useCompetitiveSession(user: AuthUser | null) {
 
   const expiresAt = session ? Date.parse(session.expires_at) : null;
   const expired = expiresAt !== null && expiresAt <= now;
-  const sessionStatus = getSessionStatus({
+  const sessionStatus = useSessionMachine({
     user,
     loading: sessionLoading || talentsLoading,
     session,

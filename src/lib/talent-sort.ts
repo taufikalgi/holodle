@@ -1,4 +1,4 @@
-import type { Talent } from "@/lib/talent-api";
+import type { AdminTalent as Talent } from "@/lib/talents";
 import { MONTH_ORDER } from "@/lib/talents";
 
 export type SortKey =

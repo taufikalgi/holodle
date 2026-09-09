@@ -30,17 +30,14 @@ export default function AuthGate({ onLogin }: { onLogin: () => void }) {
 
         <hr className="w-full border-[var(--holo-border)]" />
 
-        <p className="text-sm" style={{ color: "var(--holo-text-muted)", lineHeight: 1.6 }}>
+        <p className="text-sm text-[var(--holo-text-muted)]" style={{ lineHeight: 1.6 }}>
           Sign in untuk ikut <strong>Competitive Classic</strong> bang.
         </p>
 
         <button
           onClick={onLogin}
-          className="w-full flex items-center justify-center gap-3 py-3 px-5 rounded-xl font-bold text-sm transition-opacity hover:opacity-80"
+          className="w-full flex items-center justify-center gap-3 py-3 px-5 rounded-xl font-bold text-sm transition-opacity hover:opacity-80 border-[1.5px] border-solid border-[var(--holo-border)] bg-[var(--holo-bg-card)] text-[var(--holo-text)]"
           style={{
-            border: "1.5px solid var(--holo-border)",
-            background: "var(--holo-bg-card)",
-            color: "var(--holo-text)",
             cursor: "pointer",
           }}
         >

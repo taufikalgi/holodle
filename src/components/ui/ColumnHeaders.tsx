@@ -29,8 +29,7 @@ export default function ColumnHeaders({
         {headers.map((h) => (
           <div
             key={h}
-            className="text-center text-xs uppercase tracking-wider font-bold py-1"
-            style={{ color: "var(--holo-text-muted)" }}
+            className="text-center text-xs uppercase tracking-wider font-bold py-1 text-[var(--holo-text-muted)]"
           >
             {h}
           </div>
@@ -42,8 +41,7 @@ export default function ColumnHeaders({
         {/* Row 1: spans full width for photo + name column */}
 
         <div
-          className={`text-center ${competitive ? "text-[10px]" : "text-[10px]"} uppercase tracking-wider font-bold py-1`}
-          style={{ color: "var(--holo-text-muted)" }}
+          className={`text-center ${competitive ? "text-[10px]" : "text-[10px]"} uppercase tracking-wider font-bold py-1 text-[var(--holo-text-muted)]`}
         >
           {headers[1]} {/* "Name" */}
         </div>
@@ -53,8 +51,7 @@ export default function ColumnHeaders({
           {attrHeaders.map((h) => (
             <div
               key={h}
-              className={`text-center ${competitive ? "text-[8px]" : "text-[10px]"} uppercase tracking-wider font-bold py-1`}
-              style={{ color: "var(--holo-text-muted)" }}
+              className={`text-center ${competitive ? "text-[8px]" : "text-[10px]"} uppercase tracking-wider font-bold py-1 text-[var(--holo-text-muted)]`}
             >
               {h}
             </div>
