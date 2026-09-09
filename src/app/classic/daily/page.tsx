@@ -28,6 +28,9 @@ import { useOutsideClick } from "@/hooks/useOutsideClick";
 import { useTalentSearch } from "@/hooks/useTalentSearch";
 import type { DailyStreakStats } from "@/lib/daily-streak";
 import { useDailyStreak } from "@/hooks/useDailyStreak";
+import StatusPill from "@/components/game/StatusPill";
+import StreakResetModal from "@/components/game/StreakResetModal";
+import { ZeroGuessHint } from "@/components/game/GameShell";
 
 const MAX_GUESSES = 6;
 const STORAGE_KEY = "holodle-classic-state";
@@ -107,73 +110,16 @@ export default function ClassicGame() {
             showHowTo={showHowTo}
           />
 
-          <div
-            className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-xs font-bold border"
-            style={{
-              background: "var(--holo-bg-card)",
-              borderColor: "var(--holo-border)",
-              color: "var(--holo-text-muted)",
-            }}
-          >
-            {state.gameOver ? (
-              state.won ? (
-                <>
-                  <span className="text-green-500">●</span> You found them! 🎉
-                </>
-              ) : (
-                <>
-                  <span className="text-red-400">●</span> Game over — come back tomorrow!
-                </>
-              )
-            ) : (
-              <>
-                <span style={{ color: "var(--holo-blue)" }}>●</span> {guessesLeft} guess
-                {guessesLeft !== 1 ? "es" : ""} remaining
-              </>
-            )}
-          </div>
+          <StatusPill
+            status={state.gameOver ? (state.won ? "won" : "lost") : "playing"}
+            guessesLeft={guessesLeft}
+            variant="daily"
+          />
         </header>
 
         {showHowTo && <HowToPlay maxGuesses={MAX_GUESSES} classic={true} />}
 
-        {streakResetToast && (
-          <div
-            className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4"
-            onClick={dismissStreakResetPopup}
-            role="dialog"
-            aria-modal="true"
-            aria-label="Streak reset"
-          >
-            <div
-              className="holo-card w-full max-w-sm p-6 text-center relative"
-              onClick={(e) => e.stopPropagation()}
-            >
-              <button
-                type="button"
-                onClick={dismissStreakResetPopup}
-                aria-label="Close"
-                className="absolute top-3 right-3 w-7 h-7 rounded-full flex items-center justify-center text-sm font-bold"
-                style={{ background: "var(--holo-off-white)", color: "var(--holo-text-muted)" }}
-              >
-                ✕
-              </button>
-              <h3 className="font-black text-sm tracking-widest uppercase" style={{ color: "var(--holo-text)" }}>
-                Streak reset
-              </h3>
-              <p className="text-sm mt-2 font-semibold" style={{ color: "var(--holo-text-muted)" }}>
-                You missed a day. Your streak was reset to 0. Win today to start a new streak!
-              </p>
-              <button
-                type="button"
-                onClick={dismissStreakResetPopup}
-                className="mt-4 px-6 py-2 rounded-full text-sm font-bold text-white transition-opacity hover:opacity-80"
-                style={{ background: "var(--holo-blue)" }}
-              >
-                Got it
-              </button>
-            </div>
-          </div>
-        )}
+        <StreakResetModal open={streakResetToast} onClose={dismissStreakResetPopup} />
 
         <StatsBar
           streak={stats.streak}
@@ -237,14 +183,10 @@ export default function ClassicGame() {
         </div>
 
         {!state.gameOver && state.guesses.length === 0 && (
-          <div className="text-center py-14">
-            <p className="text-sm font-semibold" style={{ color: "var(--holo-text-muted)" }}>
-              Start typing above to make your first guess!
-            </p>
-            <p className="text-xs mt-1 opacity-50" style={{ color: "var(--holo-text-muted)" }}>
-              {ALL_TALENTS.length} talents in the pool
-            </p>
-          </div>
+          <ZeroGuessHint
+            line1="Start typing above to make your first guess!"
+            line2={`${ALL_TALENTS.length} talents in the pool`}
+          />
         )}
 
         <Footer />

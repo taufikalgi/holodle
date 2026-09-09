@@ -28,6 +28,8 @@ import { buildGridShareText } from "@/lib/share";
 import { useLocalStorageState } from "@/hooks/useLocalStorageState";
 import { useOutsideClick } from "@/hooks/useOutsideClick";
 import { useTalentSearch } from "@/hooks/useTalentSearch";
+import StatusPill from "@/components/game/StatusPill";
+import { ZeroGuessHint } from "@/components/game/GameShell";
 
 const MAX_GUESSES = 6;
 const LAST_BRANCHES_KEY = "holodle-endless-last-branches";
@@ -127,6 +129,8 @@ function EndlessGamePage() {
   }
 
   if (!hydrated) {
+    // Keep inline: transient hydration shell — GameShell would add an empty
+    // container div + footer around bare Navbar output.
     return (
       <main className="min-h-screen" style={{ background: "var(--holo-bg)" }}>
         <Navbar title="ENDLESS" />
@@ -253,28 +257,12 @@ function EndlessGameContent({
           />
 
           <div className="flex items-center justify-center gap-2 flex-wrap">
-            <div
-              className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-xs font-bold border"
-              style={{
-                background: "var(--holo-bg-card)",
-                borderColor: "var(--holo-border)",
-                color: "var(--holo-text-muted)",
-              }}
-            >
-              {current.gameOver ? (
-                current.won ? (
-                  "Correct! Ready for the next one?"
-                ) : (
-                  "Wrong — try the next one!"
-                )
-              ) : (
-                <>
-                  <span style={{ color: "var(--holo-blue)" }}>●</span> {guessesLeft} guess
-                  {guessesLeft !== 1 ? "es" : ""} remaining
-                </>
-              )}
-              {selectedBranches &&
-                selectedBranches.length < ALL_BRANCHES.length && (
+            <StatusPill
+              status={current.gameOver ? (current.won ? "won" : "lost") : "playing"}
+              guessesLeft={guessesLeft}
+              variant="endless"
+              extra={
+                selectedBranches && selectedBranches.length < ALL_BRANCHES.length ? (
                   <>
                     <span className="opacity-30">|</span>
                     {selectedBranches.map((b) => (
@@ -290,8 +278,9 @@ function EndlessGameContent({
                       </span>
                     ))}
                   </>
-                )}
-            </div>
+                ) : undefined
+              }
+            />
             <button
               type="button"
               onClick={onChangeBranches}
@@ -381,14 +370,10 @@ function EndlessGameContent({
             </p>
           </div>
         ) : !current.gameOver && current.guesses.length === 0 && (
-          <div className="text-center py-14">
-            <p className="text-sm font-semibold" style={{ color: "var(--holo-text-muted)" }}>
-              Start typing to make your first guess!
-            </p>
-            <p className="text-xs mt-1 opacity-50" style={{ color: "var(--holo-text-muted)" }}>
-              {pool.length} talent{pool.length !== 1 ? "s" : ""} in the pool
-            </p>
-          </div>
+          <ZeroGuessHint
+            line1="Start typing to make your first guess!"
+            line2={`${pool.length} talent${pool.length !== 1 ? "s" : ""} in the pool`}
+          />
         )}
 
         <Footer />
