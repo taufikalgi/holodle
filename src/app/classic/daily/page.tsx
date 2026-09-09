@@ -44,8 +44,7 @@ export default function ClassicGame() {
   useOutsideClick(dropdownRef, () => setShowDropdown(false), inputRef);
 
   const handleGuess = (talent: Talent) => {
-    makeGuess(talent);
-    clear();
+    if (makeGuess(talent)) clear();
   };
 
   const displayCurrentHistory = state.guesses

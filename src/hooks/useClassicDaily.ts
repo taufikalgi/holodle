@@ -51,8 +51,8 @@ export function useClassicDaily() {
 
   const makeGuess = useCallback(
     (talent: Talent) => {
-      if (state.gameOver) return;
-      if (state.guesses.some((g) => g.talent.name === talent.name)) return;
+      if (state.gameOver) return false;
+      if (state.guesses.some((g) => g.talent.name === talent.name)) return false;
       const result = compareTalents(talent, todayAnswer);
       const won = talent.name === todayAnswer.name;
       const newGuesses = [...state.guesses, { talent, result }];
@@ -62,6 +62,7 @@ export function useClassicDaily() {
       if (gameOver) {
         recordDailyGameOver(getDateString(), won);
       }
+      return true;
     },
     [state, todayAnswer, setState, recordDailyGameOver]
   );
