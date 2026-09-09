@@ -1,8 +1,9 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
-import type { Talent, TalentFormData } from "@/lib/talent-api";
-import { getToken } from "@/hooks/useAuth";
+import { useEffect, useRef } from "react";
+import type { Talent } from "@/lib/talent-api";
+import { useTalentForm } from "@/hooks/useTalentForm";
+import ImageUrlField from "./ImageUrlField";
 
 interface Props {
   mode: "create" | "edit";
@@ -27,23 +28,14 @@ const MONTHS = [
   "December",
 ];
 
-const EMPTY: TalentFormData = {
-  name: "",
-  branch: "",
-  debut_year: null,
-  lore_archetype: "",
-  height: null,
-  birth_month: "",
-  image_url: "",
-  avatar_url: "",
-  alt_names: [],
-};
-
 export default function TalentModal({ mode, initial, onClose, onSaved, apiBase }: Props) {
-  const [form, setForm] = useState<TalentFormData>(initial ? { ...initial } : { ...EMPTY });
-  const [altInput, setAltInput] = useState(initial?.alt_names?.join(", ") ?? "");
-  const [error, setError] = useState("");
-  const [loading, setLoading] = useState(false);
+  const { form, set, altInput, setAltInput, error, loading, handleSubmit } = useTalentForm({
+    mode,
+    initial,
+    onSaved,
+    onClose,
+    apiBase,
+  });
   const backdropRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -53,53 +45,6 @@ export default function TalentModal({ mode, initial, onClose, onSaved, apiBase }
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
   }, [onClose]);
-
-  function set<K extends keyof TalentFormData>(key: K, value: TalentFormData[K]) {
-    setForm((f) => ({ ...f, [key]: value }));
-  }
-
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    setError("");
-    if (!form.name.trim() || !form.branch.trim()) {
-      setError("Name and branch are required.");
-      return;
-    }
-    setLoading(true);
-
-    const payload = {
-      ...form,
-      alt_names: altInput
-        .split(",")
-        .map((s) => s.trim())
-        .filter(Boolean),
-      debut_year: form.debut_year ? Number(form.debut_year) : null,
-      height: form.height ? Number(form.height) : null,
-      ...(mode === "edit" && initial ? { id: initial.id } : {}),
-    };
-
-    try {
-      const url = mode === "create" ? `${apiBase}/talent/create` : `${apiBase}/talent/update`;
-      const token = getToken();
-      const res = await fetch(url, {
-        method: mode === "create" ? "POST" : "PUT",
-        headers: {
-          "Content-Type": "application/json",
-          ...(token ? { Authorization: `Bearer ${token}` } : {}),
-        },
-        body: JSON.stringify(payload),
-        credentials: "include",
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.message ?? "Request failed");
-      onSaved();
-      onClose();
-    } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : "Something went wrong");
-    } finally {
-      setLoading(false);
-    }
-  }
 
   const inputStyle: React.CSSProperties = {
     width: "100%",
@@ -288,70 +233,24 @@ export default function TalentModal({ mode, initial, onClose, onSaved, apiBase }
             </div>
 
             {/* Image URL */}
-            <div style={{ gridColumn: "1 / -1" }}>
-              <label style={labelStyle}>Image URL</label>
-              <input
-                className="holo-input"
-                style={inputStyle}
-                type="url"
-                value={form.image_url}
-                onChange={(e) => set("image_url", e.target.value)}
-                placeholder="https://hololive.hololivepro.com/..."
-              />
-              {form.image_url && (
-                <div style={{ marginTop: 8, display: "flex", alignItems: "center", gap: 10 }}>
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img
-                    src={form.image_url}
-                    alt="Preview"
-                    style={{
-                      width: 48,
-                      height: 48,
-                      borderRadius: "50%",
-                      objectFit: "cover",
-                      border: "2px solid var(--holo-border)",
-                    }}
-                    onError={(e) => {
-                      (e.currentTarget as HTMLImageElement).style.display = "none";
-                    }}
-                  />
-                  <span style={{ fontSize: 12, color: "var(--holo-text-muted)" }}>Preview</span>
-                </div>
-              )}
-            </div>
+            <ImageUrlField
+              label="Image URL"
+              value={form.image_url}
+              onChange={(v) => set("image_url", v)}
+              previewAlt="Preview"
+              inputStyle={inputStyle}
+              labelStyle={labelStyle}
+            />
 
             {/* Avatar URL */}
-            <div style={{ gridColumn: "1 / -1" }}>
-              <label style={labelStyle}>Avatar URL</label>
-              <input
-                className="holo-input"
-                style={inputStyle}
-                type="url"
-                value={form.avatar_url}
-                onChange={(e) => set("avatar_url", e.target.value)}
-                placeholder="https://hololive.hololivepro.com/..."
-              />
-              {form.avatar_url && (
-                <div style={{ marginTop: 8, display: "flex", alignItems: "center", gap: 10 }}>
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img
-                    src={form.avatar_url}
-                    alt="Avatar preview"
-                    style={{
-                      width: 48,
-                      height: 48,
-                      borderRadius: "50%",
-                      objectFit: "cover",
-                      border: "2px solid var(--holo-border)",
-                    }}
-                    onError={(e) => {
-                      (e.currentTarget as HTMLImageElement).style.display = "none";
-                    }}
-                  />
-                  <span style={{ fontSize: 12, color: "var(--holo-text-muted)" }}>Preview</span>
-                </div>
-              )}
-            </div>
+            <ImageUrlField
+              label="Avatar URL"
+              value={form.avatar_url}
+              onChange={(v) => set("avatar_url", v)}
+              previewAlt="Avatar preview"
+              inputStyle={inputStyle}
+              labelStyle={labelStyle}
+            />
 
             {/* Alt names */}
             <div style={{ gridColumn: "1 / -1" }}>
