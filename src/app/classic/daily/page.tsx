@@ -1,14 +1,7 @@
 "use client";
 
-import { useState, useRef, useCallback } from "react";
-import {
-  ALL_TALENTS,
-  getTalentOfTheDay,
-  getDateString,
-  compareTalents,
-  type Talent,
-  type CompareResult,
-} from "@/lib/talents";
+import { useState, useRef } from "react";
+import { ALL_TALENTS, type Talent } from "@/lib/talents";
 import {
   ColumnHeaders,
   DEFAULT_COLUMN_HEADERS,
@@ -23,77 +16,37 @@ import {
   TalentSearchInput,
 } from "@/components/ui";
 import { buildGridShareText } from "@/lib/share";
-import { useLocalStorageState } from "@/hooks/useLocalStorageState";
 import { useOutsideClick } from "@/hooks/useOutsideClick";
 import { useTalentSearch } from "@/hooks/useTalentSearch";
-import type { DailyStreakStats } from "@/lib/daily-streak";
-import { useDailyStreak } from "@/hooks/useDailyStreak";
+import { MAX_GUESSES, useClassicDaily } from "@/hooks/useClassicDaily";
 import StatusPill from "@/components/game/StatusPill";
 import StreakResetModal from "@/components/game/StreakResetModal";
 import { ZeroGuessHint } from "@/components/game/GameShell";
 
-const MAX_GUESSES = 6;
-const STORAGE_KEY = "holodle-classic-state";
-const STATS_STORAGE_KEY = "holodle-classic-stats";
-
-interface GameState {
-  guesses: { talent: Talent; result: CompareResult }[];
-  gameOver: boolean;
-  won: boolean;
-  date: string;
-}
-
-type GameStats = DailyStreakStats;
-
-function isValidGameState(data: unknown): data is GameState {
-  if (typeof data !== "object" || data === null) return false;
-  const c = data as Record<string, unknown>;
-  return (
-    Array.isArray(c.guesses) &&
-    typeof c.gameOver === "boolean" &&
-    typeof c.won === "boolean" &&
-    typeof c.date === "string" &&
-    c.date === getDateString()
-  );
-}
-
-const emptyState: GameState = { guesses: [], gameOver: false, won: false, date: getDateString() };
-const emptyStats: GameStats = { streak: 0, bestStreak: 0, totalPlayed: 0, totalWon: 0, lastPlayedDate: undefined };
-
 export default function ClassicGame() {
-  const [state, setState] = useLocalStorageState<GameState>(STORAGE_KEY, emptyState, isValidGameState);
-  const { stats, streakResetToast, dismissStreakResetPopup, recordDailyGameOver } =
-    useDailyStreak(STATS_STORAGE_KEY, emptyStats);
+  const {
+    state,
+    todayAnswer,
+    guessesLeft,
+    alreadyGuessed,
+    stats,
+    streakResetToast,
+    dismissStreakResetPopup,
+    makeGuess,
+  } = useClassicDaily();
   const [showHowTo, setShowHowTo] = useState(false);
   const [revealAnswer, setRevealAnswer] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
-  const todayAnswer = getTalentOfTheDay();
-  const guessesLeft = MAX_GUESSES - state.guesses.length;
 
   const { input, suggestions, showDropdown, handleInput, clear, onFocus, setShowDropdown } = useTalentSearch();
 
-  const alreadyGuessed = state.guesses.map((g) => g.talent.name);
-
   useOutsideClick(dropdownRef, () => setShowDropdown(false), inputRef);
 
-  const makeGuess = useCallback(
-    (talent: Talent) => {
-      if (state.gameOver) return;
-      if (state.guesses.some((g) => g.talent.name === talent.name)) return;
-      const result = compareTalents(talent, todayAnswer);
-      const won = talent.name === todayAnswer.name;
-      const newGuesses = [...state.guesses, { talent, result }];
-      const gameOver = won || newGuesses.length >= MAX_GUESSES;
-      const newState: GameState = { guesses: newGuesses, gameOver, won, date: getDateString() };
-      setState(newState);
-      if (gameOver) {
-        recordDailyGameOver(getDateString(), won);
-      }
-      clear();
-    },
-    [state, todayAnswer, setState, recordDailyGameOver, clear]
-  );
+  const handleGuess = (talent: Talent) => {
+    makeGuess(talent);
+    clear();
+  };
 
   const displayCurrentHistory = state.guesses
     .map((g) => ({ talent: g.talent, result: g.result }))
@@ -165,7 +118,7 @@ export default function ClassicGame() {
             suggestions={suggestions}
             showDropdown={showDropdown}
             onInput={(val) => handleInput(val, alreadyGuessed)}
-            onGuess={makeGuess}
+            onGuess={handleGuess}
             onClear={clear}
             onFocus={onFocus}
             dropdownRef={dropdownRef}
