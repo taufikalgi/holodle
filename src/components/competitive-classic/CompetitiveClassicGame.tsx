@@ -12,28 +12,14 @@ import {
 import GuessRow from "@/components/ui/GuessRow";
 import { useOutsideClick } from "@/hooks/useOutsideClick";
 import { useCompetitiveSession } from "@/hooks/useCompetitiveSession";
-import { fetchLeaderboardPage } from "@/lib/queries";
-import {
-  addDays,
-  addMonths,
-  getMondayDate,
-  toIsoDate,
-  toMonthString,
-} from "./utils";
+import { useLeaderboard } from "@/hooks/useLeaderboard";
 import TalentSearch from "./TalentSearch";
 import HeaderStat from "./HeaderStat";
 import LeaderboardModal from "./LeaderboardModal";
 import FinalResultCard from "./FinalResultCard";
 import StartSessionCard from "./StartSessionCard";
 import LoginToPlayCard from "./LoginToPlayCard";
-import type {
-  AuthUser,
-  TalentChoice,
-  LeaderboardEntry,
-  LeaderboardPeriod,
-} from "./types";
-
-const MIN_MONTH = "2026-06";
+import type { AuthUser, TalentChoice } from "./types";
 
 export default function CompetitiveClassicGame({
   user,
@@ -45,17 +31,9 @@ export default function CompetitiveClassicGame({
   onLogout: () => void;
 }) {
   const s = useCompetitiveSession(user);
+  const lb = useLeaderboard((m) => s.setSessionError(m));
 
   const [historyTab, setHistoryTab] = useState<"current" | "previous">("current");
-  const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
-  const [leaderboardLoading, setLeaderboardLoading] = useState(true);
-  const [leaderboardLoadingMore, setLeaderboardLoadingMore] = useState(false);
-  const [leaderboardTotal, setLeaderboardTotal] = useState(0);
-  const [leaderboardHasMore, setLeaderboardHasMore] = useState(false);
-  const [leaderboardPage, setLeaderboardPage] = useState(0);
-  const [period, setPeriod] = useState<LeaderboardPeriod>("all");
-  const [week, setWeek] = useState(() => toIsoDate(getMondayDate(new Date())));
-  const [month, setMonth] = useState(() => toMonthString(new Date()));
   const [search, setSearch] = useState("");
   const [showDropdown, setShowDropdown] = useState(false);
   const [showHowTo, setShowHowTo] = useState(false);
@@ -95,88 +73,10 @@ export default function CompetitiveClassicGame({
 
   useOutsideClick(dropdownRef, () => setShowDropdown(false), inputRef);
 
-  const fetchLeaderboard = useCallback(async () => {
-    setLeaderboardLoading(true);
-    setLeaderboardLoadingMore(false);
-    setLeaderboard([]);
-    setLeaderboardPage(0);
-    try {
-      const data = await fetchLeaderboardPage({ period, page: 1, week, month });
-      setLeaderboard(data.entries);
-      setLeaderboardTotal(data.total);
-      setLeaderboardHasMore(data.has_more);
-      setLeaderboardPage(data.page);
-    } catch (err) {
-      s.setSessionError(err instanceof Error ? err.message : "Failed to load leaderboard");
-    } finally {
-      setLeaderboardLoading(false);
-    }
-  }, [period, week, month]);
-
-  const loadMoreLeaderboard = useCallback(async () => {
-    if (leaderboardLoading || leaderboardLoadingMore || !leaderboardHasMore) return;
-    setLeaderboardLoadingMore(true);
-    try {
-      const data = await fetchLeaderboardPage({
-        period,
-        page: leaderboardPage + 1,
-        week,
-        month,
-      });
-      setLeaderboard((prev) => [...prev, ...data.entries]);
-      setLeaderboardTotal(data.total);
-      setLeaderboardHasMore(data.has_more);
-      setLeaderboardPage(data.page);
-    } catch (err) {
-      s.setSessionError(err instanceof Error ? err.message : "Failed to load leaderboard");
-    } finally {
-      setLeaderboardLoadingMore(false);
-    }
-  }, [
-    period,
-    week,
-    month,
-    leaderboardHasMore,
-    leaderboardLoading,
-    leaderboardLoadingMore,
-    leaderboardPage,
-  ]);
-
-  const changePeriod = useCallback((next: LeaderboardPeriod) => {
-    setPeriod(next);
-    if (next === "weekly") setWeek(toIsoDate(getMondayDate(new Date())));
-    if (next === "monthly") setMonth(toMonthString(new Date()));
-  }, []);
-
-  const navigatePeriod = useCallback(
-    (direction: 1 | -1) => {
-      if (period === "weekly") {
-        setWeek((w) => toIsoDate(addDays(new Date(w + "T00:00:00"), direction * 7)));
-        return;
-      }
-      if (period === "monthly") {
-        setMonth((m) => {
-          const next = toMonthString(addMonths(new Date(m + "-01T00:00:00"), direction));
-          const max = toMonthString(new Date());
-          if (next < MIN_MONTH) return MIN_MONTH;
-          if (next > max) return max;
-          return next;
-        });
-      }
-    },
-    [period]
-  );
-
-  const currentMonth = toMonthString(new Date());
-  const prevMonth = toMonthString(addMonths(new Date(month + "-01T00:00:00"), -1));
-  const nextMonth = toMonthString(addMonths(new Date(month + "-01T00:00:00"), 1));
-  const monthPrevDisabled = prevMonth < MIN_MONTH;
-  const monthNextDisabled = nextMonth > currentMonth;
-
   useEffect(() => {
     if (!showLeaderboard) return;
-    void fetchLeaderboard();
-  }, [fetchLeaderboard, showLeaderboard]);
+    void lb.fetchLeaderboard();
+  }, [lb.fetchLeaderboard, showLeaderboard]);
 
   const totalGuessCount =
     s.currentRoundHistory.length + s.previousRounds.reduce((count, round) => count + round.length, 0);
@@ -257,18 +157,18 @@ export default function CompetitiveClassicGame({
 
         <LeaderboardModal
           open={showLeaderboard}
-          entries={leaderboard}
-          loading={leaderboardLoading}
-          loadingMore={leaderboardLoadingMore}
-          hasMore={leaderboardHasMore}
-          total={leaderboardTotal}
-          period={period}
-          month={month}
-          prevDisabled={period === "monthly" && monthPrevDisabled}
-          nextDisabled={period === "monthly" && monthNextDisabled}
-          onPeriodChange={changePeriod}
-          onNavigate={navigatePeriod}
-          onLoadMore={loadMoreLeaderboard}
+          entries={lb.leaderboard}
+          loading={lb.leaderboardLoading}
+          loadingMore={lb.leaderboardLoadingMore}
+          hasMore={lb.leaderboardHasMore}
+          total={lb.leaderboardTotal}
+          period={lb.period}
+          month={lb.month}
+          prevDisabled={lb.period === "monthly" && lb.monthPrevDisabled}
+          nextDisabled={lb.period === "monthly" && lb.monthNextDisabled}
+          onPeriodChange={lb.changePeriod}
+          onNavigate={lb.navigatePeriod}
+          onLoadMore={lb.loadMoreLeaderboard}
           onClose={() => setShowLeaderboard(false)}
         />
 
