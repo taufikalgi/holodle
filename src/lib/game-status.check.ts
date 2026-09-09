@@ -13,7 +13,7 @@ import {
   isStoredClassicGuess,
 } from "./game-status";
 import { compareTalents, getTalentOfTheDay, type Talent } from "./talents";
-import { computeDailyStreakOnGameOver } from "./daily-streak";
+import { computeDailyStreakOnGameOver, shouldResetDailyStreakForMissedDay } from "./daily-streak";
 
 const base: Talent = {
   id: "a",
@@ -102,6 +102,10 @@ assert.equal(
   computeDailyStreakOnGameOver({ ...fresh, streak: 5, lastPlayedDate: "2026-09-07" }, "2026-09-08", false).streak,
   0
 );
+assert.equal(shouldResetDailyStreakForMissedDay("2026-09-06", "2026-09-08", 3), true);
+assert.equal(shouldResetDailyStreakForMissedDay("2026-09-07", "2026-09-08", 3), false);
+assert.equal(shouldResetDailyStreakForMissedDay("2026-09-07", "2026-09-08", 0), false);
+assert.equal(shouldResetDailyStreakForMissedDay(undefined, "2026-09-08", 3), false);
 
 // Stored-guess validation
 assert.equal(isStoredClassicGuess({ talent: { id: "a", name: "A" }, result: {} }), true);

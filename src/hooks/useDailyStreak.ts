@@ -24,7 +24,7 @@ export function useDailyStreak(storageKey: string, emptyStats: DailyStreakStats)
       setStats((prev) => ({ ...prev, streak: 0 }));
       setStreakResetToast(true);
     }
-  }, []); // Wordle-style: eager reset on mount only
+  }, [storageKey, stats.lastPlayedDate, stats.streak]); // re-evaluate when the key or outcome changes; stable: reset writes streak 0, after which shouldResetDailyStreakForMissedDay(..., 0) is false
 
   const dismissStreakResetPopup = () => setStreakResetToast(false);
 
