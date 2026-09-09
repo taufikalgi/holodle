@@ -97,7 +97,7 @@ export function useEndlessClassic(
 
   const makeGuess = useCallback(
     (talent: Talent) => {
-      if (current.gameOver) return;
+      if (current.gameOver) return false;
       const result = compareTalents(talent, current.answer);
       const won = talent.name === current.answer.name;
       const newGuesses = [...current.guesses, { talent, result }];
@@ -118,6 +118,7 @@ export function useEndlessClassic(
             }
           : prev.stats,
       }));
+      return true;
     },
     [current, setState]
   );

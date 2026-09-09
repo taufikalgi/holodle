@@ -43,8 +43,7 @@ export function EndlessGameContent({
   useOutsideClick(dropdownRef, () => setShowDropdown(false), inputRef);
 
   function handleGuess(talent: Talent) {
-    g.makeGuess(talent);
-    clear();
+    if (g.makeGuess(talent)) clear();
   }
 
   function handleNextRound() {
