@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useRef } from "react";
 import type { Talent } from "@/lib/talent-api";
+import Modal from "./Modal";
 import { useTalentForm } from "@/hooks/useTalentForm";
 import ImageUrlField from "./ImageUrlField";
 
@@ -36,16 +36,6 @@ export default function TalentModal({ mode, initial, onClose, onSaved, apiBase }
     onClose,
     apiBase,
   });
-  const backdropRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    function onKey(e: KeyboardEvent) {
-      if (e.key === "Escape") onClose();
-    }
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  }, [onClose]);
-
   const inputStyle: React.CSSProperties = {
     width: "100%",
     padding: "10px 13px",
@@ -64,22 +54,10 @@ export default function TalentModal({ mode, initial, onClose, onSaved, apiBase }
   };
 
   return (
-    <div
-      ref={backdropRef}
-      onClick={(e) => {
-        if (e.target === backdropRef.current) onClose();
-      }}
-      style={{
-        position: "fixed",
-        inset: 0,
-        background: "rgba(26,35,64,0.45)",
-        backdropFilter: "blur(4px)",
-        zIndex: 50,
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        padding: "1rem",
-      }}
+    <Modal
+      onClose={onClose}
+      label={mode === "edit" ? "Edit talent" : "Add talent"}
+      maxWidth="max-w-2xl"
     >
       <div
         className="holo-card animate-bounce-in"
@@ -347,6 +325,6 @@ export default function TalentModal({ mode, initial, onClose, onSaved, apiBase }
           </div>
         </form>
       </div>
-    </div>
+    </Modal>
   );
 }
