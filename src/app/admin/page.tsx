@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import TalentModal from "@/components/ui/TalentModal";
 import { AdminToolbar, AdminTable, AdminToast } from "@/components/admin";
+import AdminNav from "@/components/admin/AdminNav";
 import { useAdminTalents } from "@/hooks/useAdminTalents";
 
 const API_BASE = `${process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8080"}/api/v1`;
@@ -35,52 +36,10 @@ export default function AdminPage() {
         fontFamily: '"Baloo 2", sans-serif',
       }}
     >
-      <nav
-        style={{
-          background: "var(--holo-bg-card)",
-          borderBottom: "1.5px solid var(--holo-border)",
-          padding: "0 2rem",
-          height: 64,
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
-          position: "sticky",
-          top: 0,
-          zIndex: 40,
-          boxShadow: "0 2px 12px rgba(0,119,163,0.07)",
-        }}
-      >
-        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-          <span style={{ fontSize: 24 }}>🎨</span>
-          <div>
-            <span
-              className="shimmer-text"
-              style={{
-                fontFamily: "var(--font-albert-sans), sans-serif",
-                fontWeight: 800,
-                fontSize: 18,
-              }}
-            >
-              Holodle Admin
-            </span>
-            <span
-              style={{
-                marginLeft: 10,
-                fontSize: 12,
-                color: "var(--holo-text-muted)",
-                fontWeight: 600,
-              }}
-            >
-              Talent Management
-            </span>
-          </div>
-        </div>
-
-        <div style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
-          <span style={{ fontSize: 13, color: "var(--holo-text-muted)", fontWeight: 600 }}>
-            {a.talents.length} talents
-          </span>
-
+      <AdminNav
+        subtitle="Talent Management"
+        meta={`${a.talents.length} talents`}
+        userChip={
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
             {a.user.picture ? (
               // eslint-disable-next-line @next/next/no-img-element
@@ -117,25 +76,9 @@ export default function AdminPage() {
               {a.user.name}
             </span>
           </div>
-
-          <button
-            onClick={a.handleLogout}
-            style={{
-              padding: "8px 18px",
-              borderRadius: 10,
-              border: "1.5px solid var(--holo-border)",
-              background: "var(--holo-off-white)",
-              color: "var(--holo-text-muted)",
-              fontFamily: '"Baloo 2", sans-serif',
-              fontWeight: 700,
-              fontSize: 13,
-              cursor: "pointer",
-            }}
-          >
-            Sign out
-          </button>
-        </div>
-      </nav>
+        }
+        onLogout={a.handleLogout}
+      />
 
       <main style={{ maxWidth: 1200, margin: "0 auto", padding: "2rem 1.5rem" }}>
         <AdminToolbar

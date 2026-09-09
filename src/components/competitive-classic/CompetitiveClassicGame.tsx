@@ -32,8 +32,7 @@ import TalentSearch from "./TalentSearch";
 import HeaderStat from "./HeaderStat";
 import LeaderboardModal from "./LeaderboardModal";
 import FinalResultCard from "./FinalResultCard";
-import StartSessionCard from "./StartSessionCard";
-import LoginToPlayCard from "./LoginToPlayCard";
+import SessionStateCard from "./SessionStateCard";
 import type { ApiTalent } from "@/lib/talents";
 import type {
   AuthUser,
@@ -556,7 +555,7 @@ export default function CompetitiveClassicGame({
         )}
 
         {!user ? (
-          <LoginToPlayCard onLogin={() => onLogin("/classic/competitive")} />
+          <SessionStateCard variant="login" onLogin={() => onLogin("/classic/competitive")} />
         ) : sessionEnded && session ? (
           <FinalResultCard
             session={session}
@@ -564,7 +563,7 @@ export default function CompetitiveClassicGame({
             onNewSession={startNewSession}
           />
         ) : !session ? (
-          <StartSessionCard onStart={startNewSession} loading={sessionLoading} />
+          <SessionStateCard variant="start" onStart={startNewSession} loading={sessionLoading} />
         ) : (
           <>
             <TalentSearch
