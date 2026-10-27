@@ -5,6 +5,7 @@ import {
   type CropBox,
   type Difficulty,
   type EditableArea,
+  type CropArea,
   type Talent,
 } from "@/lib/avatar-crops";
 import { MAX_CONTAINER_HEIGHT, useCropDrag } from "./useCropDrag";
@@ -15,6 +16,7 @@ import DifficultyBar from "./DifficultyBar";
 interface CropEditorProps {
   talent: Talent;
   areas: EditableArea[];
+  generatedPreview: CropArea[];
   selectedKey: string | null;
   onSelect: (key: string | null) => void;
   onAdd: (box: CropBox) => void;
@@ -27,6 +29,7 @@ interface CropEditorProps {
 export default function CropEditor({
   talent,
   areas,
+  generatedPreview,
   selectedKey,
   onSelect,
   onAdd,
@@ -123,6 +126,53 @@ export default function CropEditor({
           />
 
           <CropPreview preview={preview} toDisplay={toDisplay} />
+
+          {generatedPreview.map((area, i) => {
+            const box = {
+              x: (area.x / 1000) * natural.w,
+              y: (area.y / 1000) * natural.h,
+              w: (area.w / 1000) * natural.w,
+              h: (area.h / 1000) * natural.h,
+            };
+            const display = toDisplay(box);
+            const color = {
+              easy: "#16a34a",
+              medium: "#d97706",
+              hard: "#dc2626",
+            }[area.difficulty];
+            return (
+              <div
+                key={`generated-${area.id || i}`}
+                style={{
+                  ...display,
+                  position: "absolute",
+                  border: `2px solid ${color}`,
+                  background: `${color}22`,
+                  borderRadius: 4,
+                  boxSizing: "border-box",
+                  pointerEvents: "none",
+                  zIndex: 5,
+                }}
+              >
+                <span
+                  style={{
+                    position: "absolute",
+                    top: 1,
+                    left: 3,
+                    padding: "0 4px",
+                    borderRadius: 4,
+                    background: color,
+                    color: "white",
+                    fontSize: 10,
+                    lineHeight: "16px",
+                    fontWeight: 800,
+                  }}
+                >
+                  AI {area.difficulty} #{i + 1}
+                </span>
+              </div>
+            );
+          })}
 
           <CropBoxOverlay
             areas={areas}

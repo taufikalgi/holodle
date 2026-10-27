@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "@/hooks/useAuth";
 import { ApiError } from "@/lib/errors";
@@ -9,7 +9,11 @@ import {
   createArea,
   deleteArea,
   fetchAreas,
+  generateCrops,
+  generateMissingCrops,
   updateArea,
+  type BatchGenerationSummary,
+  type CropGenerationResult,
   type CropArea,
   type CropBox,
   type Difficulty,
@@ -19,6 +23,16 @@ import {
 
 let keySeq = 0;
 const nextKey = () => `area-${++keySeq}-${Date.now() % 100000}`;
+
+type SingleGenerationConfirmation = {
+  action: "generate-and-save" | "save-preview";
+  talentId: string;
+  talentName: string;
+  overwrite: boolean;
+  existingCount: number;
+  unsavedCount: number;
+  generatedCount?: number;
+};
 
 export function useAvatarCropAdmin() {
   const { user, loading: authLoading, logout } = useAuth({ requireAdmin: true });
@@ -33,6 +47,13 @@ export function useAvatarCropAdmin() {
   const talent: Talent | undefined =
     talents.find((t) => t.id === selectedId) ?? talents[0];
 
+  const selectTalent = useCallback((id: string) => {
+    setSelectedId(id);
+    const params = new URLSearchParams(searchParams.toString());
+    params.set("talentId", id);
+    router.replace(`/admin/avatar-crops?${params.toString()}`, { scroll: false });
+  }, [router, searchParams]);
+
   const [loadedAreas, setLoadedAreas] = useState<CropArea[] | null>(null);
   const [areas, setAreas] = useState<EditableArea[]>([]);
   const [deleted, setDeleted] = useState<CropArea[]>([]);
@@ -41,6 +62,16 @@ export function useAvatarCropAdmin() {
   const [saving, setSaving] = useState(false);
   const [review, setReview] = useState<EditableArea | null>(null);
   const [toast, setToast] = useState<{ msg: string; type: "ok" | "err" } | null>(null);
+  const [generatedPreview, setGeneratedPreview] = useState<CropGenerationResult | null>(null);
+  const [generationDryRun, setGenerationDryRun] = useState(true);
+  const [generationOverwrite, setGenerationOverwrite] = useState(false);
+  const [singleConfirmation, setSingleConfirmation] = useState<SingleGenerationConfirmation | null>(null);
+  const [batchSummary, setBatchSummary] = useState<BatchGenerationSummary | null>(null);
+  const [batchCommitted, setBatchCommitted] = useState(false);
+  const [batchConfirmationOpen, setBatchConfirmationOpen] = useState(false);
+  const [generationBusy, setGenerationBusy] = useState<"single" | "batch" | null>(null);
+  const singleGenerationInFlight = useRef(false);
+  const handledSingleConfirmation = useRef<SingleGenerationConfirmation | null>(null);
 
   const showToast = (msg: string, type: "ok" | "err" = "ok") => {
     setToast({ msg, type });
@@ -92,12 +123,13 @@ export function useAvatarCropAdmin() {
   }, [fetchTalents]);
 
   useEffect(() => {
-    if (talents.length > 0 && selectedId && !talents.some((t) => t.id === selectedId)) {
-      setSelectedId(talents[0].id);
+    if (talents.length > 0 && (!selectedId || !talents.some((t) => t.id === selectedId))) {
+      selectTalent(talents[0].id);
     }
-  }, [talents, selectedId]);
+  }, [talents, selectedId, selectTalent]);
 
   useEffect(() => {
+    setGeneratedPreview(null);
     if (talent) loadAreas(talent.id);
   }, [talent, loadAreas]);
 
@@ -225,6 +257,147 @@ export function useAvatarCropAdmin() {
     showToast("Reset to last saved state ↺");
   };
 
+  const reportGenerationError = (error: unknown, fallback: string) => {
+    if (error instanceof ApiError && error.status === 401) {
+      router.replace("/admin/login");
+      return;
+    }
+    if (error instanceof ApiError && error.status === 403) {
+      showToast("Admin access is required to generate crop areas.", "err");
+      return;
+    }
+    if (error instanceof ApiError && error.status === 429) {
+      const retry = error.retryAfter ? ` Retry after ${error.retryAfter}.` : " Please try again later.";
+      showToast(`Generation was rate limited.${retry}`, "err");
+      return;
+    }
+    console.error("Crop generation failed", error);
+    if (error instanceof TypeError && /failed to fetch|networkerror|load failed/i.test(error.message)) {
+      showToast(
+        "The browser could not read the generation response. Check that the API's FRONTEND_URL exactly matches this site's origin (for local: http://localhost:3000, with no trailing slash or path), and check proxy timeouts. The server may still have completed the request; reload saved crops before retrying a save.",
+        "err"
+      );
+      return;
+    }
+    showToast(error instanceof Error ? error.message : fallback, "err");
+  };
+
+  const executeSingleGeneration = async (talentId: string, dryRun: boolean, overwrite: boolean) => {
+    // State updates disable the button on the next render; this ref closes the
+    // gap where two click events can enter the handler before that render.
+    if (singleGenerationInFlight.current) return;
+    singleGenerationInFlight.current = true;
+    setGenerationBusy("single");
+    try {
+      const result = await generateCrops(talentId, { dryRun, overwrite });
+      if (result.dry_run) {
+        setGeneratedPreview(result);
+        showToast(`Preview generated: ${result.total_generated} crop areas.`);
+      } else {
+        setGeneratedPreview(null);
+        await loadAreas(talentId);
+        showToast(`Saved ${result.total_generated} generated crop areas.`);
+      }
+    } catch (error) {
+      reportGenerationError(error, dryRun ? "Could not generate crop preview." : "Could not save generated crop areas.");
+    } finally {
+      singleGenerationInFlight.current = false;
+      setGenerationBusy(null);
+    }
+  };
+
+  const handleGeneratePreview = async () => {
+    if (!talent || generationBusy) return;
+    const existingCount = loadedAreas?.length ?? savedCount;
+    if (!generationDryRun && existingCount > 0 && !generationOverwrite) {
+      showToast("Turn on overwrite to replace the existing saved crop areas.", "err");
+      return;
+    }
+    if (!generationDryRun) {
+      setSingleConfirmation({
+        action: "generate-and-save",
+        talentId: talent.id,
+        talentName: talent.name,
+        overwrite: generationOverwrite,
+        existingCount,
+        unsavedCount,
+      });
+      return;
+    }
+    await executeSingleGeneration(talent.id, true, generationOverwrite);
+  };
+
+  const handleCommitGenerated = async () => {
+    if (!talent || !generatedPreview || generatedPreview.talent_id !== talent.id || generationBusy) return;
+    const overwrite = generationOverwrite;
+    const existingSavedCount = loadedAreas?.length ?? savedCount;
+    if (existingSavedCount > 0 && !overwrite) {
+      showToast("Turn on overwrite to replace the existing saved crop areas.", "err");
+      return;
+    }
+    setSingleConfirmation({
+      action: "save-preview",
+      talentId: talent.id,
+      talentName: talent.name,
+      overwrite,
+      existingCount: existingSavedCount,
+      unsavedCount,
+      generatedCount: generatedPreview.total_generated,
+    });
+  };
+
+  const handleConfirmSingleGeneration = async () => {
+    const confirmation = singleConfirmation;
+    if (
+      !confirmation ||
+      generationBusy ||
+      singleGenerationInFlight.current ||
+      handledSingleConfirmation.current === confirmation
+    ) return;
+    // Consume this specific confirmation synchronously. A duplicate event can
+    // still hold the old callback after React has started updating the modal.
+    handledSingleConfirmation.current = confirmation;
+    setSingleConfirmation(null);
+    await executeSingleGeneration(confirmation.talentId, false, confirmation.overwrite);
+  };
+
+  const handleGenerateMissingPreview = async () => {
+    if (generationBusy) return;
+    setGenerationBusy("batch");
+    try {
+      const result = await generateMissingCrops(true, AbortSignal.timeout(5 * 60 * 1000));
+      setBatchSummary(result);
+      setBatchCommitted(false);
+      showToast(`Batch preview complete: ${result.succeeded} succeeded, ${result.failed} failed.`);
+    } catch (error) {
+      reportGenerationError(error, "Could not generate missing crop previews.");
+    } finally {
+      setGenerationBusy(null);
+    }
+  };
+
+  const handleCommitMissing = async () => {
+    if (!batchSummary || generationBusy) return;
+    setBatchConfirmationOpen(true);
+  };
+
+  const handleConfirmBatchGeneration = async () => {
+    if (!batchSummary || generationBusy) return;
+    setBatchConfirmationOpen(false);
+    setGenerationBusy("batch");
+    try {
+      const result = await generateMissingCrops(false, AbortSignal.timeout(5 * 60 * 1000));
+      setBatchSummary(result);
+      setBatchCommitted(true);
+      if (talent) await loadAreas(talent.id);
+      showToast(`Batch generation complete: ${result.succeeded} succeeded, ${result.failed} failed.`);
+    } catch (error) {
+      reportGenerationError(error, "Could not save generated crops.");
+    } finally {
+      setGenerationBusy(null);
+    }
+  };
+
   return {
     user,
     authLoading,
@@ -243,6 +416,14 @@ export function useAvatarCropAdmin() {
     review,
     setReview,
     toast,
+    generatedPreview,
+    batchSummary,
+    batchCommitted,
+    batchConfirmationOpen,
+    generationBusy,
+    generationDryRun,
+    generationOverwrite,
+    singleConfirmation,
     unsavedCount,
     savedCount,
     addArea,
@@ -251,8 +432,20 @@ export function useAvatarCropAdmin() {
     removeArea,
     handleSave,
     handleReset,
+    handleGeneratePreview,
+    handleCommitGenerated,
+    handleConfirmSingleGeneration,
+    setSingleConfirmation,
+    handleGenerateMissingPreview,
+    handleCommitMissing,
+    handleConfirmBatchGeneration,
+    setGeneratedPreview,
+    setBatchSummary,
+    setBatchConfirmationOpen,
+    setGenerationDryRun,
+    setGenerationOverwrite,
     handleLogout,
     fetchTalents,
-    setSelectedId,
+    setSelectedId: selectTalent,
   };
 }
