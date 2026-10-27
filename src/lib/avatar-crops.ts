@@ -38,6 +38,33 @@ export interface EditableArea extends CropAreaData {
   dirty: boolean;
 }
 
+export interface CropGenerationResult {
+  talent_id: string;
+  total_generated: number;
+  areas: CropArea[];
+  dry_run: boolean;
+}
+
+export interface TalentCropResult {
+  talent_id: string;
+  talent_name: string;
+  success: boolean;
+  areas_count: number;
+  error?: string;
+}
+
+export interface BatchGenerationSummary {
+  processed: number;
+  succeeded: number;
+  failed: number;
+  details: TalentCropResult[];
+}
+
+export interface GenerateCropOptions {
+  dryRun?: boolean;
+  overwrite?: boolean;
+}
+
 const roundBox = (box: CropAreaData) => ({
   x: Math.round(box.x),
   y: Math.round(box.y),
@@ -93,4 +120,31 @@ export async function deleteArea(talentId: string, areaId: string): Promise<void
     withIdempotency({ method: "DELETE" })
   );
   await readEnvelope<null>(res);
+}
+
+export async function generateCrops(
+  talentId: string,
+  options: GenerateCropOptions = {}
+): Promise<CropGenerationResult> {
+  const params = new URLSearchParams({
+    dry_run: String(options.dryRun ?? true),
+    overwrite: String(options.overwrite ?? false),
+  });
+  const res = await authFetch(
+    `${areasPath(talentId)}/generate?${params.toString()}`,
+    { method: "POST", credentials: "include" }
+  );
+  return readEnvelope<CropGenerationResult>(res);
+}
+
+export async function generateMissingCrops(
+  dryRun = true,
+  signal?: AbortSignal
+): Promise<BatchGenerationSummary> {
+  const params = new URLSearchParams({ dry_run: String(dryRun) });
+  const res = await authFetch(
+    `/api/v1/talent/areas/generate-missing?${params.toString()}`,
+    { method: "POST", credentials: "include", signal }
+  );
+  return readEnvelope<BatchGenerationSummary>(res);
 }
