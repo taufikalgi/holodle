@@ -29,10 +29,14 @@ export async function readEnvelope<T>(res: Response): Promise<T> {
   if (!res.ok) {
     const message =
       json?.error || json?.message || `Request failed (${res.status})`;
-    throw new ApiError(message, res.status);
+    throw new ApiError(message, res.status, res.headers.get("Retry-After"));
   }
   if (!json || json.success === false) {
-    throw new ApiError(json?.message ?? json?.error ?? "Request failed", res.status);
+    throw new ApiError(
+      json?.message ?? json?.error ?? "Request failed",
+      res.status,
+      res.headers.get("Retry-After")
+    );
   }
   return json.data as T;
 }
@@ -47,7 +51,9 @@ export function getToken(): string | null {
 
 function jsonHeaders(token: string | null, init?: RequestInit): Headers {
   const headers = new Headers(init?.headers);
-  headers.set("Content-Type", "application/json");
+  if (init?.body != null && !headers.has("Content-Type")) {
+    headers.set("Content-Type", "application/json");
+  }
   if (token) headers.set("Authorization", `Bearer ${token}`);
   return headers;
 }
@@ -64,12 +70,13 @@ export function publicFetch(path: string, init?: RequestInit): Promise<Response>
   return fetch(`${apiBaseUrl()}${path}`, init);
 }
 
-/** Authenticated request — adds Bearer token when present. */
+/** Authenticated request — sends the browser's session cookie and Bearer token. */
 export function authFetch(path: string, init?: RequestInit): Promise<Response> {
   assertPath(path);
   const token = getToken();
   return fetch(`${apiBaseUrl()}${path}`, {
     ...init,
+    credentials: "include",
     headers: jsonHeaders(token, init),
   });
 }

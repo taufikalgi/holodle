@@ -1,19 +1,16 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { parseJwt } from "@/lib/jwt";
 import { emitAppEvent, onAppEvent } from "@/lib/events";
 import { clearAllCompetitiveHistory } from "@/lib/session-history";
 import {
-  apiBaseUrl,
   authFetch,
-  getToken,
   googleAuthUrl,
+  readEnvelope,
 } from "@/lib/api-client";
 
-export { authFetch, getToken };
+export { authFetch };
 
-const TOKEN_KEY = "token";
 const AUTH_REDIRECT_KEY = "auth_redirect_to";
 const COMPETITIVE_SESSION_KEY = "competitive-classic-session-id";
 
@@ -22,6 +19,23 @@ export interface AuthUser {
   email: string;
   name: string;
   picture?: string;
+  role?: string;
+  is_admin?: boolean;
+  roles?: string[];
+}
+
+interface AuthMeResponse {
+  id?: string;
+  user_id?: string;
+  sub?: string;
+  email?: string;
+  name?: string;
+  picture?: string;
+  picture_url?: string;
+  role?: string;
+  is_admin?: boolean;
+  roles?: string[];
+  user?: AuthMeResponse;
 }
 
 interface UseAuthOptions {
@@ -34,72 +48,59 @@ export function useAuth({ requireAdmin }: UseAuthOptions = {}) {
   const [unauthorized, setUnauthorized] = useState(false);
 
   useEffect(() => {
-    const syncFromStorage = () => {
-      const token = getToken();
-      if (!token) {
-        setUser(null);
-        setLoading(false);
-        setUnauthorized(false);
-        return;
-      }
-      const payload = parseJwt(token);
-      if (!payload || Date.now() / 1000 > Number(payload.exp ?? 0)) {
-        localStorage.removeItem(TOKEN_KEY);
-        setUser(null);
-        setLoading(false);
-        return;
-      }
-      if (requireAdmin) {
-        const isAdmin =
-          payload.role === "admin" ||
-          payload.is_admin === true ||
-          (Array.isArray(payload.roles) && (payload.roles as string[]).includes("admin"));
-        if (!isAdmin) {
-          setUnauthorized(true);
-          setUser(null);
-          setLoading(false);
+    let active = true;
+    const syncFromSession = async () => {
+      setLoading(true);
+      setUnauthorized(false);
+      try {
+        const response = await authFetch("/api/v1/auth/me", { method: "GET" });
+        if (!response.ok) {
+          if (response.status === 403 && requireAdmin) setUnauthorized(true);
+          if (active) setUser(null);
           return;
         }
+        const result = await readEnvelope<AuthMeResponse>(response);
+        const identity = result.user ?? result;
+        const id = String(identity.id ?? identity.user_id ?? identity.sub ?? "");
+        const email = String(identity.email ?? "");
+        if (!id || !email) {
+          if (active) setUser(null);
+          return;
+        }
+        const authUser: AuthUser = {
+          id,
+          email,
+          name: String(identity.name ?? email.split("@")[0]),
+          picture: identity.picture ?? identity.picture_url,
+          role: identity.role,
+          is_admin: identity.is_admin,
+          roles: identity.roles,
+        };
+        const isAdmin =
+          authUser.role === "admin" ||
+          authUser.is_admin === true ||
+          authUser.roles?.includes("admin") === true;
+        if (requireAdmin && !isAdmin) {
+          if (active) {
+            setUnauthorized(true);
+            setUser(null);
+          }
+          return;
+        }
+        if (active) setUser(authUser);
+      } catch {
+        if (active) setUser(null);
+      } finally {
+        if (active) setLoading(false);
       }
-      const userId = String(payload.user_id ?? payload.sub ?? "");
-      const email = String(payload.email ?? "");
-      if (!userId || !email) {
-        localStorage.removeItem(TOKEN_KEY);
-        setUser(null);
-        setLoading(false);
-        return;
-      }
-      const name = email.split("@")[0];
-      fetch(`${apiBaseUrl()}/api/v1/user/${userId}/picture`, {
-        headers: { Authorization: `Bearer ${token}` },
-      })
-        .then((r) => (r.ok ? r.json() : null))
-        .then((data) => {
-          setUser({ id: userId, email, name, picture: data?.data?.picture_url });
-        })
-        .catch(() => {
-          setUser({ id: userId, email, name });
-        })
-        .finally(() => setLoading(false));
     };
 
-    const hash = window.location.hash;
-    if (hash.startsWith("#token=")) {
-      localStorage.setItem(TOKEN_KEY, decodeURIComponent(hash.slice(7)));
-      window.history.replaceState(null, "", window.location.pathname + window.location.search);
-    }
-
-    syncFromStorage();
-
-    const onAuthChange = () => syncFromStorage();
-    const onStorage = (e: StorageEvent) => {
-      if (e.key === TOKEN_KEY) syncFromStorage();
-    };
+    syncFromSession();
+    const onAuthChange = () => syncFromSession();
     const offAuthChange = onAppEvent("holodle:auth-change", onAuthChange);
-    window.addEventListener("storage", onStorage);
     return () => {
+      active = false;
       offAuthChange();
-      window.removeEventListener("storage", onStorage);
     };
   }, [requireAdmin]);
 
@@ -129,8 +130,12 @@ export function useAuth({ requireAdmin }: UseAuthOptions = {}) {
     [requireAdmin]
   );
 
-  const logout = useCallback(() => {
-    localStorage.removeItem(TOKEN_KEY);
+  const logout = useCallback(async () => {
+    try {
+      await authFetch("/api/v1/auth/logout", { method: "POST" });
+    } catch {
+      // Clear the local UI even if the server is unavailable.
+    }
     localStorage.removeItem(COMPETITIVE_SESSION_KEY);
     clearAllCompetitiveHistory();
     setUser(null);

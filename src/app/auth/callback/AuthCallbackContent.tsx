@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import { authFetch } from "@/lib/api-client";
 
 type Status = "loading" | "success" | "error";
 
@@ -31,11 +32,10 @@ export default function AuthCallbackContent() {
   const [message, setMessage] = useState("Verifying your account...");
 
   useEffect(() => {
-    const token = searchParams.get("token");
     const error = searchParams.get("error");
 
-    if (error || !token) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect -- auth callback syncs external auth state (sessionStorage/localStorage/router) once per searchParams change
+    if (error) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- auth callback syncs external auth state (sessionStorage/router) once per searchParams change
       setStatus("error");
       setMessage(
         error === "google_oauth_failed"
@@ -46,12 +46,26 @@ export default function AuthCallbackContent() {
       return;
     }
 
-    localStorage.setItem("token", token);
-    setStatus("success");
-    setMessage("Signed in successfully!");
+    let active = true;
+    authFetch("/api/v1/auth/me", { method: "GET" })
+      .then((response) => {
+        if (!response.ok) throw new Error("Session was not established");
+        if (!active) return;
+        setStatus("success");
+        setMessage("Signed in successfully!");
+        const redirectTo = getRedirectTarget();
+        setTimeout(() => router.replace(redirectTo), 1500);
+      })
+      .catch(() => {
+        if (!active) return;
+        setStatus("error");
+        setMessage("Authentication failed. Please try again.");
+        setTimeout(() => router.replace("/login"), 3000);
+      });
 
-    const redirectTo = getRedirectTarget();
-    setTimeout(() => router.replace(redirectTo), 1500);
+    return () => {
+      active = false;
+    };
   }, [searchParams, router]);
 
   return (
