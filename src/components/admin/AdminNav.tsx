@@ -1,4 +1,14 @@
+"use client";
+
+import Link from "next/link";
+import { usePathname } from "next/navigation";
 import type { ReactNode } from "react";
+
+const ADMIN_LINKS = [
+  { href: "/admin", label: "Talents" },
+  { href: "/admin/holosong", label: "Holosong" },
+  { href: "/admin/avatar-crops", label: "Avatar Crops" },
+];
 
 export default function AdminNav({
   subtitle,
@@ -15,6 +25,10 @@ export default function AdminNav({
   userChip?: ReactNode;
   onLogout: () => void;
 }) {
+  const pathname = usePathname();
+  const isActive = (href: string) =>
+    href === "/admin" ? pathname === "/admin" : pathname.startsWith(href);
+
   return (
     <nav
       style={{
@@ -71,6 +85,34 @@ export default function AdminNav({
           >
             {subtitle}
           </span>
+        </div>
+
+        <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+          {ADMIN_LINKS.map((link) => {
+            const active = isActive(link.href);
+            return (
+              <Link
+                key={link.href}
+                href={link.href}
+                style={{
+                  padding: "7px 12px",
+                  borderRadius: 10,
+                  border: `1.5px solid ${active ? "var(--holo-blue)" : "var(--holo-border)"}`,
+                  background: active
+                    ? "var(--holo-blue)"
+                    : "var(--holo-off-white)",
+                  color: active ? "#fff" : "var(--holo-text-muted)",
+                  fontFamily: '"Baloo 2", sans-serif',
+                  fontWeight: 800,
+                  fontSize: 13,
+                  textDecoration: "none",
+                  whiteSpace: "nowrap",
+                }}
+              >
+                {link.label}
+              </Link>
+            );
+          })}
         </div>
       </div>
 
