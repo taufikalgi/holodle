@@ -17,9 +17,6 @@ export default function DifficultyBar({
     <div
       onMouseDown={(e) => e.stopPropagation()}
       style={{
-        position: "absolute",
-        bottom: 8,
-        right: 10,
         display: "flex",
         alignItems: "center",
         gap: 6,

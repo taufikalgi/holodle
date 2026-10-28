@@ -11,7 +11,7 @@ import {
 import { clampBox, normRect, resizeBox } from "@/lib/crop-geometry";
 import type { Corner, CropBox, EditableArea } from "@/lib/avatar-crops";
 
-export const MAX_CONTAINER_HEIGHT = 520;
+export const MAX_CONTAINER_HEIGHT = 760;
 
 type Drag =
   | { mode: "draw"; start: { x: number; y: number } }

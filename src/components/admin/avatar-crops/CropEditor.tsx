@@ -183,31 +183,36 @@ export default function CropEditor({
             onRemove={onRemove}
             onSelect={onSelect}
           />
+        </div>
+      )}
 
-          <div
+      {loaded ? (
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: 10,
+            flexWrap: "wrap",
+            marginTop: 10,
+          }}
+        >
+          <span
             style={{
-              position: "absolute",
-              bottom: 8,
-              left: 10,
-              fontSize: 11,
-              fontWeight: 600,
-              color: "#fff",
-              background: "rgba(0,0,0,0.45)",
-              padding: "3px 8px",
-              borderRadius: 6,
-              pointerEvents: "none",
+              fontSize: 12,
+              fontWeight: 700,
+              color: "var(--holo-text-muted)",
             }}
           >
             Drag to draw • {talent.name}
-          </div>
-
+          </span>
+          <span style={{ flex: 1 }} />
           <DifficultyBar
             areas={areas}
             selectedKey={selectedKey}
             onSetDifficulty={onSetDifficulty}
           />
         </div>
-      )}
+      ) : null}
     </div>
   );
 }
