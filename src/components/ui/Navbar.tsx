@@ -1,92 +1,75 @@
 "use client";
 
-import Image from "next/image";
 import Link from "next/link";
 import { useState } from "react";
 import { usePathname } from "next/navigation";
-import { GameMode, GAMES } from "@/lib/game-modes";
 import ThemeToggle from "@/components/theme/ThemeToggle";
-
-interface User {
-  name: string;
-  picture?: string;
-}
+import { useAuth, type AuthUser } from "@/hooks/useAuth";
+import DesktopNav from "@/components/ui/DesktopNav";
+import MobileNav from "@/components/ui/MobileNav";
+import AuthCluster from "@/components/ui/AuthCluster";
 
 export default function Navbar({
   title,
-  user,
-  onLogout,
+  user: userProp,
+  onLogout: onLogoutProp,
+  onLogin: onLoginProp,
 }: {
   title: string;
-  user?: User;
+  user?: AuthUser | null;
   onLogout?: () => void;
+  onLogin?: (redirectTo?: string) => void;
 }) {
   const [isOpen, setIsOpen] = useState(false);
+  const [openCategory, setOpenCategory] = useState<string | null>(null);
+  const [expandedCategory, setExpandedCategory] = useState<string | null>(null);
   const pathname = usePathname();
   const isActive = (href: string) => pathname === href;
+  const isCategoryActive = (id: string) => pathname.startsWith(`/${id}`);
+  const { user: authUser, loading: authLoading, login: authLogin, logout: authLogout } = useAuth();
+  const hasExternalUser = userProp !== undefined;
+  const user = hasExternalUser ? (userProp as AuthUser | null) : authUser;
+  const effectiveLoading = hasExternalUser ? false : authLoading;
+  const onLogout = onLogoutProp ?? authLogout;
+  const handleLogin = () => {
+    if (onLoginProp) {
+      onLoginProp(pathname);
+    } else {
+      authLogin(pathname);
+    }
+  };
+
+  const toggleCategory = (id: string) => setOpenCategory((prev) => (prev === id ? null : id));
+  const toggleExpanded = (id: string) => setExpandedCategory((prev) => (prev === id ? null : id));
+  const onNavigate = () => {
+    setIsOpen(false);
+    setExpandedCategory(null);
+  };
 
   return (
     <nav
-      className="w-full border-b"
-      style={{ background: "var(--holo-bg-card)", borderColor: "var(--holo-border)" }}
+      className="w-full border-b bg-[var(--holo-bg-card)] border-[var(--holo-border)]"
     >
       <div className="px-4 py-3 flex items-center gap-4">
         <Link
           href="/"
-          className="flex items-center gap-1 text-sm font-bold transition-colors hover:opacity-70"
-          style={{ color: "var(--holo-blue)" }}
+          className="flex items-center gap-1 text-sm font-bold transition-colors hover:opacity-70 text-[var(--holo-blue)]"
         >
           ← Home
         </Link>
 
         {/* Desktop links */}
-        <div className="hidden md:flex items-center gap-4">
-          {GAMES.map((game: GameMode) => (
-            <Link
-              key={game.title}
-              href={game.href}
-              className="text-sm font-black tracking-widest relative group"
-              style={{ color: "var(--holo-text)" }}
-            >
-              {game.title.toUpperCase()}
-              <span
-                className={`absolute bottom-0 left-0 h-0.5 transition-all duration-300 ease-in-out ${
-                  isActive(game.href) ? "w-full" : "w-0 group-hover:w-full"
-                }`}
-                style={{ background: "var(--holo-blue)" }}
-              />
-            </Link>
-          ))}
-        </div>
+        <DesktopNav
+          openCategory={openCategory}
+          onToggleCategory={toggleCategory}
+          onClose={() => setOpenCategory(null)}
+          isActive={isActive}
+          isCategoryActive={isCategoryActive}
+        />
 
         {/* Right-side cluster */}
         <div className="ml-auto flex items-center gap-3">
-          {user && (
-            <div className="hidden md:flex items-center gap-3">
-              {user.picture && (
-                <Image
-                  src={user.picture}
-                  alt={user.name}
-                  width={28}
-                  height={28}
-                  className="rounded-full"
-                  style={{ border: "2px solid var(--holo-border)" }}
-                />
-              )}
-              <span className="text-xs font-semibold" style={{ color: "var(--holo-text)" }}>
-                {user.name}
-              </span>
-              {onLogout && (
-                <button
-                  onClick={onLogout}
-                  className="text-xs font-semibold px-3 py-1 rounded-full transition-opacity hover:opacity-70"
-                  style={{ background: "#ef4444", color: "white", border: "none" }}
-                >
-                  Sign out
-                </button>
-              )}
-            </div>
-          )}
+          <AuthCluster user={user} loading={effectiveLoading} onLogin={handleLogin} onLogout={onLogout} />
 
           {/* Hamburger button */}
           <button
@@ -123,63 +106,28 @@ export default function Navbar({
 
       {/* Mobile dropdown */}
       <div
-        className={`md:hidden overflow-hidden transition-all duration-300 ease-in-out ${
-          isOpen ? "max-h-96 border-t" : "max-h-0"
+        className={`md:hidden overflow-hidden transition-all duration-300 ease-in-out border-[var(--holo-border)] ${
+          isOpen ? "max-h-[500px] border-t" : "max-h-0"
         }`}
-        style={{ borderColor: "var(--holo-border)" }}
       >
-        <div className="px-4 py-3 flex flex-col gap-4">
-          {GAMES.map((game: GameMode) => (
-            <Link
-              key={game.title}
-              href={game.href}
-              className="text-sm font-black tracking-widest relative group self-start"
-              style={{ color: "var(--holo-text)" }}
-              onClick={() => setIsOpen(false)}
-            >
-              {game.title.toUpperCase()}
-              <span
-                className={`absolute bottom-0 left-0 h-0.5 transition-all duration-300 ease-in-out ${
-                  isActive(game.href) ? "w-full" : "w-0 group-hover:w-full"
-                }`}
-                style={{ background: "var(--holo-blue)" }}
-              />
-            </Link>
-          ))}
+        <div className="px-4 py-3 flex flex-col gap-2">
+          <MobileNav
+            expandedCategory={expandedCategory}
+            onToggleExpanded={toggleExpanded}
+            onNavigate={onNavigate}
+            isActive={isActive}
+            isCategoryActive={isCategoryActive}
+          />
 
-          {/* Mobile user info */}
-          {user && (
-            <div
-              className="flex items-center gap-3 pt-2 border-t"
-              style={{ borderColor: "var(--holo-border)" }}
-            >
-              {user.picture && (
-                <Image
-                  src={user.picture}
-                  alt={user.name}
-                  width={28}
-                  height={28}
-                  className="rounded-full"
-                  style={{ border: "2px solid var(--holo-border)" }}
-                />
-              )}
-              <span className="text-xs font-semibold" style={{ color: "var(--holo-text)" }}>
-                {user.name}
-              </span>
-              {onLogout && (
-                <button
-                  onClick={() => {
-                    onLogout();
-                    setIsOpen(false);
-                  }}
-                  className="ml-auto text-xs font-semibold px-3 py-1 rounded-full transition-opacity hover:opacity-70"
-                  style={{ background: "#ef4444", color: "white", border: "none" }}
-                >
-                  Sign out
-                </button>
-              )}
-            </div>
-          )}
+          {/* Mobile auth */}
+          <AuthCluster
+            user={user}
+            loading={effectiveLoading}
+            onLogin={handleLogin}
+            onLogout={onLogout}
+            mobile
+            onNavigate={onNavigate}
+          />
         </div>
       </div>
     </nav>

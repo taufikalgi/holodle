@@ -1,25 +1,13 @@
 "use client";
 
-import { Suspense, useCallback, useEffect, useMemo, useState } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
-import { useAuth, getToken } from "@/hooks/useAuth";
-import { ApiError } from "@/lib/errors";
+import { Suspense, useRef } from "react";
+import type { CSSProperties, MouseEvent as ReactMouseEvent } from "react";
+import { useRouter } from "next/navigation";
 import { AdminToast } from "@/components/admin";
+import Modal from "@/components/ui/Modal";
 import { CropEditor, SavedCropsList, CropsReviewModal } from "@/components/admin/avatar-crops";
-import {
-  createArea,
-  deleteArea,
-  fetchAreas,
-  updateArea,
-  type CropArea,
-  type CropBox,
-  type Difficulty,
-  type EditableArea,
-  type Talent,
-} from "@/lib/avatar-crops";
-
-let keySeq = 0;
-const nextKey = () => `area-${++keySeq}-${Date.now() % 100000}`;
+import AdminNav from "@/components/admin/AdminNav";
+import { useAvatarCropAdmin } from "@/hooks/useAvatarCropAdmin";
 
 export default function AvatarCropsAdminPage() {
   return (
@@ -32,12 +20,10 @@ export default function AvatarCropsAdminPage() {
 function LoadingScreen() {
   return (
     <main
-      className="min-h-screen flex items-center justify-center"
-      style={{ background: "var(--holo-bg)" }}
+      className="min-h-screen flex items-center justify-center bg-[var(--holo-bg)]"
     >
       <span
-        className="text-sm font-semibold animate-pulse"
-        style={{ color: "var(--holo-text-muted)" }}
+        className="text-sm font-semibold animate-pulse text-[var(--holo-text-muted)]"
       >
         Loading…
       </span>
@@ -46,216 +32,39 @@ function LoadingScreen() {
 }
 
 function AvatarCropsAdminContent() {
-  const { user, loading: authLoading, logout } = useAuth({ requireAdmin: true });
+  const c = useAvatarCropAdmin();
   const router = useRouter();
-  const searchParams = useSearchParams();
-
-  const initialId = searchParams.get("talentId");
-  const [selectedId, setSelectedId] = useState<string | null>(initialId);
-  const [talents, setTalents] = useState<Talent[]>([]);
-  const [talentsLoading, setTalentsLoading] = useState(true);
-
-  const talent: Talent | undefined =
-    talents.find((t) => t.id === selectedId) ?? talents[0];
-
-  const [loadedAreas, setLoadedAreas] = useState<CropArea[] | null>(null);
-  const [areas, setAreas] = useState<EditableArea[]>([]);
-  const [deleted, setDeleted] = useState<CropArea[]>([]);
-  const [selectedKey, setSelectedKey] = useState<string | null>(null);
-  const [natural, setNatural] = useState({ w: 0, h: 0 });
-  const [saving, setSaving] = useState(false);
-  const [review, setReview] = useState<EditableArea | null>(null);
-  const [toast, setToast] = useState<{ msg: string; type: "ok" | "err" } | null>(null);
-
-  const showToast = (msg: string, type: "ok" | "err" = "ok") => {
-    setToast({ msg, type });
-    setTimeout(() => setToast(null), 3000);
+  const talentsRef = useRef<HTMLDivElement>(null);
+  const suppressClickRef = useRef(false);
+  const scrollTalents = (direction: number) => {
+    talentsRef.current?.scrollBy({ left: direction * 320, behavior: "smooth" });
+  };
+  const handleTalentDragStart = (e: ReactMouseEvent<HTMLDivElement>) => {
+    const el = talentsRef.current;
+    if (!el || e.button !== 0) return;
+    suppressClickRef.current = false;
+    const startX = e.clientX;
+    const startLeft = el.scrollLeft;
+    let moved = false;
+    const onMove = (ev: globalThis.MouseEvent) => {
+      const dx = ev.clientX - startX;
+      if (!moved && Math.abs(dx) > 4) {
+        moved = true;
+        el.style.cursor = "grabbing";
+      }
+      if (moved) el.scrollLeft = startLeft - dx;
+    };
+    const onUp = () => {
+      window.removeEventListener("mousemove", onMove);
+      window.removeEventListener("mouseup", onUp);
+      el.style.cursor = "grab";
+      if (moved) suppressClickRef.current = true;
+    };
+    window.addEventListener("mousemove", onMove);
+    window.addEventListener("mouseup", onUp);
   };
 
-  const loadAreas = useCallback(async (talentId: string) => {
-    setLoadedAreas(null);
-    setDeleted([]);
-    try {
-      const fetched = await fetchAreas(talentId);
-      const editable: EditableArea[] = fetched.map((a) => ({
-        ...a,
-        key: nextKey(),
-        dirty: false,
-      }));
-      setAreas(editable);
-      setLoadedAreas(fetched);
-    } catch (e) {
-      if (e instanceof ApiError && e.status === 401) {
-        router.replace("/admin/login");
-        return;
-      }
-      setAreas([]);
-      setLoadedAreas([]);
-      showToast(e instanceof Error ? e.message : "Failed to load areas", "err");
-    } finally {
-      setSelectedKey(null);
-    }
-  }, [router]);
-
-  const fetchTalents = useCallback(async () => {
-    setTalentsLoading(true);
-    try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8080"}/api/v1/talent/`, {
-        headers: { Authorization: `Bearer ${getToken() ?? ""}` },
-      });
-      if (res.status === 401) {
-        router.replace("/admin/login");
-        return;
-      }
-      const json = (await res.json().catch(() => null)) as { success?: boolean; data?: Talent[] } | null;
-      if (!res.ok || !json?.success) throw new Error(json ? "Failed to load talents" : `Request failed (${res.status})`);
-      setTalents(json.data ?? []);
-    } catch (e) {
-      showToast(e instanceof Error ? e.message : "Failed to load talents", "err");
-    } finally {
-      setTalentsLoading(false);
-    }
-  }, [router]);
-
-  useEffect(() => {
-    fetchTalents();
-  }, [fetchTalents]);
-
-  useEffect(() => {
-    if (talents.length > 0 && selectedId && !talents.some((t) => t.id === selectedId)) {
-      setSelectedId(talents[0].id);
-    }
-  }, [talents, selectedId]);
-
-  useEffect(() => {
-    if (talent) loadAreas(talent.id);
-  }, [talent, loadAreas]);
-
-  useEffect(() => {
-    if (!authLoading && !user) router.replace("/admin/login");
-  }, [authLoading, user, router]);
-
-  function handleLogout() {
-    logout();
-    router.push("/admin/login");
-  }
-
-  const addArea = useCallback((box: CropBox) => {
-    const key = nextKey();
-    setSelectedKey(key);
-    setAreas((prev) => [
-      ...prev,
-      {
-        key,
-        id: null,
-        x: box.x,
-        y: box.y,
-        w: box.w,
-        h: box.h,
-        difficulty: "medium",
-        dirty: true,
-      },
-    ]);
-  }, []);
-
-  const editArea = useCallback((key: string, box: CropBox) => {
-    setAreas((prev) => prev.map((a) => (a.key === key ? { ...a, ...box, dirty: true } : a)));
-  }, []);
-
-  const setAreaDifficulty = useCallback((key: string, difficulty: Difficulty) => {
-    setAreas((prev) => prev.map((a) => (a.key === key ? { ...a, difficulty, dirty: true } : a)));
-  }, []);
-
-  const removeArea = useCallback(
-    (key: string) => {
-      const target = areas.find((a) => a.key === key);
-      if (target?.id) {
-        const removed: CropArea = {
-          id: target.id,
-          x: target.x,
-          y: target.y,
-          w: target.w,
-          h: target.h,
-          difficulty: target.difficulty,
-        };
-        setDeleted((d) => [...d, removed]);
-        setAreas((prev) => prev.filter((a) => a.key !== key));
-      } else {
-        setAreas((prev) => prev.filter((a) => a.key !== key));
-      }
-    },
-    [areas]
-  );
-
-  const unsavedCount = useMemo(() => {
-    return areas.filter((a) => a.dirty || a.id === null).length + deleted.length;
-  }, [areas, deleted]);
-  const savedCount = areas.filter((a) => a.id !== null).length;
-
-  const handleSave = async () => {
-    if (!talent) return;
-    setSaving(true);
-    try {
-      const created = areas.filter((a) => a.id === null);
-      const updated = areas.filter((a) => a.dirty && a.id !== null);
-
-      const createdResults = await Promise.all(
-        created.map(async (c) => ({
-          key: c.key,
-          area: await createArea(talent.id, {
-            x: c.x,
-            y: c.y,
-            w: c.w,
-            h: c.h,
-            difficulty: c.difficulty,
-          }),
-        }))
-      );
-
-      if (createdResults.length > 0) {
-        const ids = new Map(createdResults.map((r) => [r.key, r.area.id]));
-        setAreas((prev) =>
-          prev.map((a) => (ids.has(a.key) ? { ...a, id: ids.get(a.key) ?? a.id, dirty: false } : a))
-        );
-      }
-
-      await Promise.all(
-        updated.map((u) =>
-          updateArea(talent.id, u.id as string, {
-            x: u.x,
-            y: u.y,
-            w: u.w,
-            h: u.h,
-            difficulty: u.difficulty,
-          })
-        )
-      );
-      await Promise.all(deleted.map((d) => deleteArea(talent.id, d.id)));
-
-      await loadAreas(talent.id);
-      showToast(
-        `Saved ${created.length + updated.length + deleted.length} change${
-          created.length + updated.length + deleted.length === 1 ? "" : "s"
-        } ✨`
-      );
-    } catch (e) {
-      if (e instanceof ApiError && e.status === 401) {
-        router.replace("/admin/login");
-        return;
-      }
-      showToast(e instanceof Error ? e.message : "Save failed — check your connection.", "err");
-    } finally {
-      setSaving(false);
-    }
-  };
-
-  const handleReset = async () => {
-    if (!talent) return;
-    await loadAreas(talent.id);
-    showToast("Reset to last saved state ↺");
-  };
-
-  if (authLoading || !user) {
+  if (c.authLoading || !c.user) {
     return <LoadingScreen />;
   }
 
@@ -267,108 +76,59 @@ function AvatarCropsAdminContent() {
         fontFamily: '"Baloo 2", sans-serif',
       }}
     >
-      <nav
-        style={{
-          background: "var(--holo-bg-card)",
-          borderBottom: "1.5px solid var(--holo-border)",
-          padding: "0 2rem",
-          height: 64,
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
-          position: "sticky",
-          top: 0,
-          zIndex: 40,
-          boxShadow: "0 2px 12px rgba(0,119,163,0.07)",
-        }}
-      >
-        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-          <button
-            type="button"
-            onClick={() => router.push("/admin")}
-            style={{
-              padding: "7px 12px",
-              borderRadius: 10,
-              border: "1.5px solid var(--holo-border)",
-              background: "var(--holo-off-white)",
-              color: "var(--holo-blue-dark)",
-              fontFamily: '"Baloo 2", sans-serif',
-              fontWeight: 700,
-              fontSize: 13,
-              cursor: "pointer",
-              whiteSpace: "nowrap",
-            }}
-          >
-            ← Talent page
-          </button>
-          <div>
-            <span
-              className="shimmer-text"
-              style={{ fontFamily: "var(--font-albert-sans), sans-serif", fontWeight: 800, fontSize: 18 }}
-            >
-              Holodle Admin
-            </span>
-            <span
-              style={{
-                marginLeft: 10,
-                fontSize: 12,
-                color: "var(--holo-text-muted)",
-                fontWeight: 600,
-              }}
-            >
-              Avatar Crop Studio
-            </span>
-          </div>
-        </div>
-
-        <div style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
-          <span style={{ fontSize: 13, color: "var(--holo-text-muted)", fontWeight: 600 }}>
-            {talent?.name ?? "Loading…"}
-          </span>
-          <button
-            type="button"
-            onClick={handleLogout}
-            style={{
-              padding: "8px 18px",
-              borderRadius: 10,
-              border: "1.5px solid var(--holo-border)",
-              background: "var(--holo-off-white)",
-              color: "var(--holo-text-muted)",
-              fontFamily: '"Baloo 2", sans-serif',
-              fontWeight: 700,
-              fontSize: 13,
-              cursor: "pointer",
-            }}
-          >
-            Sign out
-          </button>
-        </div>
-      </nav>
+      <AdminNav
+        subtitle="Avatar Crop Studio"
+        backLabel="← Talent page"
+        onBack={() => router.push("/admin")}
+        meta={c.talent?.name ?? "Loading…"}
+        onLogout={c.handleLogout}
+      />
 
       <main style={{ maxWidth: 1200, margin: "0 auto", padding: "2rem 1.5rem" }}>
-        <div
-          style={{
-            display: "flex",
-            gap: "0.75rem",
-            marginBottom: "1.5rem",
-            overflowX: "auto",
-            paddingBottom: 6,
-          }}
-        >
-          {talentsLoading ? (
+        <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: "1.5rem" }}>
+          <button
+            type="button"
+            aria-label="Scroll talents left"
+            onClick={() => scrollTalents(-1)}
+            style={talentScrollButtonStyle()}
+          >
+            ‹
+          </button>
+          <div
+            ref={talentsRef}
+            className="no-scrollbar"
+            onMouseDown={handleTalentDragStart}
+            onClickCapture={(e) => {
+              if (suppressClickRef.current) {
+                suppressClickRef.current = false;
+                e.preventDefault();
+                e.stopPropagation();
+              }
+            }}
+            style={{
+              display: "flex",
+              gap: "0.75rem",
+              overflowX: "auto",
+              flex: 1,
+              cursor: "grab",
+              userSelect: "none",
+            }}
+          >
+          {c.talentsLoading ? (
             <span
               style={{ fontSize: 13, color: "var(--holo-text-muted)", fontWeight: 600 }}
             >
               Loading talents…
             </span>
           ) : (
-            talents.map((t) => {
-              const selected = t.id === selectedId;
+            c.talents.map((t) => {
+              const selected = t.id === c.selectedId;
               return (
                 <button
                   key={t.id}
                   type="button"
-                  onClick={() => setSelectedId(t.id)}
+                  onClick={() => c.setSelectedId(t.id)}
+                  disabled={c.generationBusy !== null}
                   style={{
                     display: "flex",
                     alignItems: "center",
@@ -384,6 +144,7 @@ function AvatarCropsAdminContent() {
                     fontWeight: 700,
                     fontSize: 13,
                     cursor: "pointer",
+                    opacity: c.generationBusy !== null ? 0.6 : 1,
                     transition: "all 0.15s ease",
                     whiteSpace: "nowrap",
                     flexShrink: 0,
@@ -406,6 +167,15 @@ function AvatarCropsAdminContent() {
               );
             })
           )}
+          </div>
+          <button
+            type="button"
+            aria-label="Scroll talents right"
+            onClick={() => scrollTalents(1)}
+            style={talentScrollButtonStyle()}
+          >
+            ›
+          </button>
         </div>
 
         <div
@@ -423,15 +193,15 @@ function AvatarCropsAdminContent() {
             style={{
               fontSize: 12,
               fontWeight: 800,
-              color: unsavedCount > 0 ? "#a16207" : "var(--holo-blue-dark)",
-              background: unsavedCount > 0 ? "#fef9c3" : "rgba(0,180,216,0.10)",
-              border: `1.5px solid ${unsavedCount > 0 ? "#fde047" : "rgba(0,180,216,0.25)"}`,
+              color: c.unsavedCount > 0 ? "#a16207" : "var(--holo-blue-dark)",
+              background: c.unsavedCount > 0 ? "#fef9c3" : "rgba(0,180,216,0.10)",
+              border: `1.5px solid ${c.unsavedCount > 0 ? "#fde047" : "rgba(0,180,216,0.25)"}`,
               padding: "4px 12px",
               borderRadius: 20,
             }}
           >
-            {unsavedCount > 0
-              ? `${unsavedCount} unsaved change${unsavedCount === 1 ? "" : "s"}`
+            {c.unsavedCount > 0
+              ? `${c.unsavedCount} unsaved change${c.unsavedCount === 1 ? "" : "s"}`
               : "All saved ✓"}
           </span>
 
@@ -439,8 +209,8 @@ function AvatarCropsAdminContent() {
 
           <button
             type="button"
-            onClick={handleReset}
-            disabled={unsavedCount === 0 || saving}
+            onClick={c.handleReset}
+            disabled={c.unsavedCount === 0 || c.saving || c.generationBusy !== null}
             style={{
               padding: "9px 16px",
               borderRadius: 10,
@@ -450,16 +220,16 @@ function AvatarCropsAdminContent() {
               fontFamily: '"Baloo 2", sans-serif',
               fontWeight: 700,
               fontSize: 13,
-              cursor: unsavedCount === 0 || saving ? "not-allowed" : "pointer",
-              opacity: unsavedCount === 0 || saving ? 0.5 : 1,
+              cursor: c.unsavedCount === 0 || c.saving || c.generationBusy !== null ? "not-allowed" : "pointer",
+              opacity: c.unsavedCount === 0 || c.saving || c.generationBusy !== null ? 0.5 : 1,
             }}
           >
             ↺ Reset
           </button>
           <button
             type="button"
-            onClick={handleSave}
-            disabled={unsavedCount === 0 || saving}
+            onClick={c.handleSave}
+            disabled={c.unsavedCount === 0 || c.saving || c.generationBusy !== null}
             style={{
               padding: "9px 20px",
               borderRadius: 10,
@@ -469,16 +239,157 @@ function AvatarCropsAdminContent() {
               fontFamily: '"Baloo 2", sans-serif',
               fontWeight: 800,
               fontSize: 14,
-              cursor: unsavedCount === 0 || saving ? "not-allowed" : "pointer",
+              cursor: c.unsavedCount === 0 || c.saving || c.generationBusy !== null ? "not-allowed" : "pointer",
               boxShadow: "0 4px 14px rgba(0,119,163,0.25)",
-              opacity: unsavedCount === 0 || saving ? 0.6 : 1,
+              opacity: c.unsavedCount === 0 || c.saving || c.generationBusy !== null ? 0.6 : 1,
             }}
           >
-            {saving ? "Saving…" : `💾 Save (${unsavedCount})`}
+            {c.saving ? "Saving…" : `💾 Save (${c.unsavedCount})`}
           </button>
         </div>
 
-        {talentsLoading ? (
+        <div
+          className="holo-card"
+          style={{
+            padding: "1rem 1.25rem",
+            display: "flex",
+            alignItems: "center",
+            gap: "0.75rem",
+            flexWrap: "wrap",
+            marginBottom: "1.25rem",
+          }}
+        >
+          <div style={{ flex: "1 1 260px" }}>
+            <div style={{ fontWeight: 800, color: "var(--holo-text)" }}>AI crop generation</div>
+            <div style={{ fontSize: 12, color: "var(--holo-text-muted)" }}>
+              Choose whether to preview or save generated crops. Previews use colored difficulty outlines.
+            </div>
+          </div>
+          <label style={choiceLabelStyle()}>
+            <input
+              type="checkbox"
+              checked={c.generationDryRun}
+              onChange={(e) => c.setGenerationDryRun(e.target.checked)}
+              disabled={c.generationBusy !== null}
+            />
+            Dry run
+          </label>
+          <label style={choiceLabelStyle()}>
+            <input
+              type="checkbox"
+              checked={c.generationOverwrite}
+              onChange={(e) => c.setGenerationOverwrite(e.target.checked)}
+              disabled={c.generationBusy !== null}
+            />
+            Overwrite existing
+          </label>
+          <button
+            type="button"
+            onClick={c.handleGeneratePreview}
+            disabled={!c.talent || !c.loadedAreas || c.generationBusy !== null}
+            style={actionButtonStyle(!c.loadedAreas || c.generationBusy !== null)}
+          >
+            {c.generationBusy === "single"
+              ? (c.generationDryRun ? "Generating preview…" : "Generating and saving…")
+              : (c.generationDryRun ? "Generate preview" : "Generate and save")}
+          </button>
+          {c.generatedPreview && c.generatedPreview.talent_id === c.talent?.id && (
+            <button
+              type="button"
+              onClick={c.handleCommitGenerated}
+              disabled={c.generationBusy !== null || ((c.loadedAreas?.length ?? c.savedCount) > 0 && !c.generationOverwrite)}
+              style={primaryActionStyle(c.generationBusy !== null || ((c.loadedAreas?.length ?? c.savedCount) > 0 && !c.generationOverwrite))}
+            >
+              Save generated crops
+            </button>
+          )}
+          <span style={{ flexBasis: "100%", borderTop: "1px solid var(--holo-border)" }} />
+          <div style={{ flex: "1 1 260px" }}>
+            <div style={{ fontWeight: 800, color: "var(--holo-text)" }}>Bulk repair</div>
+            <div style={{ fontSize: 12, color: "var(--holo-text-muted)" }}>
+              Find invalid talents and review per-talent results before committing.
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={c.handleGenerateMissingPreview}
+            disabled={c.generationBusy !== null}
+            style={actionButtonStyle(c.generationBusy !== null)}
+          >
+            {c.generationBusy === "batch" ? "Processing batch…" : "Generate missing previews"}
+          </button>
+          {c.batchSummary && !c.batchCommitted && (
+            <button
+              type="button"
+              onClick={c.handleCommitMissing}
+              disabled={c.generationBusy !== null}
+              style={primaryActionStyle(c.generationBusy !== null)}
+            >
+              Commit batch
+            </button>
+          )}
+        </div>
+
+        {c.generatedPreview && (
+          <div
+            className="holo-card"
+            style={{ padding: "0.85rem 1.1rem", marginBottom: "1.25rem", fontSize: 13 }}
+          >
+            <strong>{c.talent?.name}: {c.generatedPreview.total_generated} preview areas</strong>
+            <span style={{ marginLeft: 12, color: "#b91c1c", fontWeight: 700 }}>
+              Hard {c.generatedPreview.areas.filter((a) => a.difficulty === "hard").length}
+            </span>
+            <span style={{ marginLeft: 10, color: "#a16207", fontWeight: 700 }}>
+              Medium {c.generatedPreview.areas.filter((a) => a.difficulty === "medium").length}
+            </span>
+            <span style={{ marginLeft: 10, color: "#15803d", fontWeight: 700 }}>
+              Easy {c.generatedPreview.areas.filter((a) => a.difficulty === "easy").length}
+            </span>
+            <button
+              type="button"
+              onClick={() => c.setGeneratedPreview(null)}
+              style={{ float: "right", border: 0, background: "transparent", color: "var(--holo-text-muted)", cursor: "pointer", fontWeight: 700 }}
+            >
+              Dismiss
+            </button>
+          </div>
+        )}
+
+        {c.batchSummary && (
+          <section className="holo-card" style={{ padding: "1rem 1.25rem", marginBottom: "1.25rem" }}>
+            <div style={{ display: "flex", flexWrap: "wrap", gap: "0.5rem 1.25rem", alignItems: "center" }}>
+              <strong style={{ color: "var(--holo-text)" }}>{c.batchCommitted ? "Committed batch results" : "Batch preview results"}</strong>
+              <span>Processed {c.batchSummary.processed}</span>
+              <span style={{ color: "#15803d", fontWeight: 700 }}>Succeeded {c.batchSummary.succeeded}</span>
+              <span style={{ color: c.batchSummary.failed ? "#b91c1c" : "var(--holo-text-muted)", fontWeight: 700 }}>Failed {c.batchSummary.failed}</span>
+              <span style={{ flex: 1 }} />
+              <button
+                type="button"
+                onClick={() => c.setBatchSummary(null)}
+                style={{ border: 0, background: "transparent", color: "var(--holo-text-muted)", cursor: "pointer", fontWeight: 700 }}
+              >
+                Dismiss results
+              </button>
+            </div>
+            {c.batchSummary.details.length > 0 && (
+              <div style={{ maxHeight: 240, overflowY: "auto", marginTop: 10, borderTop: "1px solid var(--holo-border)" }}>
+                {c.batchSummary.details.map((item) => (
+                  <div
+                    key={item.talent_id}
+                    style={{ display: "flex", gap: 12, padding: "7px 2px", borderBottom: "1px solid var(--holo-border)", fontSize: 13 }}
+                  >
+                    <strong style={{ flex: 1 }}>{item.talent_name || item.talent_id}</strong>
+                    <span style={{ color: item.success ? "#15803d" : "#b91c1c", fontWeight: 700 }}>
+                      {item.success ? `${item.areas_count} areas` : item.error || "Failed"}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            )}
+          </section>
+        )}
+
+        {c.talentsLoading ? (
           <div
             className="holo-card"
             style={{
@@ -491,7 +402,7 @@ function AvatarCropsAdminContent() {
           >
             Loading talents…
           </div>
-        ) : !talent ? (
+        ) : !c.talent ? (
           <div
             className="holo-card cell-wrong"
             style={{ padding: "2rem", textAlign: "center", fontWeight: 700, fontSize: 14 }}
@@ -499,7 +410,7 @@ function AvatarCropsAdminContent() {
             Couldn&apos;t load the talent list.{" "}
             <button
               type="button"
-              onClick={fetchTalents}
+              onClick={c.fetchTalents}
               style={{
                 background: "none",
                 border: "none",
@@ -522,7 +433,7 @@ function AvatarCropsAdminContent() {
             }}
           >
             <div className="holo-card" style={{ padding: "1rem" }}>
-              {!loadedAreas ? (
+              {!c.loadedAreas ? (
                 <div
                   style={{
                     aspectRatio: "1 / 0.6",
@@ -538,50 +449,222 @@ function AvatarCropsAdminContent() {
                 </div>
               ) : (
                 <CropEditor
-                  talent={talent}
-                  areas={areas}
-                  selectedKey={selectedKey}
-                  onSelect={setSelectedKey}
-                  onAdd={addArea}
-                  onUpdate={editArea}
-                  onSetDifficulty={setAreaDifficulty}
-                  onRemove={removeArea}
-                  onNaturalSize={setNatural}
+                  talent={c.talent}
+                  areas={c.areas}
+                  generatedPreview={c.generatedPreview?.areas ?? []}
+                  selectedKey={c.selectedKey}
+                  onSelect={c.setSelectedKey}
+                  onAdd={c.addArea}
+                  onUpdate={c.editArea}
+                  onSetDifficulty={c.setAreaDifficulty}
+                  onRemove={c.removeArea}
+                  onNaturalSize={c.setNatural}
                 />
               )}
             </div>
 
             <div className="holo-card" style={{ padding: "1rem 1.25rem" }}>
               <SavedCropsList
-                src={talent.avatar_url || talent.image_url}
-                natural={natural}
-                areas={areas}
-                savedCount={savedCount}
-                onReview={setReview}
-                onDelete={removeArea}
+                src={c.talent.avatar_url || c.talent.image_url}
+                natural={c.natural}
+                areas={c.areas}
+                savedCount={c.savedCount}
+                onReview={c.setReview}
+                onDelete={c.removeArea}
               />
             </div>
           </div>
         )}
       </main>
 
-      {review && talent && (
+      {c.review && c.talent && (
         <CropsReviewModal
-          talent={talent}
-          natural={natural}
+          talent={c.talent}
+          natural={c.natural}
           area={{
-            x: review.x,
-            y: review.y,
-            w: review.w,
-            h: review.h,
-            difficulty: review.difficulty,
+            x: c.review.x,
+            y: c.review.y,
+            w: c.review.w,
+            h: c.review.h,
+            difficulty: c.review.difficulty,
           }}
-          label={`Area #${areas.findIndex((a) => a.key === review.key) + 1 || "?"}`}
-          onClose={() => setReview(null)}
+          label={`Area #${c.areas.findIndex((a) => a.key === c.review!.key) + 1 || "?"}`}
+          onClose={() => c.setReview(null)}
         />
       )}
 
-      {toast && <AdminToast message={toast.msg} type={toast.type} />}
+      {c.singleConfirmation && (
+        <Modal
+          onClose={() => {
+            if (c.generationBusy === null) c.setSingleConfirmation(null);
+          }}
+          label="Confirm generated crop save"
+        >
+          <div className="holo-card" style={{ padding: "1.5rem", fontFamily: '"Baloo 2", sans-serif' }}>
+            <h2 style={{ margin: 0, fontSize: 19, fontWeight: 800, color: "var(--holo-text)" }}>
+              {c.singleConfirmation.action === "generate-and-save" ? "Generate and save crops?" : "Save generated crops?"}
+            </h2>
+            <p style={{ margin: "0.65rem 0 1rem", color: "var(--holo-text-muted)", fontSize: 14, lineHeight: 1.5 }}>
+              {c.singleConfirmation.action === "generate-and-save"
+                ? `Generate crop areas for ${c.singleConfirmation.talentName} and save them now.`
+                : `Generate and save ${c.singleConfirmation.generatedCount} crop areas for ${c.singleConfirmation.talentName}.`}
+            </p>
+            <div style={{ display: "grid", gap: 6, marginBottom: "1rem", fontSize: 13, color: "var(--holo-text)" }}>
+              <span>Overwrite existing crops: <strong>{c.singleConfirmation.overwrite ? "Yes" : "No"}</strong></span>
+              {c.singleConfirmation.existingCount > 0 && (
+                <span>Existing saved crops: <strong>{c.singleConfirmation.existingCount}</strong></span>
+              )}
+              {c.singleConfirmation.unsavedCount > 0 && (
+                <span style={{ color: "#a16207", fontWeight: 700 }}>
+                  This will discard {c.singleConfirmation.unsavedCount} unsaved manual edit{c.singleConfirmation.unsavedCount === 1 ? "" : "s"}.
+                </span>
+              )}
+              {c.singleConfirmation.existingCount > 0 && c.singleConfirmation.overwrite && (
+                <span style={{ color: "#b91c1c", fontWeight: 700 }}>Replacing saved crops cannot be undone.</span>
+              )}
+            </div>
+            <div style={{ display: "flex", justifyContent: "flex-end", gap: 10 }}>
+              <button
+                type="button"
+                onClick={() => c.setSingleConfirmation(null)}
+                disabled={c.generationBusy !== null}
+                style={secondaryModalButtonStyle(c.generationBusy !== null)}
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={c.handleConfirmSingleGeneration}
+                disabled={c.generationBusy !== null}
+                style={primaryModalButtonStyle(c.generationBusy !== null)}
+              >
+                {c.generationBusy === "single" ? "Saving…" : "Confirm and save"}
+              </button>
+            </div>
+          </div>
+        </Modal>
+      )}
+
+      {c.batchConfirmationOpen && c.batchSummary && (
+        <Modal
+          onClose={() => {
+            if (c.generationBusy === null) c.setBatchConfirmationOpen(false);
+          }}
+          label="Confirm batch crop generation"
+        >
+          <div className="holo-card" style={{ padding: "1.5rem", fontFamily: '"Baloo 2", sans-serif' }}>
+            <h2 style={{ margin: 0, fontSize: 19, fontWeight: 800, color: "var(--holo-text)" }}>
+              Generate and save missing crops?
+            </h2>
+            <p style={{ margin: "0.65rem 0 1rem", color: "var(--holo-text-muted)", fontSize: 14, lineHeight: 1.5 }}>
+              The batch will process invalid talents and replace incomplete crop sets.
+            </p>
+            <div style={{ display: "flex", gap: 12, flexWrap: "wrap", marginBottom: "1rem", fontSize: 13 }}>
+              <span>Previewed: <strong>{c.batchSummary.processed}</strong></span>
+              <span style={{ color: "#15803d" }}>Succeeded: <strong>{c.batchSummary.succeeded}</strong></span>
+              <span style={{ color: c.batchSummary.failed ? "#b91c1c" : "var(--holo-text-muted)" }}>
+                Failed: <strong>{c.batchSummary.failed}</strong>
+              </span>
+            </div>
+            <div style={{ display: "flex", justifyContent: "flex-end", gap: 10 }}>
+              <button
+                type="button"
+                onClick={() => c.setBatchConfirmationOpen(false)}
+                disabled={c.generationBusy !== null}
+                style={secondaryModalButtonStyle(c.generationBusy !== null)}
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={c.handleConfirmBatchGeneration}
+                disabled={c.generationBusy !== null}
+                style={primaryModalButtonStyle(c.generationBusy !== null)}
+              >
+                {c.generationBusy === "batch" ? "Processing…" : "Confirm and generate"}
+              </button>
+            </div>
+          </div>
+        </Modal>
+      )}
+
+      {c.toast && <AdminToast message={c.toast.msg} type={c.toast.type} />}
     </div>
   );
+}
+
+function talentScrollButtonStyle(): CSSProperties {
+  return {
+    flexShrink: 0,
+    width: 32,
+    height: 32,
+    borderRadius: "50%",
+    border: "1.5px solid var(--holo-border)",
+    background: "var(--holo-bg-card)",
+    color: "var(--holo-text)",
+    fontFamily: '"Baloo 2", sans-serif',
+    fontSize: 20,
+    lineHeight: 1,
+    fontWeight: 800,
+    cursor: "pointer",
+  };
+}
+
+function actionButtonStyle(disabled: boolean): CSSProperties {
+  return {
+    padding: "9px 16px",
+    borderRadius: 10,
+    border: "1.5px solid var(--holo-border)",
+    background: "var(--holo-bg-card)",
+    color: "var(--holo-text)",
+    fontFamily: '"Baloo 2", sans-serif',
+    fontWeight: 800,
+    fontSize: 13,
+    cursor: disabled ? "not-allowed" : "pointer",
+    opacity: disabled ? 0.55 : 1,
+  };
+}
+
+function choiceLabelStyle(): CSSProperties {
+  return {
+    display: "inline-flex",
+    alignItems: "center",
+    gap: 6,
+    color: "var(--holo-text)",
+    fontSize: 13,
+    fontWeight: 700,
+    whiteSpace: "nowrap",
+  };
+}
+
+function primaryActionStyle(disabled: boolean): CSSProperties {
+  return {
+    ...actionButtonStyle(disabled),
+    border: "none",
+    background: "linear-gradient(135deg, var(--holo-blue), var(--holo-blue-dark))",
+    color: "#fff",
+  };
+}
+
+function secondaryModalButtonStyle(disabled: boolean): CSSProperties {
+  return {
+    padding: "9px 16px",
+    borderRadius: 10,
+    border: "1.5px solid var(--holo-border)",
+    background: "var(--holo-off-white)",
+    color: "var(--holo-text-muted)",
+    fontFamily: '"Baloo 2", sans-serif',
+    fontWeight: 700,
+    cursor: disabled ? "not-allowed" : "pointer",
+    opacity: disabled ? 0.55 : 1,
+  };
+}
+
+function primaryModalButtonStyle(disabled: boolean): CSSProperties {
+  return {
+    ...secondaryModalButtonStyle(disabled),
+    border: "none",
+    background: "linear-gradient(135deg, var(--holo-blue), var(--holo-blue-dark))",
+    color: "#fff",
+  };
 }

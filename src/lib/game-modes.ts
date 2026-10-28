@@ -6,43 +6,110 @@ export interface GameMode {
   description: string;
 }
 
-export const GAMES = [
+export interface GameVariant {
+  href: string;
+  logo: string;
+  alt: string;
+  title: string;
+  /** Short label inside dropdown: "Daily" | "Endless" | "Competitive" */
+  label: string;
+  description: string;
+}
+
+export interface GameCategory {
+  id: string;
+  label: string;
+  description: string;
+  variants: GameVariant[];
+}
+
+const THUMB_BASE = "https://hololive.hololivepro.com";
+
+export const GAME_CATEGORIES: GameCategory[] = [
   {
-    href: "/classic",
-    logo: "https://hololive.hololivepro.com/wp-content/uploads/2020/07/Airani-Iofifteen_list_thumb.png",
-    alt: "classic logo",
-    title: "Classic",
-    description:
-      "Guess the talent by their attributes — branch, debut year, lore archetype and more.",
+    id: "classic",
+    label: "Classic",
+    description: "Guess by attributes — branch, debut, lore & more",
+    variants: [
+      {
+        href: "/classic/daily",
+        logo: `${THUMB_BASE}/wp-content/uploads/2020/07/Airani-Iofifteen_list_thumb.png`,
+        alt: "classic logo",
+        title: "Classic",
+        label: "Daily",
+        description:
+          "Guess the talent by their attributes — branch, debut year, lore archetype and more.",
+      },
+      {
+        href: "/classic/endless",
+        logo: `${THUMB_BASE}/wp-content/uploads/2023/07/Cecilia-Immergreen_list_thumb.png`,
+        alt: "endless classic logo",
+        title: "Endless Classic",
+        label: "Endless",
+        description:
+          "Guess the talent by their attributes. Keep guessing as long as you want. How far can you keep the streak going?",
+      },
+      {
+        href: "/classic/competitive",
+        logo: `${THUMB_BASE}/wp-content/uploads/2020/07/Anya-Melfissa_list_thumb.png`,
+        alt: "competitive classic logo",
+        title: "Competitive Classic",
+        label: "Competitive",
+        description:
+          "Test your knowledge against other players in time attack based game and reach the top in the leaderboard.",
+      },
+    ],
   },
   {
-    href: "/endless-classic",
-    logo: "https://hololive.hololivepro.com/wp-content/uploads/2023/07/Cecilia-Immergreen_list_thumb.png",
-    alt: "endless classic logo",
-    title: "Endless Classic",
-    description:
-      "Guess the talent by their attributes. Keep guessing as long as you want. How long can you streak?",
+    id: "avatar",
+    label: "Avatar",
+    description: "Guess by cropped avatar — zoom reveals hints",
+    variants: [
+      {
+        href: "/avatar/daily",
+        logo: `${THUMB_BASE}/wp-content/uploads/2023/09/Isaki-Riona_list_thumb.png`,
+        alt: "avatar logo",
+        title: "Avatar",
+        label: "Daily",
+        description:
+          "Guess the talent from a cropped avatar — each wrong guess reveals a bigger hint.",
+      },
+      {
+        href: "/avatar/endless",
+        logo: `${THUMB_BASE}/wp-content/uploads/2020/07/Nanashi-Mumei_list_thumb.png`,
+        alt: "avatar endless logo",
+        title: "Avatar Endless",
+        label: "Endless",
+        description:
+          "Guess talents from cropped avatars, endlessly. How far can you keep the streak going?",
+      },
+    ],
   },
   {
-    href: "/competitive-classic",
-    logo: "https://hololive.hololivepro.com/wp-content/uploads/2020/07/Anya-Melfissa_list_thumb.png",
-    alt: "competitive classic logo",
-    title: "Competitive Classic",
-    description:
-      "Test your knowledge against other players in time attack based game and reach the top in the leaderboard.",
-  },
-  {
-    href: "/avatar",
-    logo: "https://hololive.hololivepro.com/wp-content/uploads/2023/09/Isaki-Riona_list_thumb.png",
-    alt: "avatar logo",
-    title: "Avatar",
-    description: "Guess the talent from a cropped avatar — each wrong guess reveals a bigger hint.",
-  },
-  {
-    href: "/avatar-endless",
-    logo: "https://hololive.hololivepro.com/wp-content/uploads/2020/07/Nanashi-Mumei_list_thumb.png",
-    alt: "avatar endless logo",
-    title: "Avatar Endless",
-    description: "Guess talents from cropped avatars, endlessly. How long can you streak?",
+    id: "holosong",
+    label: "Holosong",
+    description: "Guess the song — each try plays a longer clip",
+    variants: [
+      {
+        href: "/holosong/daily",
+        logo: `${THUMB_BASE}/wp-content/uploads/2020/07/Kobo-Kanaeru_list_thumb.png`,
+        alt: "holosong logo",
+        title: "Holosong",
+        label: "Daily",
+        description:
+          "Listen to a tiny clip and guess today's Hololive song. Five tries, longer clips each time.",
+      },
+      {
+        href: "/holosong/endless",
+        logo: `${THUMB_BASE}/wp-content/uploads/2020/06/Tokino-Sora_list_thumb.png`,
+        alt: "holosong endless logo",
+        title: "Holosong Endless",
+        label: "Endless",
+        description: "Guess random Hololive songs endlessly. No streaks, no stats — just vibes.",
+      },
+    ],
   },
 ];
+
+// Flat list for backwards compat / simple iteration. New code should use GAME_CATEGORIES.
+export const GAMES: GameMode[] = GAME_CATEGORIES.flatMap((c) => c.variants);

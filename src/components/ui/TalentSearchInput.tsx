@@ -32,7 +32,7 @@ export default function TalentSearchInput({
         alt={t.name}
         className="w-10 h-10 rounded-full object-cover flex-shrink-0"
       />
-      <div className="text-sm font-bold" style={{ color: "var(--holo-text)" }}>
+      <div className="text-sm font-bold text-[var(--holo-text)]">
         {t.name}
       </div>
     </>
@@ -41,8 +41,7 @@ export default function TalentSearchInput({
   return (
     <div className="holo-card p-4 mb-5">
       <p
-        className="text-xs uppercase tracking-widest font-bold mb-3"
-        style={{ color: "var(--holo-text-muted)" }}
+        className="text-xs uppercase tracking-widest font-bold mb-3 text-[var(--holo-text-muted)]"
       >
         Type a talent name
       </p>
@@ -60,8 +59,7 @@ export default function TalentSearchInput({
         {input && (
           <button
             onClick={onClear}
-            className="absolute right-3 top-1/2 -translate-y-1/2 text-sm"
-            style={{ color: "var(--holo-text-muted)" }}
+            className="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-[var(--holo-text-muted)]"
           >
             ✕
           </button>
@@ -71,15 +69,13 @@ export default function TalentSearchInput({
       {showDropdown && suggestions.length > 0 && (
         <div
           ref={dropdownRef}
-          className="mt-2 rounded-xl border overflow-hidden"
-          style={{ borderColor: "var(--holo-border)", background: "var(--holo-bg-card)" }}
+          className="mt-2 rounded-xl border overflow-hidden border-[var(--holo-border)] bg-[var(--holo-bg-card)]"
         >
           {suggestions.map((t) => (
             <button
               key={t.name}
               onClick={() => onGuess(t)}
-              className="dropdown-item w-full text-left px-4 py-3 flex items-center gap-3 border-b last:border-0 transition-colors"
-              style={{ borderColor: "var(--holo-border)" }}
+              className="dropdown-item w-full text-left px-4 py-3 flex items-center gap-3 border-b last:border-0 transition-colors border-[var(--holo-border)]"
             >
               {renderSuggestion ? renderSuggestion(t) : defaultSuggestion(t)}
             </button>
@@ -89,12 +85,7 @@ export default function TalentSearchInput({
 
       {showDropdown && input.length > 1 && suggestions.length === 0 && (
         <div
-          className="mt-2 rounded-xl border px-4 py-3 text-sm"
-          style={{
-            borderColor: "var(--holo-border)",
-            color: "var(--holo-text-muted)",
-            background: "var(--holo-bg-card)",
-          }}
+          className="mt-2 rounded-xl border px-4 py-3 text-sm border-[var(--holo-border)] text-[var(--holo-text-muted)] bg-[var(--holo-bg-card)]"
         >
           No talents found — try a different name!
         </div>

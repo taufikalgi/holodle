@@ -1,140 +1,33 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
-import type { Talent, TalentFormData } from "@/lib/talent-api";
-import { getToken } from "@/hooks/useAuth";
+import type { AdminTalent as Talent } from "@/lib/talents";
+import { ALL_BRANCHES, MONTH_ORDER } from "@/lib/talents";
+import Modal from "./Modal";
+import { useTalentForm } from "@/hooks/useTalentForm";
+import ImageUrlField, { Field, inputStyle } from "./ImageUrlField";
 
 interface Props {
   mode: "create" | "edit";
   initial?: Talent | null;
   onClose: () => void;
   onSaved: () => void;
-  apiBase: string;
 }
 
-const MONTHS = [
-  "January",
-  "February",
-  "March",
-  "April",
-  "May",
-  "June",
-  "July",
-  "August",
-  "September",
-  "October",
-  "November",
-  "December",
-];
+const MONTHS = Object.keys(MONTH_ORDER);
 
-const EMPTY: TalentFormData = {
-  name: "",
-  branch: "",
-  debut_year: null,
-  lore_archetype: "",
-  height: null,
-  birth_month: "",
-  image_url: "",
-  avatar_url: "",
-  alt_names: [],
-};
-
-export default function TalentModal({ mode, initial, onClose, onSaved, apiBase }: Props) {
-  const [form, setForm] = useState<TalentFormData>(initial ? { ...initial } : { ...EMPTY });
-  const [altInput, setAltInput] = useState(initial?.alt_names?.join(", ") ?? "");
-  const [error, setError] = useState("");
-  const [loading, setLoading] = useState(false);
-  const backdropRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    function onKey(e: KeyboardEvent) {
-      if (e.key === "Escape") onClose();
-    }
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  }, [onClose]);
-
-  function set<K extends keyof TalentFormData>(key: K, value: TalentFormData[K]) {
-    setForm((f) => ({ ...f, [key]: value }));
-  }
-
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    setError("");
-    if (!form.name.trim() || !form.branch.trim()) {
-      setError("Name and branch are required.");
-      return;
-    }
-    setLoading(true);
-
-    const payload = {
-      ...form,
-      alt_names: altInput
-        .split(",")
-        .map((s) => s.trim())
-        .filter(Boolean),
-      debut_year: form.debut_year ? Number(form.debut_year) : null,
-      height: form.height ? Number(form.height) : null,
-      ...(mode === "edit" && initial ? { id: initial.id } : {}),
-    };
-
-    try {
-      const url = mode === "create" ? `${apiBase}/talent/create` : `${apiBase}/talent/update`;
-      const token = getToken();
-      const res = await fetch(url, {
-        method: mode === "create" ? "POST" : "PUT",
-        headers: {
-          "Content-Type": "application/json",
-          ...(token ? { Authorization: `Bearer ${token}` } : {}),
-        },
-        body: JSON.stringify(payload),
-        credentials: "include",
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.message ?? "Request failed");
-      onSaved();
-      onClose();
-    } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : "Something went wrong");
-    } finally {
-      setLoading(false);
-    }
-  }
-
-  const inputStyle: React.CSSProperties = {
-    width: "100%",
-    padding: "10px 13px",
-    borderRadius: 10,
-    fontSize: 14,
-  };
-
-  const labelStyle: React.CSSProperties = {
-    display: "block",
-    fontSize: 12,
-    fontWeight: 700,
-    color: "var(--holo-text-muted)",
-    marginBottom: 5,
-    textTransform: "uppercase",
-    letterSpacing: "0.05em",
-  };
+export default function TalentModal({ mode, initial, onClose, onSaved }: Props) {
+  const { form, set, altInput, setAltInput, error, loading, handleSubmit } = useTalentForm({
+    mode,
+    initial,
+    onSaved,
+    onClose,
+  });
 
   return (
-    <div
-      ref={backdropRef}
-      onClick={(e) => {
-        if (e.target === backdropRef.current) onClose();
-      }}
-      style={{
-        position: "fixed",
-        inset: 0,
-        background: "rgba(26,35,64,0.45)",
-        backdropFilter: "blur(4px)",
-        zIndex: 50,
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        padding: "1rem",
-      }}
+    <Modal
+      onClose={onClose}
+      label={mode === "edit" ? "Edit talent" : "Add talent"}
+      maxWidth="max-w-2xl"
     >
       <div
         className="holo-card animate-bounce-in"
@@ -147,14 +40,7 @@ export default function TalentModal({ mode, initial, onClose, onSaved, apiBase }
         }}
       >
         {/* Header */}
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
-            marginBottom: "1.5rem",
-          }}
-        >
+        <div className="mb-6 flex items-center justify-between">
           <h2
             style={{
               fontFamily: "var(--font-albert-sans), sans-serif",
@@ -188,16 +74,9 @@ export default function TalentModal({ mode, initial, onClose, onSaved, apiBase }
         </div>
 
         <form onSubmit={handleSubmit}>
-          <div
-            style={{
-              display: "grid",
-              gridTemplateColumns: "1fr 1fr",
-              gap: "1rem",
-            }}
-          >
+          <div className="grid grid-cols-2 gap-4">
             {/* Name */}
-            <div style={{ gridColumn: "1 / -1" }}>
-              <label style={labelStyle}>Name *</label>
+            <Field label="Name *" span>
               <input
                 className="holo-input"
                 style={inputStyle}
@@ -206,11 +85,10 @@ export default function TalentModal({ mode, initial, onClose, onSaved, apiBase }
                 placeholder="Tokino Sora"
                 required
               />
-            </div>
+            </Field>
 
             {/* Branch */}
-            <div>
-              <label style={labelStyle}>Branch *</label>
+            <Field label="Branch *">
               <select
                 className="holo-input"
                 style={{ ...inputStyle, cursor: "pointer" }}
@@ -219,17 +97,16 @@ export default function TalentModal({ mode, initial, onClose, onSaved, apiBase }
                 required
               >
                 <option value="">Select branch</option>
-                {["JP", "EN", "ID", "DEV_IS", "Stars JP", "Stars EN"].map((b) => (
+                {ALL_BRANCHES.map((b) => (
                   <option key={b} value={b}>
                     {b}
                   </option>
                 ))}
               </select>
-            </div>
+            </Field>
 
             {/* Lore archetype */}
-            <div>
-              <label style={labelStyle}>Lore archetype</label>
+            <Field label="Lore archetype">
               <input
                 className="holo-input"
                 style={inputStyle}
@@ -237,11 +114,10 @@ export default function TalentModal({ mode, initial, onClose, onSaved, apiBase }
                 onChange={(e) => set("lore_archetype", e.target.value)}
                 placeholder="Human"
               />
-            </div>
+            </Field>
 
             {/* Debut year */}
-            <div>
-              <label style={labelStyle}>Debut year</label>
+            <Field label="Debut year">
               <input
                 className="holo-input"
                 style={inputStyle}
@@ -252,11 +128,10 @@ export default function TalentModal({ mode, initial, onClose, onSaved, apiBase }
                 onChange={(e) => set("debut_year", e.target.value ? Number(e.target.value) : null)}
                 placeholder="2017"
               />
-            </div>
+            </Field>
 
             {/* Height */}
-            <div>
-              <label style={labelStyle}>Height (cm)</label>
+            <Field label="Height (cm)">
               <input
                 className="holo-input"
                 style={inputStyle}
@@ -267,11 +142,10 @@ export default function TalentModal({ mode, initial, onClose, onSaved, apiBase }
                 onChange={(e) => set("height", e.target.value ? Number(e.target.value) : null)}
                 placeholder="160"
               />
-            </div>
+            </Field>
 
             {/* Birth month */}
-            <div>
-              <label style={labelStyle}>Birth month</label>
+            <Field label="Birth month">
               <select
                 className="holo-input"
                 style={{ ...inputStyle, cursor: "pointer", gridColumn: "1 / -1" }}
@@ -285,77 +159,26 @@ export default function TalentModal({ mode, initial, onClose, onSaved, apiBase }
                   </option>
                 ))}
               </select>
-            </div>
+            </Field>
 
             {/* Image URL */}
-            <div style={{ gridColumn: "1 / -1" }}>
-              <label style={labelStyle}>Image URL</label>
-              <input
-                className="holo-input"
-                style={inputStyle}
-                type="url"
-                value={form.image_url}
-                onChange={(e) => set("image_url", e.target.value)}
-                placeholder="https://hololive.hololivepro.com/..."
-              />
-              {form.image_url && (
-                <div style={{ marginTop: 8, display: "flex", alignItems: "center", gap: 10 }}>
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img
-                    src={form.image_url}
-                    alt="Preview"
-                    style={{
-                      width: 48,
-                      height: 48,
-                      borderRadius: "50%",
-                      objectFit: "cover",
-                      border: "2px solid var(--holo-border)",
-                    }}
-                    onError={(e) => {
-                      (e.currentTarget as HTMLImageElement).style.display = "none";
-                    }}
-                  />
-                  <span style={{ fontSize: 12, color: "var(--holo-text-muted)" }}>Preview</span>
-                </div>
-              )}
-            </div>
+            <ImageUrlField
+              label="Image URL"
+              value={form.image_url}
+              onChange={(v) => set("image_url", v)}
+              previewAlt="Preview"
+            />
 
             {/* Avatar URL */}
-            <div style={{ gridColumn: "1 / -1" }}>
-              <label style={labelStyle}>Avatar URL</label>
-              <input
-                className="holo-input"
-                style={inputStyle}
-                type="url"
-                value={form.avatar_url}
-                onChange={(e) => set("avatar_url", e.target.value)}
-                placeholder="https://hololive.hololivepro.com/..."
-              />
-              {form.avatar_url && (
-                <div style={{ marginTop: 8, display: "flex", alignItems: "center", gap: 10 }}>
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img
-                    src={form.avatar_url}
-                    alt="Avatar preview"
-                    style={{
-                      width: 48,
-                      height: 48,
-                      borderRadius: "50%",
-                      objectFit: "cover",
-                      border: "2px solid var(--holo-border)",
-                    }}
-                    onError={(e) => {
-                      (e.currentTarget as HTMLImageElement).style.display = "none";
-                    }}
-                  />
-                  <span style={{ fontSize: 12, color: "var(--holo-text-muted)" }}>Preview</span>
-                </div>
-              )}
-            </div>
+            <ImageUrlField
+              label="Avatar URL"
+              value={form.avatar_url}
+              onChange={(v) => set("avatar_url", v)}
+              previewAlt="Avatar preview"
+            />
 
             {/* Alt names */}
-            <div style={{ gridColumn: "1 / -1" }}>
-              <label style={labelStyle}>Alt names (comma-separated)</label>
+            <Field label="Alt names (comma-separated)" span>
               <input
                 className="holo-input"
                 style={inputStyle}
@@ -387,26 +210,16 @@ export default function TalentModal({ mode, initial, onClose, onSaved, apiBase }
                     ))}
                 </div>
               )}
-            </div>
+            </Field>
           </div>
 
           {error && (
-            <div
-              className="cell-wrong"
-              style={{ padding: "10px 14px", borderRadius: 10, fontSize: 13, marginTop: "1rem" }}
-            >
+            <div className="cell-wrong rounded-[10px] px-[14px] py-[10px] text-[13px] mt-4">
               ⚠ {error}
             </div>
           )}
 
-          <div
-            style={{
-              display: "flex",
-              justifyContent: "flex-end",
-              gap: "0.75rem",
-              marginTop: "1.5rem",
-            }}
-          >
+          <div className="mt-6 flex justify-end gap-3">
             <button
               type="button"
               onClick={onClose}
@@ -448,6 +261,6 @@ export default function TalentModal({ mode, initial, onClose, onSaved, apiBase }
           </div>
         </form>
       </div>
-    </div>
+    </Modal>
   );
 }

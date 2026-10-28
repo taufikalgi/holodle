@@ -71,6 +71,7 @@ export default function CropStage({
   const past = areas.slice(0, count - 1);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- Image-preload external sync; reset-before-load prevents stale-size flash on src change
     setError(false);
     setNatural({ w: 0, h: 0 });
     if (!src) return;
@@ -154,10 +155,7 @@ export default function CropStage({
             className="absolute inset-0 flex items-end justify-center pb-4"
             style={{ background: "linear-gradient(to top, rgba(0,0,0,0.55), transparent)" }}
           >
-            <span
-              className="rounded-full px-4 py-1.5 text-sm font-black"
-              style={{ background: "var(--holo-bg-card)", color: "var(--holo-text)" }}
-            >
+            <span className="rounded-full px-4 py-1.5 text-sm font-black bg-[var(--holo-bg-card)] text-[var(--holo-text)]">
               {answerName}
             </span>
           </div>
@@ -192,8 +190,8 @@ export default function CropStage({
                 ariaLabel={`Current hint ${count}`}
               />
               <span
-                className="absolute top-2 right-2 rounded-full px-2.5 py-1 text-[10px] font-black uppercase tracking-wider"
-                style={{ background: "rgba(0,0,0,0.55)", color: "#fff" }}
+                className="absolute top-2 right-2 rounded-full px-2.5 py-1 text-[10px] font-black uppercase tracking-wider text-white"
+                style={{ background: "rgba(0,0,0,0.55)" }}
               >
                 {count}/{areas.length} hints
               </span>

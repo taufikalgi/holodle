@@ -1,7 +1,8 @@
+import { memo } from "react";
 import type { GameSession } from "./types";
 import HeaderStat from "./HeaderStat";
 
-export default function FinalResultCard({
+function FinalResultCardInner({
   session,
   historyCount,
   onNewSession,
@@ -13,12 +14,11 @@ export default function FinalResultCard({
   return (
     <div className="win-banner rounded-3xl p-6 md:p-8 text-center animate-bounce-in">
       <div className="text-4xl">⏰</div>
-      <h2 className="mt-3 text-2xl font-black" style={{ color: "var(--holo-blue)" }}>
+      <h2 className="mt-3 text-2xl font-black text-[var(--holo-blue)]">
         Session expired
       </h2>
       <p
-        className="mx-auto mt-2 max-w-2xl text-sm leading-6"
-        style={{ color: "var(--holo-text-muted)" }}
+        className="mx-auto mt-2 max-w-2xl text-sm leading-6 text-[var(--holo-text-muted)]"
       >
         The 5 minute competitive session is over. Your final score is locked and the round no longer
         accepts guesses.
@@ -33,11 +33,12 @@ export default function FinalResultCard({
 
       <button
         onClick={onNewSession}
-        className="mt-6 inline-flex items-center justify-center rounded-xl px-5 py-3 text-sm font-bold text-white transition-opacity hover:opacity-80"
-        style={{ background: "var(--holo-blue)" }}
+        className="mt-6 inline-flex items-center justify-center rounded-xl px-5 py-3 text-sm font-bold text-white transition-opacity hover:opacity-80 bg-[var(--holo-blue)]"
       >
         Start a new session
       </button>
     </div>
   );
 }
+
+export default memo(FinalResultCardInner);

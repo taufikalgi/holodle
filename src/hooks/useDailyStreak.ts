@@ -22,9 +22,10 @@ export function useDailyStreak(storageKey: string, emptyStats: DailyStreakStats)
     const today = getDateString();
     if (shouldResetDailyStreakForMissedDay(stats.lastPlayedDate, today, stats.streak)) {
       setStats((prev) => ({ ...prev, streak: 0 }));
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- wall-clock + localStorage sync; self-stable since reset writes streak 0
       setStreakResetToast(true);
     }
-  }, []); // Wordle-style: eager reset on mount only
+  }, [storageKey, stats.lastPlayedDate, stats.streak]); // re-evaluate when the key or outcome changes; stable: reset writes streak 0, after which shouldResetDailyStreakForMissedDay(..., 0) is false
 
   const dismissStreakResetPopup = () => setStreakResetToast(false);
 

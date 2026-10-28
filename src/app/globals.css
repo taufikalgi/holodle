@@ -103,6 +103,13 @@ body {
   background: var(--holo-blue);
 }
 
+.no-scrollbar {
+  scrollbar-width: none;
+}
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
 @keyframes rowReveal {
   0% {
     opacity: 0;

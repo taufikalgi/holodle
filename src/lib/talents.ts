@@ -1,5 +1,4 @@
-import { config } from "./config";
-import { ApiError } from "./errors";
+import { publicJson } from "./api-client";
 
 export type Branch = "JP" | "EN" | "ID" | "DEV_IS" | "Stars JP" | "Stars EN";
 
@@ -41,6 +40,20 @@ export type ApiTalent = {
   alt_names: string[];
 };
 
+export type AdminTalent = ApiTalent;
+
+export interface TalentsResponse {
+  success: boolean;
+  message: string;
+  data: AdminTalent[];
+}
+
+export type TalentFormData = Omit<AdminTalent, "id" | "branch"> & {
+  id?: string;
+  // Draft strings — validated on submit (branch must be a valid Branch).
+  branch: string;
+};
+
 export function normalizeTalent(talent: ApiTalent): Talent {
   return {
     id: talent.id,
@@ -57,35 +70,37 @@ export function normalizeTalent(talent: ApiTalent): Talent {
   };
 }
 
-type ApiResponse<T> = {
-  success: boolean;
-  message: string;
-  data: T;
-};
+let poolCache: Talent[] | null = null;
+let poolInflight: Promise<Talent[]> | null = null;
 
-export const TALENTS: Talent[] = await (async () => {
-  const res = await fetch(`${config.apiUrl}/api/v1/talent/`);
-  const json = (await res.json().catch(() => null)) as ApiResponse<ApiTalent[]> | null;
-  if (!res.ok) {
-    throw new ApiError(json?.message ?? `Request failed (${res.status})`, res.status);
+function dedupeByName(talents: Talent[]): Talent[] {
+  return talents.filter(
+    (t, i, arr) => arr.findIndex((x) => x.name === t.name) === i
+  );
+}
+
+/** Fetches + normalizes the talent pool. Cached; concurrent calls share one request. */
+export function loadTalents(): Promise<Talent[]> {
+  if (poolCache) return Promise.resolve(poolCache);
+  if (!poolInflight) {
+    poolInflight = publicJson<ApiTalent[]>("/api/v1/talent/").then(
+      (data) => {
+        poolCache = dedupeByName(data.map(normalizeTalent));
+        return poolCache;
+      },
+      (err) => {
+        poolInflight = null;
+        throw err;
+      }
+    );
   }
+  return poolInflight;
+}
 
-  if (!json || json.success === false) {
-    throw new ApiError(json?.message ?? "Request failed", res.status);
-  }
-
-  return json.data.map(normalizeTalent);
-})();
-
-export const ALL_TALENTS = TALENTS.filter(
-  (t, i, arr) => arr.findIndex((x) => x.name === t.name) === i
-);
-
-export function getTalentOfTheDay(): Talent {
-  const now = new Date();
-  const seed = now.getFullYear() * 10000 + (now.getMonth() + 1) * 100 + now.getDate();
-  const index = seed % ALL_TALENTS.length;
-  return ALL_TALENTS[index];
+export function getTalentOfTheDay(pool: Talent[], date = new Date()): Talent | null {
+  if (pool.length === 0) return null;
+  const seed = date.getFullYear() * 10000 + (date.getMonth() + 1) * 100 + date.getDate();
+  return pool[seed % pool.length];
 }
 
 export function getDateString(): string {
@@ -103,7 +118,7 @@ export function filterTalentsByBranch(
 
 export function searchTalents(
   query: string,
-  pool: Talent[] = ALL_TALENTS
+  pool: Talent[] = []
 ): Talent[] {
   const q = query.toLowerCase().trim();
   if (!q) return [];
@@ -122,7 +137,7 @@ export type CompareResult = {
   debutYear: "correct" | "higher" | "higher-close" | "lower" | "lower-close";
   loreArchetype: "correct" | "wrong";
   height: "correct" | "higher" | "higher-close" | "lower" | "lower-close";
-  birthMonth: "correct" | "higher" | "higher-close" | "lower" | "lower-close";
+  birthMonth: "correct" | "wrong" | "higher" | "higher-close" | "lower" | "lower-close";
 };
 
 export const MONTH_ORDER: Record<string, number> = {
@@ -140,17 +155,16 @@ export const MONTH_ORDER: Record<string, number> = {
   December: 12,
 };
 
-export const MONTH_MAP = MONTH_ORDER;
-
-type MonthKey = keyof typeof MONTH_MAP;
+type MonthKey = keyof typeof MONTH_ORDER;
 
 function isValidMonth(month: string): month is MonthKey {
-  return month in MONTH_MAP;
+  return month in MONTH_ORDER;
 }
 
-function getMonthNumber(month: string): number {
-  if (!isValidMonth(month)) throw new Error(`Invalid month: ${month}`);
-  return MONTH_MAP[month];
+/** Unknown/empty month → null (caller treats as non-comparable, never throws). */
+function monthNumber(month: string): number | null {
+  if (!isValidMonth(month)) return null;
+  return MONTH_ORDER[month];
 }
 
 export function getLoreArchetypeCategory(loreArchetype: string): string {
@@ -164,9 +178,24 @@ export function getLoreArchetypeCategory(loreArchetype: string): string {
 }
 
 export function compareTalents(guess: Talent, answer: Talent): CompareResult {
-  const guessMonth = getMonthNumber(guess.birthMonth);
-  const answerMonth = getMonthNumber(answer.birthMonth);
-  const monthDiff = Math.abs(guessMonth - answerMonth);
+  const guessMonth = monthNumber(guess.birthMonth);
+  const answerMonth = monthNumber(answer.birthMonth);
+  const monthDiff =
+    guessMonth !== null && answerMonth !== null
+      ? Math.abs(guessMonth - answerMonth)
+      : null;
+  const birthMonth: CompareResult["birthMonth"] =
+    guess.birthMonth === answer.birthMonth
+      ? "correct"
+      : monthDiff === null
+        ? "wrong"
+        : guessMonth! > answerMonth!
+          ? monthDiff <= 2
+            ? "higher-close"
+            : "higher"
+          : monthDiff <= 2
+            ? "lower-close"
+            : "lower";
   return {
     name: guess.name === answer.name ? "correct" : "wrong",
     branch: guess.branch === answer.branch ? "correct" : "wrong",
@@ -195,15 +224,6 @@ export function compareTalents(guess: Talent, answer: Talent): CompareResult {
           : Math.abs(guess.height - answer.height) <= 5
             ? "lower-close"
             : "lower",
-    birthMonth:
-      guess.birthMonth === answer.birthMonth
-        ? "correct"
-        : guessMonth > answerMonth
-          ? monthDiff <= 2
-            ? "higher-close"
-            : "higher"
-          : monthDiff <= 2
-            ? "lower-close"
-            : "lower",
+    birthMonth,
   };
 }

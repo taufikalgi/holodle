@@ -8,15 +8,14 @@ export default function HowToPlay({
   return (
     <div className="holo-card p-5 mb-5 animate-slide-down">
       <h2
-        className="font-black text-sm tracking-widest uppercase mb-3"
-        style={{ color: "var(--holo-blue-dark)" }}
+        className="font-black text-sm tracking-widest uppercase mb-3 text-[var(--holo-blue-dark)]"
       >
         How to Play
       </h2>
-      <ul className="text-sm space-y-2" style={{ color: "var(--holo-text-muted)" }}>
+      <ul className="text-sm space-y-2 text-[var(--holo-text-muted)]">
         <li>
           🎯 Guess the secret Hololive talent in{" "}
-          <strong style={{ color: "var(--holo-text)" }}>{maxGuesses} tries</strong>
+          <strong className="text-[var(--holo-text)]">{maxGuesses} tries</strong>
         </li>
         <li>
           🟢 <span className="text-green-600 font-semibold">Green</span> = correct attribute

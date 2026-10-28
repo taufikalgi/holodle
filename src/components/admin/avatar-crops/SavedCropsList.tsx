@@ -93,7 +93,7 @@ export default function SavedCropsList({
           Draw boxes on the image and press Save.
         </div>
       ) : (
-        <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+        <div className="flex flex-col gap-2">
           {areas.map((area, i) => (
             <div
               key={area.key}
