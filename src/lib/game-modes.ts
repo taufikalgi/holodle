@@ -92,7 +92,7 @@ export const GAME_CATEGORIES: GameCategory[] = [
     variants: [
       {
         href: "/holosong/daily",
-        logo: `${THUMB_BASE}/wp-content/uploads/2020/07/Gawr-Gura_list_thumb.png`,
+        logo: `${THUMB_BASE}/wp-content/uploads/2020/07/Kobo-Kanaeru_list_thumb.png`,
         alt: "holosong logo",
         title: "Holosong",
         label: "Daily",
@@ -101,12 +101,11 @@ export const GAME_CATEGORIES: GameCategory[] = [
       },
       {
         href: "/holosong/endless",
-        logo: `${THUMB_BASE}/wp-content/uploads/2020/07/Mori-Calliope_list_thumb.png`,
+        logo: `${THUMB_BASE}/wp-content/uploads/2020/06/Tokino-Sora_list_thumb.png`,
         alt: "holosong endless logo",
         title: "Holosong Endless",
         label: "Endless",
-        description:
-          "Guess random Hololive songs endlessly. No streaks, no stats — just vibes.",
+        description: "Guess random Hololive songs endlessly. No streaks, no stats — just vibes.",
       },
     ],
   },
