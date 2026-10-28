@@ -1,9 +1,18 @@
 "use client";
 
 import Link from "next/link";
+import type { ReactNode } from "react";
 import { GoogleIcon, PageHeader } from "@/components/ui";
 
-export default function AuthGate({ onLogin }: { onLogin: () => void }) {
+export default function AuthGate({
+  onLogin,
+  subtitle = "Daily Hololive Talent Guessing Game",
+  message,
+}: {
+  onLogin: () => void;
+  subtitle?: string;
+  message?: ReactNode;
+}) {
   return (
     <main
       className="min-h-screen flex flex-col items-center justify-center bg-[var(--holo-bg)]"
@@ -19,7 +28,7 @@ export default function AuthGate({ onLogin }: { onLogin: () => void }) {
           ← Back to Home
         </Link>
         <PageHeader
-          subtitle="Daily Hololive Talent Guessing Game"
+          subtitle={subtitle}
           onHowTo={() => {}}
           onLeaderboard={() => {}}
           showHowTo={false}
@@ -31,7 +40,11 @@ export default function AuthGate({ onLogin }: { onLogin: () => void }) {
         <hr className="w-full border-[var(--holo-border)]" />
 
         <p className="text-sm text-[var(--holo-text-muted)]" style={{ lineHeight: 1.6 }}>
-          Sign in untuk ikut <strong>Competitive Classic</strong> bang.
+          {message ?? (
+            <>
+              Sign in untuk ikut <strong>Competitive Classic</strong> bang.
+            </>
+          )}
         </p>
 
         <button

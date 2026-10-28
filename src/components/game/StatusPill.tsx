@@ -1,8 +1,16 @@
 import type { ReactNode } from "react";
 import type { GameStatus } from "@/lib/game-status";
 
-const WON_COPY = { daily: "You found them! 🎉", endless: "Correct! Ready for the next one?" } as const;
-const LOST_COPY = { daily: "Game over — come back tomorrow!", endless: "Wrong — try the next one!" } as const;
+const WON_COPY = {
+  daily: "You found them! 🎉",
+  endless: "Correct! Ready for the next one?",
+  practice: "Correct! Ready for another song?",
+} as const;
+const LOST_COPY = {
+  daily: "Game over — come back tomorrow!",
+  endless: "Wrong — try the next one!",
+  practice: "Wrong — try another song!",
+} as const;
 
 export default function StatusPill({
   status,
@@ -12,7 +20,7 @@ export default function StatusPill({
 }: {
   status: GameStatus | "idle" | "expired";
   guessesLeft: number;
-  variant: "daily" | "endless";
+  variant: "daily" | "endless" | "practice";
   extra?: ReactNode;
 }) {
   return (
@@ -23,7 +31,7 @@ export default function StatusPill({
             <span className="text-green-500">●</span> {WON_COPY.daily}
           </>
         ) : (
-          WON_COPY.endless
+          WON_COPY[variant]
         )
       ) : status === "lost" ? (
         variant === "daily" ? (
@@ -31,7 +39,7 @@ export default function StatusPill({
             <span className="text-red-400">●</span> {LOST_COPY.daily}
           </>
         ) : (
-          LOST_COPY.endless
+          LOST_COPY[variant]
         )
       ) : (
         <>
