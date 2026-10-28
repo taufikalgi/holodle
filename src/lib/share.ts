@@ -46,7 +46,7 @@ export function buildHolosongShareText({
   won,
   url,
 }: {
-  mode: "DAILY" | "PRACTICE";
+  mode: "DAILY" | "ENDLESS";
   guesses: { correct: boolean; skipped: boolean }[];
   maxGuesses: number;
   won: boolean;

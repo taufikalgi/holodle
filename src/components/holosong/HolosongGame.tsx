@@ -17,7 +17,13 @@ import { useHolosongGame } from "@/hooks/useHolosongGame";
 import type { HolosongSessionMode } from "@/lib/holosong-api";
 import { buildHolosongShareText } from "@/lib/share";
 
-export default function HolosongGame({ mode }: { mode: HolosongSessionMode }) {
+export default function HolosongGame({
+  mode,
+}: {
+  mode: "daily" | "endless";
+}) {
+  const endless = mode === "endless";
+  const sessionMode: HolosongSessionMode = endless ? "practice" : "daily";
   const {
     session,
     stats,
@@ -28,13 +34,12 @@ export default function HolosongGame({ mode }: { mode: HolosongSessionMode }) {
     submit,
     retry,
     newSong,
-  } = useHolosongGame(mode);
+  } = useHolosongGame(sessionMode);
   const [showHowTo, setShowHowTo] = useState(false);
 
-  const practice = mode === "practice";
   const shareText = session
     ? buildHolosongShareText({
-        mode: practice ? "PRACTICE" : "DAILY",
+        mode: endless ? "ENDLESS" : "DAILY",
         guesses: session.board,
         maxGuesses: session.attempts,
         won: session.status === "won",
@@ -43,14 +48,14 @@ export default function HolosongGame({ mode }: { mode: HolosongSessionMode }) {
 
   return (
     <main className="min-h-screen bg-[var(--holo-bg)]">
-      <Navbar title={practice ? "HOLOSONG PRACTICE" : "HOLOSONG"} />
+      <Navbar title={endless ? "HOLOSONG ENDLESS" : "HOLOSONG"} />
 
       <div className="max-w-3xl mx-auto px-4 py-8">
         <header className="text-center mb-6">
           <PageHeader
             subtitle={
-              practice
-                ? "Practice any Hololive song"
+              endless
+                ? "Guess random Hololive songs endlessly"
                 : "Guess today's Hololive song"
             }
             onHowTo={() => setShowHowTo((value) => !value)}
@@ -61,18 +66,18 @@ export default function HolosongGame({ mode }: { mode: HolosongSessionMode }) {
             <StatusPill
               status={status}
               guessesLeft={attemptsLeft}
-              variant={practice ? "practice" : "daily"}
+              variant={endless ? "endless" : "daily"}
             />
           )}
         </header>
 
-        {showHowTo && <HolosongHowToPlay practice={practice} />}
+        {showHowTo && <HolosongHowToPlay endless={endless} />}
 
         {stats && <HolosongStatsPanel stats={stats} />}
 
         {status === "loading" && (
           <LoadingBlock
-            text={practice ? "Loading a new song…" : "Loading today's song…"}
+            text={endless ? "Loading a new song…" : "Loading today's song…"}
           />
         )}
 
@@ -149,9 +154,9 @@ export default function HolosongGame({ mode }: { mode: HolosongSessionMode }) {
               session={session}
               shareText={shareText}
               message={
-                practice ? undefined : "Come back tomorrow for a new song!"
+                endless ? undefined : "Come back tomorrow for a new song!"
               }
-              onNewSong={practice ? newSong : undefined}
+              onNewSong={endless ? newSong : undefined}
             />
             <HolosongBoard board={session.board} />
           </>

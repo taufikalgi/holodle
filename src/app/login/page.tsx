@@ -21,7 +21,7 @@ export default function LoginPage() {
         "/avatar/daily",
         "/avatar/endless",
         "/holosong/daily",
-        "/holosong/practice",
+        "/holosong/endless",
         "/admin",
       ]);
       const redirectTo = target && validPaths.has(target) ? target : "/classic/competitive";

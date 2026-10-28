@@ -73,7 +73,7 @@ assert.equal(
 );
 assert.equal(
   buildHolosongShareText({
-    mode: "PRACTICE",
+    mode: "ENDLESS",
     guesses: [
       { correct: false, skipped: false },
       { correct: false, skipped: false },
@@ -85,7 +85,7 @@ assert.equal(
     won: false,
     url: shareUrl,
   }).split("\n")[0],
-  "HOLODLE HOLOSONG PRACTICE X/5"
+  "HOLODLE HOLOSONG ENDLESS X/5"
 );
 
 console.log("holosong.check: all assertions passed");

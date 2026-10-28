@@ -76,7 +76,7 @@ export function useHolosongGame(mode: HolosongSessionMode) {
       setError(
         status === 401
           ? "Please sign in to play Holosong."
-          : messageOf(e, "Failed to start a practice session.")
+          : messageOf(e, "Failed to start an endless session.")
       );
     }
   }, [refreshStats]);

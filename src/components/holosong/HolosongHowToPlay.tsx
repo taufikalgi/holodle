@@ -3,7 +3,7 @@ import {
   HOLOSONG_CLIP_STEPS,
 } from "@/lib/holosong-api";
 
-export default function HolosongHowToPlay({ practice }: { practice?: boolean }) {
+export default function HolosongHowToPlay({ endless }: { endless?: boolean }) {
   return (
     <div className="holo-card p-5 mb-5 animate-slide-down">
       <h2 className="font-black text-sm tracking-widest uppercase mb-3 text-[var(--holo-blue-dark)]">
@@ -20,8 +20,8 @@ export default function HolosongHowToPlay({ practice }: { practice?: boolean }) 
         </li>
         <li>▶️ Replay the current clip as often as you want</li>
         <li>🫥 The title and artist are revealed only after the round ends</li>
-        {practice ? (
-          <li>🎲 Practice is unlimited and does not affect your stats</li>
+        {endless ? (
+          <li>🎲 Endless mode is unlimited and does not affect your stats</li>
         ) : (
           <li>⏰ A new song is chosen every day at midnight UTC!</li>
         )}

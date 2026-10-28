@@ -100,13 +100,13 @@ export const GAME_CATEGORIES: GameCategory[] = [
           "Listen to a tiny clip and guess today's Hololive song. Five tries, longer clips each time.",
       },
       {
-        href: "/holosong/practice",
+        href: "/holosong/endless",
         logo: `${THUMB_BASE}/wp-content/uploads/2020/07/Mori-Calliope_list_thumb.png`,
-        alt: "holosong practice logo",
-        title: "Holosong Practice",
-        label: "Practice",
+        alt: "holosong endless logo",
+        title: "Holosong Endless",
+        label: "Endless",
         description:
-          "Practice unlimited random Hololive songs. No streaks, no stats — just vibes.",
+          "Guess random Hololive songs endlessly. No streaks, no stats — just vibes.",
       },
     ],
   },
