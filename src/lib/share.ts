@@ -1,4 +1,4 @@
-import type { CompareResult } from "@/lib/talents";
+import type { CompareResult } from "./talents";
 
 function resultToEmoji(result: CompareResult): string {
   const cell = (status: string) =>
@@ -35,6 +35,29 @@ export function buildGridShareText({
   const lines = [header, ""];
   lines.push(...guesses.map(resultToEmoji));
   lines.push("");
+  if (shareUrl) lines.push(`Play Today's Game: ${shareUrl}`);
+  return lines.join("\n");
+}
+
+export function buildHolosongShareText({
+  mode,
+  guesses,
+  maxGuesses,
+  won,
+  url,
+}: {
+  mode: "DAILY" | "PRACTICE";
+  guesses: { correct: boolean; skipped: boolean }[];
+  maxGuesses: number;
+  won: boolean;
+  url?: string;
+}): string {
+  const header = `HOLODLE HOLOSONG ${mode} ${won ? guesses.length : "X"}/${maxGuesses}`;
+  const row = guesses
+    .map((guess) => (guess.correct ? "🟩" : guess.skipped ? "⬜" : "🟥"))
+    .join("");
+  const shareUrl = url ?? (typeof window !== "undefined" ? window.location.href : "");
+  const lines = [header, "", row, ""];
   if (shareUrl) lines.push(`Play Today's Game: ${shareUrl}`);
   return lines.join("\n");
 }
