@@ -73,7 +73,7 @@ export default function HolosongGame({
 
         {showHowTo && <HolosongHowToPlay endless={endless} />}
 
-        {stats && <HolosongStatsPanel stats={stats} />}
+        {!endless && stats && <HolosongStatsPanel stats={stats} />}
 
         {status === "loading" && (
           <LoadingBlock

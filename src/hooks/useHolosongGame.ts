@@ -69,7 +69,6 @@ export function useHolosongGame(mode: HolosongSessionMode) {
     try {
       setSession(await createHolosongPractice());
       setLoadStatus("ready");
-      void refreshStats();
     } catch (e) {
       const status = statusOf(e);
       setLoadStatus("error");
@@ -79,7 +78,7 @@ export function useHolosongGame(mode: HolosongSessionMode) {
           : messageOf(e, "Failed to start an endless session.")
       );
     }
-  }, [refreshStats]);
+  }, []);
 
   useEffect(() => {
     if (startedRef.current) return;
