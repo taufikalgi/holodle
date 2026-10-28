@@ -299,6 +299,23 @@ export function useAvatarCropAdmin() {
         showToast(`Saved ${result.total_generated} generated crop areas.`);
       }
     } catch (error) {
+      if (error instanceof ApiError && error.status === 409) {
+        if (!dryRun) await loadAreas(talentId);
+        showToast(
+          "Crop areas already exist for this talent. Enable Overwrite to replace them.",
+          "err"
+        );
+        return;
+      }
+      if (
+        !dryRun &&
+        error instanceof TypeError &&
+        /failed to fetch|networkerror|load failed/i.test(error.message)
+      ) {
+        await loadAreas(talentId);
+        showToast("The save response was lost. Saved crops were reloaded; check them before retrying.", "err");
+        return;
+      }
       reportGenerationError(error, dryRun ? "Could not generate crop preview." : "Could not save generated crop areas.");
     } finally {
       singleGenerationInFlight.current = false;
