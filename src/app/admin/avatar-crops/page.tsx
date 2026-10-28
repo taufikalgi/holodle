@@ -1,7 +1,7 @@
 "use client";
 
-import { Suspense } from "react";
-import type { CSSProperties } from "react";
+import { Suspense, useRef } from "react";
+import type { CSSProperties, MouseEvent as ReactMouseEvent } from "react";
 import { useRouter } from "next/navigation";
 import { AdminToast } from "@/components/admin";
 import Modal from "@/components/ui/Modal";
@@ -34,6 +34,35 @@ function LoadingScreen() {
 function AvatarCropsAdminContent() {
   const c = useAvatarCropAdmin();
   const router = useRouter();
+  const talentsRef = useRef<HTMLDivElement>(null);
+  const suppressClickRef = useRef(false);
+  const scrollTalents = (direction: number) => {
+    talentsRef.current?.scrollBy({ left: direction * 320, behavior: "smooth" });
+  };
+  const handleTalentDragStart = (e: ReactMouseEvent<HTMLDivElement>) => {
+    const el = talentsRef.current;
+    if (!el || e.button !== 0) return;
+    suppressClickRef.current = false;
+    const startX = e.clientX;
+    const startLeft = el.scrollLeft;
+    let moved = false;
+    const onMove = (ev: globalThis.MouseEvent) => {
+      const dx = ev.clientX - startX;
+      if (!moved && Math.abs(dx) > 4) {
+        moved = true;
+        el.style.cursor = "grabbing";
+      }
+      if (moved) el.scrollLeft = startLeft - dx;
+    };
+    const onUp = () => {
+      window.removeEventListener("mousemove", onMove);
+      window.removeEventListener("mouseup", onUp);
+      el.style.cursor = "grab";
+      if (moved) suppressClickRef.current = true;
+    };
+    window.addEventListener("mousemove", onMove);
+    window.addEventListener("mouseup", onUp);
+  };
 
   if (c.authLoading || !c.user) {
     return <LoadingScreen />;
@@ -56,15 +85,35 @@ function AvatarCropsAdminContent() {
       />
 
       <main style={{ maxWidth: 1200, margin: "0 auto", padding: "2rem 1.5rem" }}>
-        <div
-          style={{
-            display: "flex",
-            gap: "0.75rem",
-            marginBottom: "1.5rem",
-            overflowX: "auto",
-            paddingBottom: 6,
-          }}
-        >
+        <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: "1.5rem" }}>
+          <button
+            type="button"
+            aria-label="Scroll talents left"
+            onClick={() => scrollTalents(-1)}
+            style={talentScrollButtonStyle()}
+          >
+            ‹
+          </button>
+          <div
+            ref={talentsRef}
+            className="no-scrollbar"
+            onMouseDown={handleTalentDragStart}
+            onClickCapture={(e) => {
+              if (suppressClickRef.current) {
+                suppressClickRef.current = false;
+                e.preventDefault();
+                e.stopPropagation();
+              }
+            }}
+            style={{
+              display: "flex",
+              gap: "0.75rem",
+              overflowX: "auto",
+              flex: 1,
+              cursor: "grab",
+              userSelect: "none",
+            }}
+          >
           {c.talentsLoading ? (
             <span
               style={{ fontSize: 13, color: "var(--holo-text-muted)", fontWeight: 600 }}
@@ -118,6 +167,15 @@ function AvatarCropsAdminContent() {
               );
             })
           )}
+          </div>
+          <button
+            type="button"
+            aria-label="Scroll talents right"
+            onClick={() => scrollTalents(1)}
+            style={talentScrollButtonStyle()}
+          >
+            ›
+          </button>
         </div>
 
         <div
@@ -533,6 +591,23 @@ function AvatarCropsAdminContent() {
       {c.toast && <AdminToast message={c.toast.msg} type={c.toast.type} />}
     </div>
   );
+}
+
+function talentScrollButtonStyle(): CSSProperties {
+  return {
+    flexShrink: 0,
+    width: 32,
+    height: 32,
+    borderRadius: "50%",
+    border: "1.5px solid var(--holo-border)",
+    background: "var(--holo-bg-card)",
+    color: "var(--holo-text)",
+    fontFamily: '"Baloo 2", sans-serif',
+    fontSize: 20,
+    lineHeight: 1,
+    fontWeight: 800,
+    cursor: "pointer",
+  };
 }
 
 function actionButtonStyle(disabled: boolean): CSSProperties {
