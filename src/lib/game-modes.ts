@@ -19,6 +19,7 @@ export interface GameVariant {
 export interface GameCategory {
   id: string;
   label: string;
+  description: string;
   variants: GameVariant[];
 }
 
@@ -28,6 +29,7 @@ export const GAME_CATEGORIES: GameCategory[] = [
   {
     id: "classic",
     label: "Classic",
+    description: "Guess by attributes — branch, debut, lore & more",
     variants: [
       {
         href: "/classic/daily",
@@ -61,6 +63,7 @@ export const GAME_CATEGORIES: GameCategory[] = [
   {
     id: "avatar",
     label: "Avatar",
+    description: "Guess by cropped avatar — zoom reveals hints",
     variants: [
       {
         href: "/avatar/daily",
@@ -79,6 +82,31 @@ export const GAME_CATEGORIES: GameCategory[] = [
         label: "Endless",
         description:
           "Guess talents from cropped avatars, endlessly. How far can you keep the streak going?",
+      },
+    ],
+  },
+  {
+    id: "holosong",
+    label: "Holosong",
+    description: "Guess the song — each try plays a longer clip",
+    variants: [
+      {
+        href: "/holosong/daily",
+        logo: `${THUMB_BASE}/wp-content/uploads/2020/07/Gawr-Gura_list_thumb.png`,
+        alt: "holosong logo",
+        title: "Holosong",
+        label: "Daily",
+        description:
+          "Listen to a tiny clip and guess today's Hololive song. Five tries, longer clips each time.",
+      },
+      {
+        href: "/holosong/practice",
+        logo: `${THUMB_BASE}/wp-content/uploads/2020/07/Mori-Calliope_list_thumb.png`,
+        alt: "holosong practice logo",
+        title: "Holosong Practice",
+        label: "Practice",
+        description:
+          "Practice unlimited random Hololive songs. No streaks, no stats — just vibes.",
       },
     ],
   },

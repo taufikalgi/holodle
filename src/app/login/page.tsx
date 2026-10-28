@@ -20,6 +20,8 @@ export default function LoginPage() {
         "/classic/endless",
         "/avatar/daily",
         "/avatar/endless",
+        "/holosong/daily",
+        "/holosong/practice",
         "/admin",
       ]);
       const redirectTo = target && validPaths.has(target) ? target : "/classic/competitive";

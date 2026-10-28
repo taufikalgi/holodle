@@ -60,7 +60,7 @@ export default function CategoryDropdown({ category }: { category: GameCategory 
             {category.label.toUpperCase()}
           </h2>
           <p className="text-xs leading-tight mt-1 text-[var(--holo-text-muted)]">
-            {category.id === "classic" ? "Guess by attributes — branch, debut, lore & more" : "Guess by cropped avatar — zoom reveals hints"}
+            {category.description}
           </p>
         </div>
       </button>

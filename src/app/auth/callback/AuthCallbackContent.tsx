@@ -15,6 +15,8 @@ const AUTH_REDIRECT_PATHS = new Set([
   "/classic/endless",
   "/avatar/daily",
   "/avatar/endless",
+  "/holosong/daily",
+  "/holosong/practice",
   "/admin",
 ]);
 

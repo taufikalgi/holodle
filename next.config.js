@@ -19,6 +19,7 @@ const nextConfig = {
       { source: "/competitive-classic", destination: "/classic/competitive", permanent: true },
       { source: "/avatar", destination: "/avatar/daily", permanent: true },
       { source: "/avatar-endless", destination: "/avatar/endless", permanent: true },
+      { source: "/holosong", destination: "/holosong/daily", permanent: true },
     ];
   },
 };
