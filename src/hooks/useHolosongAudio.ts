@@ -7,6 +7,16 @@ interface Progress {
   clip: number;
 }
 
+const VOLUME_STORAGE_KEY = "holosong-clip-volume";
+
+function readSavedVolume(): number {
+  if (typeof window === "undefined") return 1;
+  const raw = window.localStorage.getItem(VOLUME_STORAGE_KEY);
+  if (raw === null) return 1;
+  const saved = Number(raw);
+  return Number.isFinite(saved) && saved >= 0 && saved <= 1 ? saved : 1;
+}
+
 export function useHolosongAudio(
   previewUrl: string | undefined,
   clipSeconds: number
@@ -15,12 +25,21 @@ export function useHolosongAudio(
   const progressTimerRef = useRef<number | null>(null);
   const [playing, setPlaying] = useState(false);
   const [progress, setProgress] = useState<Progress>({ value: 0, clip: 0 });
+  const [volume, setVolumeState] = useState(readSavedVolume);
   const [error, setError] = useState("");
 
   const stopProgress = useCallback(() => {
     if (progressTimerRef.current !== null) {
       window.clearInterval(progressTimerRef.current);
       progressTimerRef.current = null;
+    }
+  }, []);
+
+  const setVolume = useCallback((value: number) => {
+    const next = Math.min(Math.max(value, 0), 1);
+    setVolumeState(next);
+    if (typeof window !== "undefined") {
+      window.localStorage.setItem(VOLUME_STORAGE_KEY, String(next));
     }
   }, []);
 
@@ -40,6 +59,10 @@ export function useHolosongAudio(
       audioRef.current = null;
     };
   }, [previewUrl, stopProgress]);
+
+  useEffect(() => {
+    if (audioRef.current) audioRef.current.volume = volume;
+  }, [volume, previewUrl]);
 
   const play = useCallback(() => {
     const audio = audioRef.current;
@@ -83,6 +106,8 @@ export function useHolosongAudio(
     play,
     playing,
     error,
+    volume,
+    setVolume,
     progress: progress.clip === clipSeconds ? progress.value : 0,
   };
 }

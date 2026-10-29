@@ -11,6 +11,7 @@ import {
   HOLOSONG_CLIP_STEPS,
   HOLOSONG_MAX_CLIP_SECONDS,
   holosongAttemptsLeft,
+  holosongClipBarPercent,
   isHolosongFinished,
   type HolosongSession,
 } from "./holosong-api";
@@ -40,6 +41,18 @@ assert.equal(formatHolosongClip(0.53), "0.5s");
 assert.equal(formatHolosongClip(2), "2s");
 assert.equal(formatHolosongClip(8), "8s");
 assert.equal(formatHolosongClip(15), "15s");
+
+const closeTo = (actual: number, expected: number) =>
+  assert.ok(
+    Math.abs(actual - expected) < 0.01,
+    `${actual} should be within 0.01 of ${expected}`
+  );
+closeTo(holosongClipBarPercent(0.13), 0.513);
+closeTo(holosongClipBarPercent(0.53), 2.572);
+closeTo(holosongClipBarPercent(2), 10.366);
+closeTo(holosongClipBarPercent(8), 41.543);
+closeTo(holosongClipBarPercent(15), 100);
+closeTo(holosongClipBarPercent(30), 100);
 
 assert.equal(holosongAttemptsLeft(session), 3);
 assert.equal(holosongAttemptsLeft({ ...session, guesses_used: 5 }), 0);

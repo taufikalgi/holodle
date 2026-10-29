@@ -76,6 +76,21 @@ export function formatHolosongClip(seconds: number): string {
   return `${Number.isInteger(rounded) ? rounded : rounded.toFixed(1)}s`;
 }
 
+/** Cumulative step-bar width up to the given clip, as a percentage. */
+export function holosongClipBarPercent(seconds: number): number {
+  const found = HOLOSONG_CLIP_STEPS.findIndex(
+    (step) => step >= seconds - 0.001
+  );
+  const lastIndex =
+    found === -1 ? HOLOSONG_CLIP_STEPS.length - 1 : found;
+  const total = HOLOSONG_CLIP_STEPS.reduce((sum, step) => sum + step, 0);
+  const used = HOLOSONG_CLIP_STEPS.slice(0, lastIndex + 1).reduce(
+    (sum, step) => sum + step,
+    0
+  );
+  return (used / total) * 100;
+}
+
 export async function fetchHolosongDaily(): Promise<HolosongSession> {
   return authedJson<HolosongSession>("/api/v1/holosong/daily");
 }

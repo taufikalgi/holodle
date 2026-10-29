@@ -3,7 +3,7 @@
 import {
   formatHolosongClip,
   HOLOSONG_CLIP_STEPS,
-  HOLOSONG_MAX_CLIP_SECONDS,
+  holosongClipBarPercent,
 } from "@/lib/holosong-api";
 import { useHolosongAudio } from "@/hooks/useHolosongAudio";
 
@@ -14,20 +14,21 @@ export default function HolosongClipPlayer({
   previewUrl: string;
   clipSeconds: number;
 }) {
-  const { play, playing, error, progress } = useHolosongAudio(
-    previewUrl,
-    clipSeconds
-  );
+  const { play, playing, error, progress, volume, setVolume } =
+    useHolosongAudio(previewUrl, clipSeconds);
   const finished = !playing && progress >= 1;
   const progressSeconds = progress * clipSeconds;
   const currentStep = Math.max(
     0,
     HOLOSONG_CLIP_STEPS.findIndex((step) => step >= clipSeconds - 0.001)
   );
-  const labelLeft = Math.min(
-    Math.max((clipSeconds / HOLOSONG_MAX_CLIP_SECONDS) * 100, 8),
-    90
-  );
+  const markerLeft = holosongClipBarPercent(clipSeconds);
+  const labelShift =
+    markerLeft <= 10
+      ? ""
+      : markerLeft >= 90
+        ? "-translate-x-full"
+        : "-translate-x-1/2";
 
   return (
     <div className="holo-card p-4 mb-5">
@@ -41,14 +42,13 @@ export default function HolosongClipPlayer({
       </div>
 
       <div className="relative pt-7">
-        <div
-          className="absolute top-0 -translate-x-1/2 text-center"
-          style={{ left: `${labelLeft}%` }}
-        >
-          <span className="block text-xs font-black whitespace-nowrap text-[var(--holo-blue-dark)]">
+        <div className="absolute top-0" style={{ left: `${markerLeft}%` }}>
+          <span
+            className={`block text-xs font-black whitespace-nowrap text-[var(--holo-blue-dark)] ${labelShift}`}
+          >
             {formatHolosongClip(clipSeconds)}
           </span>
-          <span className="block text-[10px] leading-none text-[var(--holo-blue-dark)]">
+          <span className="absolute left-0 top-4 -translate-x-1/2 text-[10px] leading-none text-[var(--holo-blue-dark)]">
             ▼
           </span>
         </div>
@@ -94,6 +94,20 @@ export default function HolosongClipPlayer({
         >
           {playing || finished ? "↻ Replay clip" : "▶ Play clip"}
         </button>
+        <label className="flex items-center gap-2 text-xs font-semibold text-[var(--holo-text-muted)]">
+          <span>Volume</span>
+          <input
+            type="range"
+            min={0}
+            max={1}
+            step={0.05}
+            value={volume}
+            onChange={(event) => setVolume(Number(event.target.value))}
+            aria-label="Clip volume"
+            className="w-28 cursor-pointer accent-[var(--holo-blue)]"
+          />
+          <span className="w-8 tabular-nums">{Math.round(volume * 100)}%</span>
+        </label>
         <p className="text-xs font-semibold text-[var(--holo-text-muted)]">
           Each try plays up to its own marker — the last try fills the whole bar.
         </p>
