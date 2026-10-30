@@ -1,10 +1,11 @@
 import { authedJson } from "./api-client";
 
 export type HolosongSessionStatus = "ongoing" | "won" | "lost";
-export type HolosongSessionMode = "daily" | "practice";
+export type HolosongSessionMode = "daily" | "endless";
 
 export interface HolosongGuess {
   guess_number: number;
+  round_number?: number;
   song_id?: string;
   song_title?: string;
   song_artist?: string;
@@ -36,6 +37,12 @@ export interface HolosongSession {
   clip_seconds: number;
   preview_url: string;
   board: HolosongGuess[];
+  round_number: number;
+  rounds_played: number;
+  rounds_won: number;
+  current_streak: number;
+  longest_streak: number;
+  win_rate_percentage: number;
   version: number;
   answer?: HolosongSong;
 }
@@ -76,6 +83,10 @@ export function formatHolosongClip(seconds: number): string {
   return `${Number.isInteger(rounded) ? rounded : rounded.toFixed(1)}s`;
 }
 
+export function formatHolosongWinRate(value: number): string {
+  return `${Math.round(value * 100) / 100}%`;
+}
+
 /** Cumulative step-bar width up to the given clip, as a percentage. */
 export function holosongClipBarPercent(seconds: number): number {
   const found = HOLOSONG_CLIP_STEPS.findIndex(
@@ -95,8 +106,8 @@ export async function fetchHolosongDaily(): Promise<HolosongSession> {
   return authedJson<HolosongSession>("/api/v1/holosong/daily");
 }
 
-export async function createHolosongPractice(): Promise<HolosongSession> {
-  return authedJson<HolosongSession>("/api/v1/holosong/practice", {
+export async function createHolosongEndless(): Promise<HolosongSession> {
+  return authedJson<HolosongSession>("/api/v1/holosong/endless", {
     method: "POST",
   });
 }

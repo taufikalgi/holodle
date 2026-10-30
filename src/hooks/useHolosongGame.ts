@@ -4,7 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { ApiError } from "@/lib/errors";
 import { deriveGameStatus } from "@/lib/game-status";
 import {
-  createHolosongPractice,
+  createHolosongEndless,
   fetchHolosongDaily,
   fetchHolosongSession,
   fetchHolosongStats,
@@ -63,11 +63,11 @@ export function useHolosongGame(mode: HolosongSessionMode) {
     }
   }, [refreshStats]);
 
-  const startPractice = useCallback(async () => {
+  const startEndless = useCallback(async () => {
     setLoadStatus("loading");
     setError("");
     try {
-      setSession(await createHolosongPractice());
+      setSession(await createHolosongEndless());
       setLoadStatus("ready");
     } catch (e) {
       const status = statusOf(e);
@@ -83,8 +83,8 @@ export function useHolosongGame(mode: HolosongSessionMode) {
   useEffect(() => {
     if (startedRef.current) return;
     startedRef.current = true;
-    void (mode === "daily" ? loadDaily() : startPractice());
-  }, [mode, loadDaily, startPractice]);
+    void (mode === "daily" ? loadDaily() : startEndless());
+  }, [mode, loadDaily, startEndless]);
 
   const submit = useCallback(
     async (songId?: string) => {
@@ -131,12 +131,12 @@ export function useHolosongGame(mode: HolosongSessionMode) {
   );
 
   const retry = useCallback(() => {
-    void (mode === "daily" ? loadDaily() : startPractice());
-  }, [mode, loadDaily, startPractice]);
+    void (mode === "daily" ? loadDaily() : startEndless());
+  }, [mode, loadDaily, startEndless]);
 
   const newSong = useCallback(() => {
-    void startPractice();
-  }, [startPractice]);
+    void startEndless();
+  }, [startEndless]);
 
   const status = deriveGameStatus({
     loading: loadStatus === "loading",

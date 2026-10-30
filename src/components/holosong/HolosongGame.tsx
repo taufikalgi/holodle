@@ -23,7 +23,7 @@ export default function HolosongGame({
   mode: "daily" | "endless";
 }) {
   const endless = mode === "endless";
-  const sessionMode: HolosongSessionMode = endless ? "practice" : "daily";
+  const sessionMode: HolosongSessionMode = endless ? "endless" : "daily";
   const {
     session,
     stats,

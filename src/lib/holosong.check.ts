@@ -8,6 +8,7 @@
 import assert from "node:assert/strict";
 import {
   formatHolosongClip,
+  formatHolosongWinRate,
   HOLOSONG_CLIP_STEPS,
   HOLOSONG_MAX_CLIP_SECONDS,
   holosongAttemptsLeft,
@@ -26,6 +27,12 @@ const session: HolosongSession = {
   clip_seconds: 2,
   preview_url: "https://example.com/preview.m4a",
   board: [],
+  round_number: 1,
+  rounds_played: 0,
+  rounds_won: 0,
+  current_streak: 0,
+  longest_streak: 0,
+  win_rate_percentage: 0,
   version: 3,
 };
 
@@ -41,6 +48,10 @@ assert.equal(formatHolosongClip(0.53), "0.5s");
 assert.equal(formatHolosongClip(2), "2s");
 assert.equal(formatHolosongClip(8), "8s");
 assert.equal(formatHolosongClip(15), "15s");
+
+assert.equal(formatHolosongWinRate(0), "0%");
+assert.equal(formatHolosongWinRate(100), "100%");
+assert.equal(formatHolosongWinRate(33.333), "33.33%");
 
 const closeTo = (actual: number, expected: number) =>
   assert.ok(
