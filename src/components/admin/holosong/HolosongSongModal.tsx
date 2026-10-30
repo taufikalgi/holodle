@@ -6,6 +6,7 @@ import type {
   HolosongAdminSong,
   HolosongAdminSongUpdate,
 } from "@/lib/holosong-admin-api";
+import HolosongAdminClipPlayer from "./HolosongAdminClipPlayer";
 
 const inputStyle =
   "holo-input w-full rounded-xl px-3 py-2.5 text-sm";
@@ -152,6 +153,20 @@ export default function HolosongSongModal({
               Where the 30-second preview should start. 0 plays from the beginning.
             </span>
           </label>
+
+          <div className="rounded-xl border border-[var(--holo-border)] bg-[var(--holo-off-white)] p-3">
+            <p className="mb-2 text-xs font-extrabold uppercase tracking-widest text-[var(--holo-text-muted)]">
+              Preview
+            </p>
+            <HolosongAdminClipPlayer
+              previewUrl={song.preview_url}
+              clipStartMs={Number.isFinite(Number(clipStart)) ? Number(clipStart) : 0}
+              onClipStartChange={(ms) => setClipStart(String(ms))}
+            />
+            <span className="mt-2 block text-[11px] font-semibold text-[var(--holo-text-muted)]">
+              Click the bar to set where the clip starts.
+            </span>
+          </div>
 
           {error && (
             <div className="cell-wrong rounded-xl px-3 py-2 text-sm font-semibold">
