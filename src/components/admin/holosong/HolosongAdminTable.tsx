@@ -159,6 +159,9 @@ export default function HolosongAdminTable({
                             Apple Music ↗
                           </a>
                         )}
+                        <span className="text-[var(--holo-text-muted)]">
+                          Start {(song.clip_start_ms / 1000).toFixed(2)}s
+                        </span>
                       </div>
                     </td>
 

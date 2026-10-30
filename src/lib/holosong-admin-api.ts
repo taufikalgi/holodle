@@ -21,6 +21,7 @@ export interface HolosongAdminSongUpdate {
   title: string;
   artist: string;
   album: string;
+  clip_start_ms?: number;
 }
 
 export interface HolosongAdminQuery {

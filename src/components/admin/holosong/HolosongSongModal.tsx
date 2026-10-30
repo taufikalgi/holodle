@@ -22,6 +22,7 @@ export default function HolosongSongModal({
   const [title, setTitle] = useState(song.title);
   const [artist, setArtist] = useState(song.artist);
   const [album, setAlbum] = useState(song.album ?? "");
+  const [clipStart, setClipStart] = useState(String(song.clip_start_ms ?? 0));
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
 
@@ -31,6 +32,17 @@ export default function HolosongSongModal({
       setError("Title and artist are required.");
       return;
     }
+
+    const parsedClipStart = Number(clipStart);
+    if (
+      !Number.isInteger(parsedClipStart) ||
+      parsedClipStart < 0 ||
+      parsedClipStart >= 30000
+    ) {
+      setError("Clip start must be a whole number between 0 and 29999 ms.");
+      return;
+    }
+
     setSaving(true);
     setError("");
     try {
@@ -38,6 +50,7 @@ export default function HolosongSongModal({
         title: title.trim(),
         artist: artist.trim(),
         album: album.trim(),
+        clip_start_ms: parsedClipStart,
       });
     } catch (e) {
       setError(e instanceof Error ? e.message : "Failed to update song");
@@ -120,6 +133,24 @@ export default function HolosongSongModal({
               value={album}
               onChange={(e) => setAlbum(e.target.value)}
             />
+          </label>
+
+          <label className="block">
+            <span className="block text-xs font-extrabold uppercase tracking-widest mb-1.5 text-[var(--holo-text-muted)]">
+              Clip start (ms)
+            </span>
+            <input
+              className={inputStyle}
+              type="number"
+              min={0}
+              max={29999}
+              step={1}
+              value={clipStart}
+              onChange={(e) => setClipStart(e.target.value)}
+            />
+            <span className="mt-1 block text-[11px] font-semibold text-[var(--holo-text-muted)]">
+              Where the 30-second preview should start. 0 plays from the beginning.
+            </span>
           </label>
 
           {error && (
