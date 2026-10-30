@@ -14,9 +14,10 @@ export default function HolosongClipPlayer({
   previewUrl: string;
   clipSeconds: number;
 }) {
-  const { play, playing, error, progress, volume, setVolume } =
+  const { play, pause, playing, error, progress, volume, setVolume } =
     useHolosongAudio(previewUrl, clipSeconds);
   const finished = !playing && progress >= 1;
+  const paused = !playing && progress > 0 && progress < 1;
   const progressSeconds = progress * clipSeconds;
   const currentStep = Math.max(
     0,
@@ -37,7 +38,7 @@ export default function HolosongClipPlayer({
           Song clip
         </p>
         <p className="text-xs font-semibold text-[var(--holo-text-muted)]">
-          {playing ? "Playing…" : finished ? "Clip finished" : "Ready"}
+          {playing ? "Playing…" : paused ? "Paused" : finished ? "Clip finished" : "Ready"}
         </p>
       </div>
 
@@ -89,10 +90,10 @@ export default function HolosongClipPlayer({
       <div className="mt-3 flex flex-col gap-3 sm:flex-row sm:items-center">
         <button
           type="button"
-          onClick={play}
+          onClick={playing ? pause : play}
           className="px-6 py-2 rounded-full text-sm font-bold text-white transition-opacity hover:opacity-80 bg-[var(--holo-blue)]"
         >
-          {playing || finished ? "↻ Replay clip" : "▶ Play clip"}
+          {playing ? "⏸ Pause" : "▶ Play clip"}
         </button>
         <label className="flex items-center gap-2 text-xs font-semibold text-[var(--holo-text-muted)]">
           <span>Volume</span>
