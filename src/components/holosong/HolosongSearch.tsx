@@ -79,7 +79,7 @@ export default function HolosongSearch({
             type="text"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder="Search or browse the catalog…"
+            placeholder="Search by title or artist…"
             className="holo-input w-full rounded-xl px-4 py-3 text-sm"
             autoComplete="off"
             disabled={disabled}
@@ -167,11 +167,10 @@ export default function HolosongSearch({
       {!loading &&
         !error &&
         !waitingForMore &&
+        trimmed.length >= 2 &&
         results.length === 0 && (
           <p className="mt-2 text-xs font-semibold text-[var(--holo-text-muted)]">
-            {trimmed
-              ? "No songs found — try a different title or artist."
-              : "No approved songs available yet."}
+            No songs found — try a different title or artist.
           </p>
         )}
     </div>

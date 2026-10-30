@@ -24,8 +24,7 @@ export function useHolosongSearch(
   const loadingMoreRef = useRef(false);
 
   const trimmed = query.trim();
-  const validLength = trimmed.length === 0 || trimmed.length >= 2;
-  const active = enabled && validLength;
+  const active = enabled && trimmed.length >= 2;
 
   const reset = useCallback(() => {
     requestId.current += 1;
