@@ -11,6 +11,7 @@ import HolosongBoard from "@/components/holosong/HolosongBoard";
 import HolosongClipPlayer from "@/components/holosong/HolosongClipPlayer";
 import HolosongHowToPlay from "@/components/holosong/HolosongHowToPlay";
 import HolosongResult from "@/components/holosong/HolosongResult";
+import HolosongRunStats from "@/components/holosong/HolosongRunStats";
 import HolosongSearch from "@/components/holosong/HolosongSearch";
 import HolosongStatsPanel from "@/components/holosong/HolosongStats";
 import HolosongStatsLoginHint from "@/components/holosong/HolosongStatsLoginHint";
@@ -88,6 +89,8 @@ export default function HolosongGame({
 
         {showHowTo && <HolosongHowToPlay endless={endless} />}
 
+        {endless && session && <HolosongRunStats session={session} />}
+
         {!endless && stats ? (
           <HolosongStatsPanel stats={stats} />
         ) : !endless && statsAuthRequired && onLogin ? (
@@ -133,7 +136,7 @@ export default function HolosongGame({
         {status === "playing" && session && (
           <>
             <HolosongClipPlayer
-              key={`${session.id}-${session.clip_seconds}`}
+              key={`${session.id}-${session.preview_url}-${session.clip_seconds}`}
               previewUrl={session.preview_url}
               clipSeconds={session.clip_seconds}
             />
@@ -165,7 +168,7 @@ export default function HolosongGame({
         {(status === "won" || status === "lost") && session && (
           <>
             <HolosongClipPlayer
-              key={`${session.id}-${session.clip_seconds}`}
+              key={`${session.id}-${session.preview_url}-${session.clip_seconds}`}
               previewUrl={session.preview_url}
               clipSeconds={session.clip_seconds}
             />

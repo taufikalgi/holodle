@@ -105,7 +105,8 @@ export const GAME_CATEGORIES: GameCategory[] = [
         alt: "holosong endless logo",
         title: "Holosong Endless",
         label: "Endless",
-        description: "Guess random Hololive songs endlessly. No streaks, no stats — just vibes.",
+        description:
+          "Guess random Hololive songs in one resumable run. Build a streak and chase a high win rate.",
       },
     ],
   },
