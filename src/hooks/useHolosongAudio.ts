@@ -71,9 +71,13 @@ export function useHolosongAudio(
     const clip = Math.max(clipSeconds, 0.05);
     stopProgress();
     setError("");
-    setProgress({ value: 0, clip });
-    audio.pause();
-    audio.currentTime = 0;
+
+    if (audio.currentTime >= clip - 0.001) {
+      audio.currentTime = 0;
+      setProgress({ value: 0, clip });
+    } else {
+      setProgress({ value: Math.min(audio.currentTime / clip, 1), clip });
+    }
 
     void audio
       .play()
@@ -102,8 +106,20 @@ export function useHolosongAudio(
       });
   }, [clipSeconds, stopProgress]);
 
+  const pause = useCallback(() => {
+    const audio = audioRef.current;
+    if (!audio) return;
+
+    const clip = Math.max(clipSeconds, 0.05);
+    audio.pause();
+    stopProgress();
+    setPlaying(false);
+    setProgress({ value: Math.min(audio.currentTime / clip, 1), clip });
+  }, [clipSeconds, stopProgress]);
+
   return {
     play,
+    pause,
     playing,
     error,
     volume,
