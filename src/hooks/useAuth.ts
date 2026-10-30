@@ -5,6 +5,7 @@ import { emitAppEvent, onAppEvent } from "@/lib/events";
 import { clearAllCompetitiveHistory } from "@/lib/session-history";
 import {
   authFetch,
+  clearToken,
   googleAuthUrl,
   readEnvelope,
 } from "@/lib/api-client";
@@ -32,6 +33,7 @@ interface AuthMeResponse {
   name?: string;
   picture?: string;
   picture_url?: string;
+  provider?: string;
   role?: string;
   is_admin?: boolean;
   roles?: string[];
@@ -55,6 +57,7 @@ export function useAuth({ requireAdmin }: UseAuthOptions = {}) {
       try {
         const response = await authFetch("/api/v1/auth/me", { method: "GET" });
         if (!response.ok) {
+          if (response.status === 401) clearToken();
           if (response.status === 403 && requireAdmin) setUnauthorized(true);
           if (active) setUser(null);
           return;
@@ -64,6 +67,11 @@ export function useAuth({ requireAdmin }: UseAuthOptions = {}) {
         const id = String(identity.id ?? identity.user_id ?? identity.sub ?? "");
         const email = String(identity.email ?? "");
         if (!id || !email) {
+          if (active) setUser(null);
+          return;
+        }
+        if (identity.provider === "guest") {
+          clearToken();
           if (active) setUser(null);
           return;
         }
@@ -138,6 +146,7 @@ export function useAuth({ requireAdmin }: UseAuthOptions = {}) {
     } catch {
       // Clear the local UI even if the server is unavailable.
     }
+    clearToken();
     localStorage.removeItem(COMPETITIVE_SESSION_KEY);
     clearAllCompetitiveHistory();
     setUser(null);
