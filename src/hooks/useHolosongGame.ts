@@ -29,6 +29,7 @@ function statusOf(error: unknown): number {
 export function useHolosongGame(mode: HolosongSessionMode) {
   const [session, setSession] = useState<HolosongSession | null>(null);
   const [stats, setStats] = useState<HolosongStats | null>(null);
+  const [statsAuthRequired, setStatsAuthRequired] = useState(false);
   const [loadStatus, setLoadStatus] = useState<HolosongLoadStatus>("loading");
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
@@ -37,8 +38,10 @@ export function useHolosongGame(mode: HolosongSessionMode) {
   const refreshStats = useCallback(async () => {
     try {
       setStats(await fetchHolosongStats());
-    } catch {
-      // Stats are decorative; the round must still be playable.
+      setStatsAuthRequired(false);
+    } catch (e) {
+      const status = statusOf(e);
+      setStatsAuthRequired(status === 401 || status === 403);
     }
   }, []);
 
@@ -149,6 +152,7 @@ export function useHolosongGame(mode: HolosongSessionMode) {
   return {
     session,
     stats,
+    statsAuthRequired,
     loadStatus,
     error,
     submitting,

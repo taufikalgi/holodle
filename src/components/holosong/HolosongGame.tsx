@@ -13,20 +13,24 @@ import HolosongHowToPlay from "@/components/holosong/HolosongHowToPlay";
 import HolosongResult from "@/components/holosong/HolosongResult";
 import HolosongSearch from "@/components/holosong/HolosongSearch";
 import HolosongStatsPanel from "@/components/holosong/HolosongStats";
+import HolosongStatsLoginHint from "@/components/holosong/HolosongStatsLoginHint";
 import { useHolosongGame } from "@/hooks/useHolosongGame";
 import type { HolosongSessionMode } from "@/lib/holosong-api";
 import { buildHolosongShareText } from "@/lib/share";
 
 export default function HolosongGame({
   mode,
+  onLogin,
 }: {
   mode: "daily" | "endless";
+  onLogin?: () => void;
 }) {
   const endless = mode === "endless";
   const sessionMode: HolosongSessionMode = endless ? "endless" : "daily";
   const {
     session,
     stats,
+    statsAuthRequired,
     error,
     submitting,
     status,
@@ -73,7 +77,11 @@ export default function HolosongGame({
 
         {showHowTo && <HolosongHowToPlay endless={endless} />}
 
-        {!endless && stats && <HolosongStatsPanel stats={stats} />}
+        {!endless && stats ? (
+          <HolosongStatsPanel stats={stats} />
+        ) : !endless && statsAuthRequired && onLogin ? (
+          <HolosongStatsLoginHint onLogin={onLogin} />
+        ) : null}
 
         {status === "loading" && (
           <LoadingBlock
