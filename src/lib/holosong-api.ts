@@ -184,18 +184,17 @@ export async function submitHolosongGuess(
 }
 
 export async function searchHolosongSongs(
-  query: string,
-  limit = 10
-): Promise<HolosongSongSummary[]> {
-  const q = query.trim();
-  if (q.length < 2) return [];
-  const params = new URLSearchParams({
-    q,
-    limit: String(Math.min(Math.max(limit, 1), 20)),
-  });
-  return authedJson<HolosongSongSummary[]>(
-    `/api/v1/holosong/search?${params.toString()}`
+  params: HolosongSongSearchParams = {}
+): Promise<HolosongSongSearchPage> {
+  const data = await authedJson<HolosongSongSearchPage>(
+    buildHolosongSearchPath(params)
   );
+
+  return {
+    songs: Array.isArray(data?.songs) ? data.songs : [],
+    next_cursor: data?.next_cursor || undefined,
+    has_more: Boolean(data?.has_more),
+  };
 }
 
 export async function fetchHolosongStats(): Promise<HolosongStats> {
