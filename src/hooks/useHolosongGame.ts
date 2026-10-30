@@ -137,7 +137,7 @@ export function useHolosongGame(mode: HolosongSessionMode) {
     void (mode === "daily" ? loadDaily() : startEndless());
   }, [mode, loadDaily, startEndless]);
 
-  const newSong = useCallback(() => {
+  const newRun = useCallback(() => {
     void startEndless();
   }, [startEndless]);
 
@@ -160,6 +160,6 @@ export function useHolosongGame(mode: HolosongSessionMode) {
     attemptsLeft: holosongAttemptsLeft(session),
     submit,
     retry,
-    newSong,
+    newRun,
   };
 }

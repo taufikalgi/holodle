@@ -1,16 +1,19 @@
 import ShareButton from "@/components/ui/ShareButton";
+import { formatHolosongWinRate } from "@/lib/holosong-api";
 import type { HolosongSession } from "@/lib/holosong-api";
 
 export default function HolosongResult({
   session,
   shareText,
   message,
-  onNewSong,
+  endless = false,
+  onNewRun,
 }: {
   session: HolosongSession;
   shareText: string;
   message?: string;
-  onNewSong?: () => void;
+  endless?: boolean;
+  onNewRun?: () => void;
 }) {
   const won = session.status === "won";
   const answer = session.answer;
@@ -59,15 +62,27 @@ export default function HolosongResult({
         </div>
       )}
 
+      {endless && (
+        <div className="mt-4 grid grid-cols-2 gap-1 text-xs font-semibold text-[var(--holo-text-muted)]">
+          <span>
+            Rounds won: {session.rounds_won}/{session.rounds_played}
+          </span>
+          <span>Best streak: {session.longest_streak} 🔥</span>
+          <span>
+            Win rate: {formatHolosongWinRate(session.win_rate_percentage)}
+          </span>
+        </div>
+      )}
+
       <div className="mt-4 flex flex-wrap items-center justify-center gap-2">
         <ShareButton text={shareText} />
-        {onNewSong && (
+        {onNewRun && (
           <button
             type="button"
-            onClick={onNewSong}
+            onClick={onNewRun}
             className="mt-3 px-6 py-2 rounded-full text-sm font-bold text-white transition-opacity hover:opacity-80 bg-[var(--holo-blue)]"
           >
-            New song →
+            New run →
           </button>
         )}
       </div>

@@ -16,7 +16,10 @@ import {
   isHolosongFinished,
   type HolosongSession,
 } from "./holosong-api";
-import { buildHolosongShareText } from "./share";
+import {
+  buildHolosongEndlessShareText,
+  buildHolosongShareText,
+} from "./share";
 
 const session: HolosongSession = {
   id: "session-1",
@@ -96,20 +99,21 @@ assert.equal(
   ].join("\n")
 );
 assert.equal(
-  buildHolosongShareText({
-    mode: "ENDLESS",
-    guesses: [
-      { correct: false, skipped: false },
-      { correct: false, skipped: false },
-      { correct: false, skipped: false },
-      { correct: false, skipped: false },
-      { correct: false, skipped: false },
-    ],
-    maxGuesses: 5,
-    won: false,
+  buildHolosongEndlessShareText({
+    roundsPlayed: 5,
+    roundsWon: 3,
+    longestStreak: 2,
+    winRatePercentage: 60,
     url: shareUrl,
-  }).split("\n")[0],
-  "HOLODLE HOLOSONG ENDLESS X/5"
+  }),
+  [
+    "HOLODLE HOLOSONG ENDLESS 3/5",
+    "",
+    "Best streak: 2 🔥",
+    "Win rate: 60%",
+    "",
+    `Play Holosong: ${shareUrl}`,
+  ].join("\n")
 );
 
 console.log("holosong.check: all assertions passed");

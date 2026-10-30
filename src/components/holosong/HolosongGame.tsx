@@ -16,7 +16,10 @@ import HolosongStatsPanel from "@/components/holosong/HolosongStats";
 import HolosongStatsLoginHint from "@/components/holosong/HolosongStatsLoginHint";
 import { useHolosongGame } from "@/hooks/useHolosongGame";
 import type { HolosongSessionMode } from "@/lib/holosong-api";
-import { buildHolosongShareText } from "@/lib/share";
+import {
+  buildHolosongEndlessShareText,
+  buildHolosongShareText,
+} from "@/lib/share";
 
 export default function HolosongGame({
   mode,
@@ -37,17 +40,24 @@ export default function HolosongGame({
     attemptsLeft,
     submit,
     retry,
-    newSong,
+    newRun,
   } = useHolosongGame(sessionMode);
   const [showHowTo, setShowHowTo] = useState(false);
 
   const shareText = session
-    ? buildHolosongShareText({
-        mode: endless ? "ENDLESS" : "DAILY",
-        guesses: session.board,
-        maxGuesses: session.attempts,
-        won: session.status === "won",
-      })
+    ? endless
+      ? buildHolosongEndlessShareText({
+          roundsPlayed: session.rounds_played,
+          roundsWon: session.rounds_won,
+          longestStreak: session.longest_streak,
+          winRatePercentage: session.win_rate_percentage,
+        })
+      : buildHolosongShareText({
+          mode: "DAILY",
+          guesses: session.board,
+          maxGuesses: session.attempts,
+          won: session.status === "won",
+        })
     : "";
 
   return (
@@ -71,6 +81,7 @@ export default function HolosongGame({
               status={status}
               guessesLeft={attemptsLeft}
               variant={endless ? "endless" : "daily"}
+              lostText={endless ? "Run over — start a new run!" : undefined}
             />
           )}
         </header>
@@ -161,10 +172,9 @@ export default function HolosongGame({
             <HolosongResult
               session={session}
               shareText={shareText}
-              message={
-                endless ? undefined : "Come back tomorrow for a new song!"
-              }
-              onNewSong={endless ? newSong : undefined}
+              endless={endless}
+              message={endless ? undefined : "Come back tomorrow for a new song!"}
+              onNewRun={endless ? newRun : undefined}
             />
             <HolosongBoard board={session.board} />
           </>

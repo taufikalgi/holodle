@@ -62,6 +62,33 @@ export function buildHolosongShareText({
   return lines.join("\n");
 }
 
+export function buildHolosongEndlessShareText({
+  roundsPlayed,
+  roundsWon,
+  longestStreak,
+  winRatePercentage,
+  url,
+}: {
+  roundsPlayed: number;
+  roundsWon: number;
+  longestStreak: number;
+  winRatePercentage: number;
+  url?: string;
+}): string {
+  const header = `HOLODLE HOLOSONG ENDLESS ${roundsWon}/${roundsPlayed}`;
+  const winRate = Math.round(winRatePercentage * 100) / 100;
+  const shareUrl = url ?? (typeof window !== "undefined" ? window.location.href : "");
+  const lines = [
+    header,
+    "",
+    `Best streak: ${longestStreak} 🔥`,
+    `Win rate: ${winRate}%`,
+    "",
+  ];
+  if (shareUrl) lines.push(`Play Holosong: ${shareUrl}`);
+  return lines.join("\n");
+}
+
 export function buildAvatarShareText({
   mode,
   guessCount,
