@@ -3,19 +3,26 @@
  * Run:
  *   ./node_modules/.bin/tsc src/lib/holosong.check.ts --outDir /tmp/opencode/check \
  *     --module nodenext --target es2022 --moduleResolution nodenext --skipLibCheck \
- *   && node /tmp/opencode/check/src/lib/holosong.check.js
+ *   && node /tmp/opencode/check/holosong.check.js
  */
 import assert from "node:assert/strict";
 import {
+  buildHolosongSearchPath,
   formatHolosongClip,
+  formatHolosongWinRate,
   HOLOSONG_CLIP_STEPS,
   HOLOSONG_MAX_CLIP_SECONDS,
   holosongAttemptsLeft,
   holosongClipBarPercent,
+  holosongClipEndSeconds,
+  holosongClipStartSeconds,
   isHolosongFinished,
   type HolosongSession,
 } from "./holosong-api";
-import { buildHolosongShareText } from "./share";
+import {
+  buildHolosongEndlessShareText,
+  buildHolosongShareText,
+} from "./share";
 
 const session: HolosongSession = {
   id: "session-1",
@@ -24,8 +31,15 @@ const session: HolosongSession = {
   attempts: 5,
   guesses_used: 2,
   clip_seconds: 2,
+  clip_start_ms: 1750,
   preview_url: "https://example.com/preview.m4a",
   board: [],
+  round_number: 1,
+  rounds_played: 0,
+  rounds_won: 0,
+  current_streak: 0,
+  longest_streak: 0,
+  win_rate_percentage: 0,
   version: 3,
 };
 
@@ -42,6 +56,10 @@ assert.equal(formatHolosongClip(2), "2s");
 assert.equal(formatHolosongClip(8), "8s");
 assert.equal(formatHolosongClip(15), "15s");
 
+assert.equal(formatHolosongWinRate(0), "0%");
+assert.equal(formatHolosongWinRate(100), "100%");
+assert.equal(formatHolosongWinRate(33.333), "33.33%");
+
 const closeTo = (actual: number, expected: number) =>
   assert.ok(
     Math.abs(actual - expected) < 0.01,
@@ -53,6 +71,27 @@ closeTo(holosongClipBarPercent(2), 10.366);
 closeTo(holosongClipBarPercent(8), 41.543);
 closeTo(holosongClipBarPercent(15), 100);
 closeTo(holosongClipBarPercent(30), 100);
+
+assert.equal(holosongClipStartSeconds(session), 1.75);
+assert.equal(holosongClipEndSeconds(session), 3.75);
+assert.equal(holosongClipStartSeconds({ clip_start_ms: -50 }), 0);
+
+assert.equal(
+  buildHolosongSearchPath({ query: "stellar", field: "q" }),
+  "/api/v1/holosong/search?q=stellar&limit=10"
+);
+assert.equal(
+  buildHolosongSearchPath({ query: " stellar ", field: "title", limit: 500 }),
+  "/api/v1/holosong/search?title=stellar&limit=50"
+);
+assert.equal(
+  buildHolosongSearchPath({ query: "Stellar Stellar" }),
+  "/api/v1/holosong/search?q=Stellar+Stellar&limit=10"
+);
+assert.equal(
+  buildHolosongSearchPath({ field: "artist", cursor: "abc", limit: 0 }),
+  "/api/v1/holosong/search?limit=1&cursor=abc"
+);
 
 assert.equal(holosongAttemptsLeft(session), 3);
 assert.equal(holosongAttemptsLeft({ ...session, guesses_used: 5 }), 0);
@@ -85,20 +124,21 @@ assert.equal(
   ].join("\n")
 );
 assert.equal(
-  buildHolosongShareText({
-    mode: "ENDLESS",
-    guesses: [
-      { correct: false, skipped: false },
-      { correct: false, skipped: false },
-      { correct: false, skipped: false },
-      { correct: false, skipped: false },
-      { correct: false, skipped: false },
-    ],
-    maxGuesses: 5,
-    won: false,
+  buildHolosongEndlessShareText({
+    roundsPlayed: 5,
+    roundsWon: 3,
+    longestStreak: 2,
+    winRatePercentage: 60,
     url: shareUrl,
-  }).split("\n")[0],
-  "HOLODLE HOLOSONG ENDLESS X/5"
+  }),
+  [
+    "HOLODLE HOLOSONG ENDLESS 3/5",
+    "",
+    "Best streak: 2 🔥",
+    "Win rate: 60%",
+    "",
+    `Play Holosong: ${shareUrl}`,
+  ].join("\n")
 );
 
 console.log("holosong.check: all assertions passed");

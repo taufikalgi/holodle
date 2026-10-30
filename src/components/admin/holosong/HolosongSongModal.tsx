@@ -6,6 +6,7 @@ import type {
   HolosongAdminSong,
   HolosongAdminSongUpdate,
 } from "@/lib/holosong-admin-api";
+import HolosongAdminClipPlayer from "./HolosongAdminClipPlayer";
 
 const inputStyle =
   "holo-input w-full rounded-xl px-3 py-2.5 text-sm";
@@ -22,6 +23,7 @@ export default function HolosongSongModal({
   const [title, setTitle] = useState(song.title);
   const [artist, setArtist] = useState(song.artist);
   const [album, setAlbum] = useState(song.album ?? "");
+  const [clipStart, setClipStart] = useState(String(song.clip_start_ms ?? 0));
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
 
@@ -31,6 +33,17 @@ export default function HolosongSongModal({
       setError("Title and artist are required.");
       return;
     }
+
+    const parsedClipStart = Number(clipStart);
+    if (
+      !Number.isInteger(parsedClipStart) ||
+      parsedClipStart < 0 ||
+      parsedClipStart >= 30000
+    ) {
+      setError("Clip start must be a whole number between 0 and 29999 ms.");
+      return;
+    }
+
     setSaving(true);
     setError("");
     try {
@@ -38,6 +51,7 @@ export default function HolosongSongModal({
         title: title.trim(),
         artist: artist.trim(),
         album: album.trim(),
+        clip_start_ms: parsedClipStart,
       });
     } catch (e) {
       setError(e instanceof Error ? e.message : "Failed to update song");
@@ -121,6 +135,38 @@ export default function HolosongSongModal({
               onChange={(e) => setAlbum(e.target.value)}
             />
           </label>
+
+          <label className="block">
+            <span className="block text-xs font-extrabold uppercase tracking-widest mb-1.5 text-[var(--holo-text-muted)]">
+              Clip start (ms)
+            </span>
+            <input
+              className={inputStyle}
+              type="number"
+              min={0}
+              max={29999}
+              step={1}
+              value={clipStart}
+              onChange={(e) => setClipStart(e.target.value)}
+            />
+            <span className="mt-1 block text-[11px] font-semibold text-[var(--holo-text-muted)]">
+              Where the 30-second preview should start. 0 plays from the beginning.
+            </span>
+          </label>
+
+          <div className="rounded-xl border border-[var(--holo-border)] bg-[var(--holo-off-white)] p-3">
+            <p className="mb-2 text-xs font-extrabold uppercase tracking-widest text-[var(--holo-text-muted)]">
+              Preview
+            </p>
+            <HolosongAdminClipPlayer
+              previewUrl={song.preview_url}
+              clipStartMs={Number.isFinite(Number(clipStart)) ? Number(clipStart) : 0}
+              onClipStartChange={(ms) => setClipStart(String(ms))}
+            />
+            <span className="mt-2 block text-[11px] font-semibold text-[var(--holo-text-muted)]">
+              Click the bar to set where the clip starts.
+            </span>
+          </div>
 
           {error && (
             <div className="cell-wrong rounded-xl px-3 py-2 text-sm font-semibold">

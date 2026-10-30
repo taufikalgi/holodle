@@ -21,7 +21,10 @@ export default function HolosongHowToPlay({ endless }: { endless?: boolean }) {
         <li>▶️ Replay the current clip as often as you want</li>
         <li>🫥 The title and artist are revealed only after the round ends</li>
         {endless ? (
-          <li>🎲 Endless mode is unlimited and does not affect your stats</li>
+          <li>
+            🎲 Endless is one resumable run: win rounds to build a streak, and 5
+            misses ends the run
+          </li>
         ) : (
           <li>⏰ A new song is chosen every day at midnight UTC!</li>
         )}

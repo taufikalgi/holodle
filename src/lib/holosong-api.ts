@@ -1,10 +1,11 @@
 import { authedJson } from "./api-client";
 
 export type HolosongSessionStatus = "ongoing" | "won" | "lost";
-export type HolosongSessionMode = "daily" | "practice";
+export type HolosongSessionMode = "daily" | "endless";
 
 export interface HolosongGuess {
   guess_number: number;
+  round_number?: number;
   song_id?: string;
   song_title?: string;
   song_artist?: string;
@@ -21,6 +22,7 @@ export interface HolosongSong {
   album?: string;
   artwork_url?: string;
   preview_url?: string;
+  clip_start_ms: number;
   track_view_url?: string;
   release_date?: string;
   status?: "pending" | "approved" | "rejected";
@@ -34,8 +36,15 @@ export interface HolosongSession {
   attempts: number;
   guesses_used: number;
   clip_seconds: number;
+  clip_start_ms: number;
   preview_url: string;
   board: HolosongGuess[];
+  round_number: number;
+  rounds_played: number;
+  rounds_won: number;
+  current_streak: number;
+  longest_streak: number;
+  win_rate_percentage: number;
   version: number;
   answer?: HolosongSong;
 }
@@ -45,6 +54,21 @@ export interface HolosongSongSummary {
   title: string;
   artist: string;
   artwork_url?: string;
+}
+
+export type HolosongSearchField = "q" | "title" | "artist";
+
+export interface HolosongSongSearchParams {
+  query?: string;
+  field?: HolosongSearchField;
+  limit?: number;
+  cursor?: string;
+}
+
+export interface HolosongSongSearchPage {
+  songs: HolosongSongSummary[];
+  next_cursor?: string;
+  has_more: boolean;
 }
 
 export interface HolosongStats {
@@ -60,6 +84,8 @@ export const HOLOSONG_MAX_ATTEMPTS = 5;
 export const HOLOSONG_CLIP_STEPS = [0.13, 0.53, 2, 8, 15] as const;
 export const HOLOSONG_MAX_CLIP_SECONDS =
   HOLOSONG_CLIP_STEPS[HOLOSONG_CLIP_STEPS.length - 1];
+export const HOLOSONG_SEARCH_DEFAULT_LIMIT = 10;
+export const HOLOSONG_SEARCH_MAX_LIMIT = 50;
 
 export function isHolosongFinished(session: HolosongSession | null): boolean {
   return session?.status === "won" || session?.status === "lost";
@@ -74,6 +100,10 @@ export function holosongAttemptsLeft(session: HolosongSession | null): number {
 export function formatHolosongClip(seconds: number): string {
   const rounded = Math.round(seconds * 10) / 10;
   return `${Number.isInteger(rounded) ? rounded : rounded.toFixed(1)}s`;
+}
+
+export function formatHolosongWinRate(value: number): string {
+  return `${Math.round(value * 100) / 100}%`;
 }
 
 /** Cumulative step-bar width up to the given clip, as a percentage. */
@@ -91,12 +121,41 @@ export function holosongClipBarPercent(seconds: number): number {
   return (used / total) * 100;
 }
 
+export function holosongClipStartSeconds(
+  session: Pick<HolosongSession, "clip_start_ms">
+): number {
+  return Math.max(session.clip_start_ms, 0) / 1000;
+}
+
+export function holosongClipEndSeconds(
+  session: Pick<HolosongSession, "clip_start_ms" | "clip_seconds">
+): number {
+  return holosongClipStartSeconds(session) + Math.max(session.clip_seconds, 0);
+}
+
+export function buildHolosongSearchPath(
+  params: HolosongSongSearchParams = {}
+): string {
+  const search = new URLSearchParams();
+  const query = params.query?.trim();
+  if (query) search.set(params.field ?? "q", query);
+
+  const limit = Math.min(
+    Math.max(params.limit ?? HOLOSONG_SEARCH_DEFAULT_LIMIT, 1),
+    HOLOSONG_SEARCH_MAX_LIMIT
+  );
+  search.set("limit", String(limit));
+  if (params.cursor) search.set("cursor", params.cursor);
+
+  return `/api/v1/holosong/search?${search.toString()}`;
+}
+
 export async function fetchHolosongDaily(): Promise<HolosongSession> {
   return authedJson<HolosongSession>("/api/v1/holosong/daily");
 }
 
-export async function createHolosongPractice(): Promise<HolosongSession> {
-  return authedJson<HolosongSession>("/api/v1/holosong/practice", {
+export async function createHolosongEndless(): Promise<HolosongSession> {
+  return authedJson<HolosongSession>("/api/v1/holosong/endless", {
     method: "POST",
   });
 }
@@ -125,18 +184,17 @@ export async function submitHolosongGuess(
 }
 
 export async function searchHolosongSongs(
-  query: string,
-  limit = 10
-): Promise<HolosongSongSummary[]> {
-  const q = query.trim();
-  if (q.length < 2) return [];
-  const params = new URLSearchParams({
-    q,
-    limit: String(Math.min(Math.max(limit, 1), 20)),
-  });
-  return authedJson<HolosongSongSummary[]>(
-    `/api/v1/holosong/search?${params.toString()}`
+  params: HolosongSongSearchParams = {}
+): Promise<HolosongSongSearchPage> {
+  const data = await authedJson<HolosongSongSearchPage>(
+    buildHolosongSearchPath(params)
   );
+
+  return {
+    songs: Array.isArray(data?.songs) ? data.songs : [],
+    next_cursor: data?.next_cursor || undefined,
+    has_more: Boolean(data?.has_more),
+  };
 }
 
 export async function fetchHolosongStats(): Promise<HolosongStats> {

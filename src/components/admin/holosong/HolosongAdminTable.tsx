@@ -1,6 +1,7 @@
 "use client";
 
 import type { HolosongAdminSong } from "@/lib/holosong-admin-api";
+import HolosongAdminClipPlayer from "./HolosongAdminClipPlayer";
 
 const STATUS_CLASS: Record<HolosongAdminSong["status"], string> = {
   approved: "tag-correct",
@@ -41,21 +42,20 @@ export default function HolosongAdminTable({
   return (
     <div className="holo-card overflow-hidden">
       <div className="overflow-x-auto">
-        <table className="w-full min-w-[900px] border-collapse">
+        <table className="w-full border-collapse">
           <thead>
             <tr className="bg-[var(--holo-off-white)]">
               {[
-                "Song",
-                "Artist",
-                "Album",
-                "iTunes ID",
-                "Status",
-                "Preview",
-                "Actions",
-              ].map((label) => (
+                { label: "Song", className: "" },
+                { label: "Artist", className: "" },
+                { label: "Album", className: "hidden xl:table-cell" },
+                { label: "Status", className: "" },
+                { label: "Preview", className: "" },
+                { label: "Actions", className: "" },
+              ].map(({ label, className }) => (
                 <th
                   key={label}
-                  className="px-4 py-3 text-left text-[11px] font-extrabold uppercase tracking-[0.06em] text-[var(--holo-text-muted)] border-b border-[var(--holo-border)] whitespace-nowrap"
+                  className={`px-3 py-3 text-left text-[11px] font-extrabold uppercase tracking-[0.06em] text-[var(--holo-text-muted)] border-b border-[var(--holo-border)] whitespace-nowrap ${className}`}
                 >
                   {label}
                 </th>
@@ -66,7 +66,7 @@ export default function HolosongAdminTable({
             {loading ? (
               <tr>
                 <td
-                  colSpan={7}
+                  colSpan={6}
                   className="px-4 py-14 text-center text-sm font-semibold text-[var(--holo-text-muted)]"
                 >
                   Loading songs…
@@ -75,7 +75,7 @@ export default function HolosongAdminTable({
             ) : songs.length === 0 ? (
               <tr>
                 <td
-                  colSpan={7}
+                  colSpan={6}
                   className="px-4 py-14 text-center text-sm font-semibold text-[var(--holo-text-muted)]"
                 >
                   🎵 No Holosong songs found
@@ -89,7 +89,7 @@ export default function HolosongAdminTable({
                     key={song.id}
                     className="row-reveal border-b border-[var(--holo-border)] last:border-0"
                   >
-                    <td className="px-4 py-3">
+                    <td className="px-3 py-3">
                       <div className="flex items-center gap-3 min-w-0">
                         {song.artwork_url ? (
                           // eslint-disable-next-line @next/next/no-img-element
@@ -103,29 +103,30 @@ export default function HolosongAdminTable({
                             🎵
                           </div>
                         )}
-                        <span className="font-bold text-sm text-[var(--holo-text)] truncate max-w-[220px]">
-                          {song.title}
-                        </span>
+                        <div className="min-w-0">
+                          <p className="font-bold text-sm text-[var(--holo-text)] truncate max-w-[180px]">
+                            {song.title}
+                          </p>
+                          <p className="text-[10px] font-mono text-[var(--holo-text-muted)] truncate max-w-[180px]">
+                            iTunes ID {song.itunes_track_id}
+                          </p>
+                        </div>
                       </div>
                     </td>
 
-                    <td className="px-4 py-3 text-sm text-[var(--holo-text-muted)] font-semibold">
-                      <span className="block truncate max-w-[180px]">
+                    <td className="px-3 py-3 text-sm text-[var(--holo-text-muted)] font-semibold">
+                      <span className="block truncate max-w-[140px]">
                         {song.artist}
                       </span>
                     </td>
 
-                    <td className="px-4 py-3 text-sm text-[var(--holo-text-muted)]">
-                      <span className="block truncate max-w-[160px]">
+                    <td className="hidden xl:table-cell px-3 py-3 text-sm text-[var(--holo-text-muted)]">
+                      <span className="block truncate max-w-[120px]">
                         {song.album || "—"}
                       </span>
                     </td>
 
-                    <td className="px-4 py-3 text-xs font-mono text-[var(--holo-text-muted)] whitespace-nowrap">
-                      {song.itunes_track_id}
-                    </td>
-
-                    <td className="px-4 py-3">
+                    <td className="px-3 py-3">
                       <span
                         className={`inline-block rounded-full px-2.5 py-1 text-[11px] font-extrabold uppercase ${STATUS_CLASS[song.status]}`}
                       >
@@ -133,28 +134,18 @@ export default function HolosongAdminTable({
                       </span>
                     </td>
 
-                    <td className="px-4 py-3 text-xs font-bold whitespace-nowrap">
+                    <td className="px-3 py-3 text-xs font-bold whitespace-nowrap">
                       <div className="flex flex-col gap-1">
-                        {song.preview_url ? (
-                          <a
-                            href={song.preview_url}
-                            target="_blank"
-                            rel="noreferrer"
-                            className="text-[var(--holo-blue-dark)] underline"
-                          >
-                            ▶ Preview
-                          </a>
-                        ) : (
-                          <span className="text-[var(--holo-text-muted)]">
-                            No preview
-                          </span>
-                        )}
+                        <HolosongAdminClipPlayer
+                          previewUrl={song.preview_url}
+                          clipStartMs={song.clip_start_ms}
+                        />
                         {song.track_view_url && (
                           <a
                             href={song.track_view_url}
                             target="_blank"
                             rel="noreferrer"
-                            className="text-[var(--holo-text-muted)] underline"
+                            className="text-[10px] text-[var(--holo-text-muted)] underline"
                           >
                             Apple Music ↗
                           </a>
@@ -162,13 +153,13 @@ export default function HolosongAdminTable({
                       </div>
                     </td>
 
-                    <td className="px-4 py-3">
+                    <td className="px-3 py-3">
                       <div className="flex flex-wrap gap-1.5">
                         <button
                           type="button"
                           onClick={() => onEdit(song)}
                           disabled={busy}
-                          className="px-3 py-1.5 rounded-lg text-xs font-bold border border-[var(--holo-border)] bg-[var(--holo-off-white)] text-[var(--holo-blue-dark)] disabled:opacity-50"
+                          className="px-2 py-1.5 rounded-lg text-[11px] font-bold border border-[var(--holo-border)] bg-[var(--holo-off-white)] text-[var(--holo-blue-dark)] disabled:opacity-50"
                         >
                           ✏️ Edit
                         </button>
@@ -177,7 +168,7 @@ export default function HolosongAdminTable({
                             type="button"
                             onClick={() => onApprove(song)}
                             disabled={busy}
-                            className="px-3 py-1.5 rounded-lg text-xs font-bold border border-green-300 bg-green-50 text-green-700 disabled:opacity-50"
+                            className="px-2 py-1.5 rounded-lg text-[11px] font-bold border border-green-300 bg-green-50 text-green-700 disabled:opacity-50"
                           >
                             ✓ Approve
                           </button>
@@ -187,7 +178,7 @@ export default function HolosongAdminTable({
                             type="button"
                             onClick={() => onReject(song)}
                             disabled={busy}
-                            className="px-3 py-1.5 rounded-lg text-xs font-bold border border-red-300 bg-red-50 text-red-600 disabled:opacity-50"
+                            className="px-2 py-1.5 rounded-lg text-[11px] font-bold border border-red-300 bg-red-50 text-red-600 disabled:opacity-50"
                           >
                             ✕ Reject
                           </button>

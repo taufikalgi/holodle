@@ -49,6 +49,12 @@ export function getToken(): string | null {
   return localStorage.getItem(TOKEN_KEY);
 }
 
+/** Remove the stored JWT (safe on server). */
+export function clearToken(): void {
+  if (typeof window === "undefined") return;
+  localStorage.removeItem(TOKEN_KEY);
+}
+
 function jsonHeaders(token: string | null, init?: RequestInit): Headers {
   const headers = new Headers(init?.headers);
   if (init?.body != null && !headers.has("Content-Type")) {

@@ -15,11 +15,13 @@ export default function StatusPill({
   guessesLeft,
   variant,
   extra,
+  lostText,
 }: {
   status: GameStatus | "idle" | "expired";
   guessesLeft: number;
   variant: "daily" | "endless";
   extra?: ReactNode;
+  lostText?: string;
 }) {
   return (
     <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-xs font-bold border bg-[var(--holo-bg-card)] border-[var(--holo-border)] text-[var(--holo-text-muted)]">
@@ -37,7 +39,7 @@ export default function StatusPill({
             <span className="text-red-400">●</span> {LOST_COPY.daily}
           </>
         ) : (
-          LOST_COPY[variant]
+          lostText ?? LOST_COPY[variant]
         )
       ) : (
         <>

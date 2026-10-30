@@ -11,39 +11,54 @@ import HolosongBoard from "@/components/holosong/HolosongBoard";
 import HolosongClipPlayer from "@/components/holosong/HolosongClipPlayer";
 import HolosongHowToPlay from "@/components/holosong/HolosongHowToPlay";
 import HolosongResult from "@/components/holosong/HolosongResult";
+import HolosongRunStats from "@/components/holosong/HolosongRunStats";
 import HolosongSearch from "@/components/holosong/HolosongSearch";
 import HolosongStatsPanel from "@/components/holosong/HolosongStats";
+import HolosongStatsLoginHint from "@/components/holosong/HolosongStatsLoginHint";
 import { useHolosongGame } from "@/hooks/useHolosongGame";
 import type { HolosongSessionMode } from "@/lib/holosong-api";
-import { buildHolosongShareText } from "@/lib/share";
+import {
+  buildHolosongEndlessShareText,
+  buildHolosongShareText,
+} from "@/lib/share";
 
 export default function HolosongGame({
   mode,
+  onLogin,
 }: {
   mode: "daily" | "endless";
+  onLogin?: () => void;
 }) {
   const endless = mode === "endless";
-  const sessionMode: HolosongSessionMode = endless ? "practice" : "daily";
+  const sessionMode: HolosongSessionMode = endless ? "endless" : "daily";
   const {
     session,
     stats,
+    statsAuthRequired,
     error,
     submitting,
     status,
     attemptsLeft,
     submit,
     retry,
-    newSong,
+    newRun,
   } = useHolosongGame(sessionMode);
   const [showHowTo, setShowHowTo] = useState(false);
 
   const shareText = session
-    ? buildHolosongShareText({
-        mode: endless ? "ENDLESS" : "DAILY",
-        guesses: session.board,
-        maxGuesses: session.attempts,
-        won: session.status === "won",
-      })
+    ? endless
+      ? buildHolosongEndlessShareText({
+          roundsPlayed: session.rounds_played,
+          roundsWon: session.rounds_won,
+          longestStreak: session.longest_streak,
+          winRatePercentage: session.win_rate_percentage,
+        })
+      : buildHolosongShareText({
+          mode: "DAILY",
+          guesses: session.board,
+          maxGuesses: session.attempts,
+          won: session.status === "won",
+        })
     : "";
 
   return (
@@ -67,13 +82,20 @@ export default function HolosongGame({
               status={status}
               guessesLeft={attemptsLeft}
               variant={endless ? "endless" : "daily"}
+              lostText={endless ? "Run over — start a new run!" : undefined}
             />
           )}
         </header>
 
         {showHowTo && <HolosongHowToPlay endless={endless} />}
 
-        {!endless && stats && <HolosongStatsPanel stats={stats} />}
+        {endless && session && <HolosongRunStats session={session} />}
+
+        {!endless && stats ? (
+          <HolosongStatsPanel stats={stats} />
+        ) : !endless && statsAuthRequired && onLogin ? (
+          <HolosongStatsLoginHint onLogin={onLogin} />
+        ) : null}
 
         {status === "loading" && (
           <LoadingBlock
@@ -114,8 +136,9 @@ export default function HolosongGame({
         {status === "playing" && session && (
           <>
             <HolosongClipPlayer
-              key={`${session.id}-${session.clip_seconds}`}
+              key={`${session.id}-${session.preview_url}-${session.clip_seconds}-${session.clip_start_ms}`}
               previewUrl={session.preview_url}
+              clipStartMS={session.clip_start_ms}
               clipSeconds={session.clip_seconds}
             />
 
@@ -146,17 +169,17 @@ export default function HolosongGame({
         {(status === "won" || status === "lost") && session && (
           <>
             <HolosongClipPlayer
-              key={`${session.id}-${session.clip_seconds}`}
+              key={`${session.id}-${session.preview_url}-${session.clip_seconds}-${session.clip_start_ms}`}
               previewUrl={session.preview_url}
+              clipStartMS={session.clip_start_ms}
               clipSeconds={session.clip_seconds}
             />
             <HolosongResult
               session={session}
               shareText={shareText}
-              message={
-                endless ? undefined : "Come back tomorrow for a new song!"
-              }
-              onNewSong={endless ? newSong : undefined}
+              endless={endless}
+              message={endless ? undefined : "Come back tomorrow for a new song!"}
+              onNewRun={endless ? newRun : undefined}
             />
             <HolosongBoard board={session.board} />
           </>
