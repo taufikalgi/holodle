@@ -1,7 +1,17 @@
 "use client";
 
-import type { HolosongSongSummary } from "@/lib/holosong-api";
+import { useState } from "react";
+import type {
+  HolosongSearchField,
+  HolosongSongSummary,
+} from "@/lib/holosong-api";
 import { useHolosongSearch } from "@/hooks/useHolosongSearch";
+
+const FIELDS: { value: HolosongSearchField; label: string }[] = [
+  { value: "q", label: "All" },
+  { value: "title", label: "Title" },
+  { value: "artist", label: "Artist" },
+];
 
 export default function HolosongSearch({
   disabled,
@@ -12,8 +22,18 @@ export default function HolosongSearch({
   onGuess: (song: HolosongSongSummary) => void;
   onSkip: () => void;
 }) {
-  const { query, setQuery, results, loading, error, clear } =
-    useHolosongSearch(!disabled);
+  const [field, setField] = useState<HolosongSearchField>("q");
+  const {
+    query,
+    setQuery,
+    results,
+    loading,
+    loadingMore,
+    hasMore,
+    loadMore,
+    error,
+    clear,
+  } = useHolosongSearch(!disabled, field);
 
   const handleGuess = (song: HolosongSongSummary) => {
     onGuess(song);
@@ -25,18 +45,41 @@ export default function HolosongSearch({
     clear();
   };
 
+  const trimmed = query.trim();
+  const waitingForMore = trimmed.length === 1;
+
   return (
     <div className="holo-card p-4 mb-5">
-      <p className="text-xs uppercase tracking-widest font-bold mb-3 text-[var(--holo-text-muted)]">
-        Search for the song
-      </p>
+      <div className="mb-3 flex items-center justify-between gap-3">
+        <p className="text-xs uppercase tracking-widest font-bold text-[var(--holo-text-muted)]">
+          Search for the song
+        </p>
+        <div className="flex gap-1">
+          {FIELDS.map((option) => (
+            <button
+              key={option.value}
+              type="button"
+              onClick={() => setField(option.value)}
+              disabled={disabled}
+              className={`rounded-lg px-2.5 py-1 text-[11px] font-extrabold uppercase transition-colors disabled:opacity-50 ${
+                field === option.value
+                  ? "bg-[var(--holo-blue)] text-white"
+                  : "border border-[var(--holo-border)] bg-[var(--holo-off-white)] text-[var(--holo-text-muted)]"
+              }`}
+            >
+              {option.label}
+            </button>
+          ))}
+        </div>
+      </div>
+
       <div className="flex gap-2">
         <div className="relative flex-1">
           <input
             type="text"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder="e.g. Stellar Stellar, Suisei…"
+            placeholder="Search or browse the catalog…"
             className="holo-input w-full rounded-xl px-4 py-3 text-sm"
             autoComplete="off"
             disabled={disabled}
@@ -101,15 +144,34 @@ export default function HolosongSearch({
               </div>
             </button>
           ))}
+
+          {hasMore && (
+            <button
+              type="button"
+              onClick={() => void loadMore()}
+              disabled={loadingMore}
+              className="w-full px-4 py-2 text-xs font-bold text-[var(--holo-blue-dark)] disabled:opacity-50"
+            >
+              {loadingMore ? "Loading…" : "Load more songs"}
+            </button>
+          )}
         </div>
+      )}
+
+      {!loading && !error && waitingForMore && (
+        <p className="mt-2 text-xs font-semibold text-[var(--holo-text-muted)]">
+          Type at least 2 characters.
+        </p>
       )}
 
       {!loading &&
         !error &&
-        query.trim().length >= 2 &&
+        !waitingForMore &&
         results.length === 0 && (
           <p className="mt-2 text-xs font-semibold text-[var(--holo-text-muted)]">
-            No songs found — try a different title or artist.
+            {trimmed
+              ? "No songs found — try a different title or artist."
+              : "No approved songs available yet."}
           </p>
         )}
     </div>
