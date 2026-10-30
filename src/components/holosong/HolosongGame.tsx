@@ -136,8 +136,9 @@ export default function HolosongGame({
         {status === "playing" && session && (
           <>
             <HolosongClipPlayer
-              key={`${session.id}-${session.preview_url}-${session.clip_seconds}`}
+              key={`${session.id}-${session.preview_url}-${session.clip_seconds}-${session.clip_start_ms}`}
               previewUrl={session.preview_url}
+              clipStartMS={session.clip_start_ms}
               clipSeconds={session.clip_seconds}
             />
 
@@ -168,8 +169,9 @@ export default function HolosongGame({
         {(status === "won" || status === "lost") && session && (
           <>
             <HolosongClipPlayer
-              key={`${session.id}-${session.preview_url}-${session.clip_seconds}`}
+              key={`${session.id}-${session.preview_url}-${session.clip_seconds}-${session.clip_start_ms}`}
               previewUrl={session.preview_url}
+              clipStartMS={session.clip_start_ms}
               clipSeconds={session.clip_seconds}
             />
             <HolosongResult

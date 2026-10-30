@@ -19,6 +19,7 @@ function readSavedVolume(): number {
 
 export function useHolosongAudio(
   previewUrl: string | undefined,
+  clipStartMS: number,
   clipSeconds: number
 ) {
   const audioRef = useRef<HTMLAudioElement | null>(null);
@@ -27,6 +28,10 @@ export function useHolosongAudio(
   const [progress, setProgress] = useState<Progress>({ value: 0, clip: 0 });
   const [volume, setVolumeState] = useState(readSavedVolume);
   const [error, setError] = useState("");
+
+  const start = Math.max(clipStartMS, 0) / 1000;
+  const clip = Math.max(clipSeconds, 0.05);
+  const end = start + clip;
 
   const stopProgress = useCallback(() => {
     if (progressTimerRef.current !== null) {
@@ -49,16 +54,25 @@ export function useHolosongAudio(
     const audio = new Audio(previewUrl);
     audio.preload = "auto";
     audioRef.current = audio;
+
+    const alignToStart = () => {
+      if (audio.currentTime < start || audio.currentTime >= end) {
+        audio.currentTime = start;
+      }
+    };
     const onEnded = () => setPlaying(false);
+
+    audio.addEventListener("loadedmetadata", alignToStart);
     audio.addEventListener("ended", onEnded);
 
     return () => {
       stopProgress();
       audio.pause();
+      audio.removeEventListener("loadedmetadata", alignToStart);
       audio.removeEventListener("ended", onEnded);
       audioRef.current = null;
     };
-  }, [previewUrl, stopProgress]);
+  }, [previewUrl, start, end, stopProgress]);
 
   useEffect(() => {
     if (audioRef.current) audioRef.current.volume = volume;
@@ -68,15 +82,17 @@ export function useHolosongAudio(
     const audio = audioRef.current;
     if (!audio) return;
 
-    const clip = Math.max(clipSeconds, 0.05);
     stopProgress();
     setError("");
 
-    if (audio.currentTime >= clip - 0.001) {
-      audio.currentTime = 0;
+    if (audio.currentTime < start || audio.currentTime >= end - 0.001) {
+      audio.currentTime = start;
       setProgress({ value: 0, clip });
     } else {
-      setProgress({ value: Math.min(audio.currentTime / clip, 1), clip });
+      setProgress({
+        value: Math.min((audio.currentTime - start) / clip, 1),
+        clip,
+      });
     }
 
     void audio
@@ -84,7 +100,7 @@ export function useHolosongAudio(
       .then(() => {
         setPlaying(true);
         progressTimerRef.current = window.setInterval(() => {
-          if (audio.currentTime >= clip) {
+          if (audio.currentTime >= end) {
             audio.pause();
             setPlaying(false);
             setProgress({ value: 1, clip });
@@ -92,7 +108,7 @@ export function useHolosongAudio(
             return;
           }
           setProgress({
-            value: Math.min(audio.currentTime / clip, 1),
+            value: Math.min((audio.currentTime - start) / clip, 1),
             clip,
           });
         }, 50);
@@ -104,18 +120,20 @@ export function useHolosongAudio(
           "Audio unavailable in this browser. Reload the session and try again."
         );
       });
-  }, [clipSeconds, stopProgress]);
+  }, [clip, start, end, stopProgress]);
 
   const pause = useCallback(() => {
     const audio = audioRef.current;
     if (!audio) return;
 
-    const clip = Math.max(clipSeconds, 0.05);
     audio.pause();
     stopProgress();
     setPlaying(false);
-    setProgress({ value: Math.min(audio.currentTime / clip, 1), clip });
-  }, [clipSeconds, stopProgress]);
+    setProgress({
+      value: Math.min(Math.max((audio.currentTime - start) / clip, 0), 1),
+      clip,
+    });
+  }, [clip, start, stopProgress]);
 
   return {
     play,

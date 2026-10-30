@@ -9,13 +9,15 @@ import { useHolosongAudio } from "@/hooks/useHolosongAudio";
 
 export default function HolosongClipPlayer({
   previewUrl,
+  clipStartMS,
   clipSeconds,
 }: {
   previewUrl: string;
+  clipStartMS: number;
   clipSeconds: number;
 }) {
   const { play, pause, playing, error, progress, volume, setVolume } =
-    useHolosongAudio(previewUrl, clipSeconds);
+    useHolosongAudio(previewUrl, clipStartMS, clipSeconds);
   const finished = !playing && progress >= 1;
   const paused = !playing && progress > 0 && progress < 1;
   const progressSeconds = progress * clipSeconds;
@@ -37,9 +39,14 @@ export default function HolosongClipPlayer({
         <p className="text-xs font-bold uppercase tracking-widest text-[var(--holo-text-muted)]">
           Song clip
         </p>
-        <p className="text-xs font-semibold text-[var(--holo-text-muted)]">
-          {playing ? "Playing…" : paused ? "Paused" : finished ? "Clip finished" : "Ready"}
-        </p>
+        <div className="flex items-center gap-2">
+          <p className="text-xs font-semibold text-[var(--holo-text-muted)]">
+            Starts at {(clipStartMS / 1000).toFixed(2)}s
+          </p>
+          <p className="text-xs font-semibold text-[var(--holo-text-muted)]">
+            {playing ? "Playing…" : paused ? "Paused" : finished ? "Clip finished" : "Ready"}
+          </p>
+        </div>
       </div>
 
       <div className="relative pt-7">
