@@ -2,13 +2,15 @@
 
 export default function HolosongStatsLoginHint({
   onLogin,
+  message = "Log in with Google to save your daily stats and streak.",
 }: {
   onLogin: () => void;
+  message?: string;
 }) {
   return (
     <div className="holo-card p-4 mb-5 flex flex-col items-center gap-3 text-center">
       <p className="text-sm font-semibold text-[var(--holo-text-muted)]">
-        Log in with Google to save your daily stats and streak.
+        {message}
       </p>
       <button
         type="button"
