@@ -7,10 +7,12 @@ import {
   fetchHolosongQuizDaily,
   fetchHolosongQuizSession,
   fetchHolosongQuizStats,
+  isHolosongQuizCorrectAdvance,
   isHolosongQuizFinished,
   startHolosongQuizEndless,
   submitHolosongQuizGuess,
   type HolosongQuizMode,
+  type HolosongQuizOption,
   type HolosongQuizSession,
   type HolosongQuizStats,
 } from "@/lib/holosong-quiz-api";
@@ -32,6 +34,7 @@ export function useHolosongQuiz(mode: HolosongQuizMode) {
   const [loadStatus, setLoadStatus] = useState<HolosongQuizLoadStatus>("loading");
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const [correctReveal, setCorrectReveal] = useState<HolosongQuizOption | null>(null);
   const startedRef = useRef(false);
 
   const refreshStats = useCallback(async () => {
@@ -47,6 +50,7 @@ export function useHolosongQuiz(mode: HolosongQuizMode) {
   const load = useCallback(async () => {
     setLoadStatus("loading");
     setError("");
+    setCorrectReveal(null);
     try {
       const next =
         mode === "daily" ? await fetchHolosongQuizDaily() : await startHolosongQuizEndless();
@@ -78,9 +82,13 @@ export function useHolosongQuiz(mode: HolosongQuizMode) {
 
       setSubmitting(true);
       setError("");
+      const chosen = session.options.find((option) => option.song_id === songId);
       try {
         const next = await submitHolosongQuizGuess(session.id, songId, session.version);
         setSession(next);
+        setCorrectReveal(
+          chosen && isHolosongQuizCorrectAdvance(mode, session, next) ? chosen : null
+        );
         if (isHolosongQuizFinished(next)) void refreshStats();
       } catch (e) {
         const status = statusOf(e);
@@ -113,7 +121,7 @@ export function useHolosongQuiz(mode: HolosongQuizMode) {
         setSubmitting(false);
       }
     },
-    [session, submitting, refreshStats]
+    [session, submitting, refreshStats, mode]
   );
 
   const retry = useCallback(() => {
@@ -123,6 +131,10 @@ export function useHolosongQuiz(mode: HolosongQuizMode) {
   const newRun = useCallback(() => {
     void load();
   }, [load]);
+
+  const nextRound = useCallback(() => {
+    setCorrectReveal(null);
+  }, []);
 
   const status = deriveGameStatus({
     loading: loadStatus === "loading",
@@ -143,5 +155,7 @@ export function useHolosongQuiz(mode: HolosongQuizMode) {
     submit,
     retry,
     newRun,
+    correctReveal,
+    nextRound,
   };
 }

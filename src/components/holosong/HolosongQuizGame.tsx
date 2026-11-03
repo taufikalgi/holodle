@@ -6,6 +6,7 @@ import Modal from "@/components/ui/Modal";
 import { LoadingBlock, ZeroGuessHint } from "@/components/game/GameShell";
 import StatusPill from "@/components/game/StatusPill";
 import HolosongQuizClipPlayer from "@/components/holosong/HolosongQuizClipPlayer";
+import HolosongQuizCorrect from "@/components/holosong/HolosongQuizCorrect";
 import HolosongQuizHowToPlay from "@/components/holosong/HolosongQuizHowToPlay";
 import HolosongQuizLeaderboard from "@/components/holosong/HolosongQuizLeaderboard";
 import HolosongQuizOptions from "@/components/holosong/HolosongQuizOptions";
@@ -24,8 +25,19 @@ export default function HolosongQuizGame({
   onLogin?: () => void;
 }) {
   const endless = mode === "endless";
-  const { session, stats, statsAuthRequired, error, submitting, status, submit, retry, newRun } =
-    useHolosongQuiz(mode);
+  const {
+    session,
+    stats,
+    statsAuthRequired,
+    error,
+    submitting,
+    status,
+    submit,
+    retry,
+    newRun,
+    correctReveal,
+    nextRound,
+  } = useHolosongQuiz(mode);
   const leaderboard = useHolosongQuizLeaderboard();
   const [showHowTo, setShowHowTo] = useState(false);
   const [showLeaderboard, setShowLeaderboard] = useState(false);
@@ -131,40 +143,50 @@ export default function HolosongQuizGame({
 
         {session && status !== "loading" && status !== "error" && status !== "empty" && (
           <>
-            <HolosongQuizClipPlayer
-              key={`${session.id}-${session.round_number}-${session.clip_start_ms}`}
-              previewUrl={session.preview_url}
-              clipStartMS={session.clip_start_ms}
-              clipSeconds={session.clip_seconds}
-            />
-
-            {error && (
-              <div className="mb-4 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm font-semibold text-amber-800">
-                {error}
-              </div>
-            )}
-
-            <HolosongQuizOptions
-              session={session}
-              selectedId={selectedId}
-              disabled={submitting || session.status !== "ongoing"}
-              onSelect={onSelect}
-            />
-
-            {session.status === "ongoing" && (
-              <ZeroGuessHint
-                compact
-                line1="Listen, then pick the song you heard."
-                line2="One guess per round — no timer"
+            {correctReveal ? (
+              <HolosongQuizCorrect
+                key={correctReveal.song_id}
+                option={correctReveal}
+                onNext={nextRound}
               />
-            )}
+            ) : (
+              <>
+                <HolosongQuizClipPlayer
+                  key={`${session.id}-${session.round_number}-${session.clip_start_ms}`}
+                  previewUrl={session.preview_url}
+                  clipStartMS={session.clip_start_ms}
+                  clipSeconds={session.clip_seconds}
+                />
 
-            {session.status !== "ongoing" && (
-              <HolosongQuizResult
-                session={session}
-                endless={endless}
-                onNewRun={endless ? newRun : undefined}
-              />
+                {error && (
+                  <div className="mb-4 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm font-semibold text-amber-800">
+                    {error}
+                  </div>
+                )}
+
+                <HolosongQuizOptions
+                  session={session}
+                  selectedId={selectedId}
+                  disabled={submitting || session.status !== "ongoing"}
+                  onSelect={onSelect}
+                />
+
+                {session.status === "ongoing" && (
+                  <ZeroGuessHint
+                    compact
+                    line1="Listen, then pick the song you heard."
+                    line2="One guess per round — no timer"
+                  />
+                )}
+
+                {session.status !== "ongoing" && (
+                  <HolosongQuizResult
+                    session={session}
+                    endless={endless}
+                    onNewRun={endless ? newRun : undefined}
+                  />
+                )}
+              </>
             )}
           </>
         )}
