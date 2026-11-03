@@ -25,7 +25,7 @@ export default function HolosongQuizClipPlayer({
           Song clip
         </p>
         <p className="text-xs font-semibold text-[var(--holo-text-muted)]">
-          {clipSeconds}s from {(clipStartMS / 1000).toFixed(2)}s
+          {playing ? "Playing for 5s" : finished ? "Clip finished" : "5-second clip"}
         </p>
       </div>
 
