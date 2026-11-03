@@ -82,6 +82,16 @@ export function isHolosongQuizFinished(session: HolosongQuizSession | null): boo
   return session?.status === "won" || session?.status === "lost";
 }
 
+export function isHolosongQuizCorrectAdvance(
+  mode: HolosongQuizMode,
+  previous: Pick<HolosongQuizSession, "round_number">,
+  next: Pick<HolosongQuizSession, "round_number" | "status">
+): boolean {
+  return (
+    mode === "endless" && next.status === "ongoing" && next.round_number > previous.round_number
+  );
+}
+
 export function holosongQuizLeaderboardHasMore(
   data: Pick<HolosongQuizLeaderboard, "page" | "page_size" | "total">
 ): boolean {

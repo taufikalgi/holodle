@@ -11,6 +11,7 @@ import {
   HOLOSONG_QUIZ_CLIP_SECONDS,
   HOLOSONG_QUIZ_OPTION_COUNT,
   holosongQuizLeaderboardHasMore,
+  isHolosongQuizCorrectAdvance,
   isHolosongQuizFinished,
   type HolosongQuizSession,
 } from "./holosong-quiz-api";
@@ -40,6 +41,27 @@ assert.equal(isHolosongQuizFinished(null), false);
 assert.equal(isHolosongQuizFinished(session), false);
 assert.equal(isHolosongQuizFinished({ ...session, status: "won" }), true);
 assert.equal(isHolosongQuizFinished({ ...session, status: "lost" }), true);
+
+assert.equal(
+  isHolosongQuizCorrectAdvance(
+    "endless",
+    { round_number: 1 },
+    { round_number: 2, status: "ongoing" }
+  ),
+  true
+);
+assert.equal(
+  isHolosongQuizCorrectAdvance(
+    "daily",
+    { round_number: 1 },
+    { round_number: 2, status: "ongoing" }
+  ),
+  false
+);
+assert.equal(
+  isHolosongQuizCorrectAdvance("endless", { round_number: 1 }, { round_number: 1, status: "lost" }),
+  false
+);
 
 assert.equal(
   buildHolosongQuizLeaderboardPath(),
