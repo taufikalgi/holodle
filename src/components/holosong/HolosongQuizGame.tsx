@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Footer, Navbar, PageHeader } from "@/components/ui";
 import Modal from "@/components/ui/Modal";
 import { LoadingBlock, ZeroGuessHint } from "@/components/game/GameShell";
@@ -38,11 +38,18 @@ export default function HolosongQuizGame({
   const leaderboard = useHolosongQuizLeaderboard();
   const [showHowTo, setShowHowTo] = useState(false);
   const [showLeaderboard, setShowLeaderboard] = useState(false);
-  const [selectedId, setSelectedId] = useState<string>();
+  const [selection, setSelection] = useState<{
+    sessionId: string;
+    round: number;
+    songId: string;
+  }>();
 
-  useEffect(() => {
-    setSelectedId(undefined);
-  }, [session?.id, session?.round_number]);
+  const selectedId =
+    session &&
+    selection?.sessionId === session.id &&
+    selection.round === session.round_number
+      ? selection.songId
+      : undefined;
 
   const openLeaderboard = () => {
     setShowLeaderboard(true);
@@ -50,7 +57,12 @@ export default function HolosongQuizGame({
   };
 
   const onSelect = (songId: string) => {
-    setSelectedId(songId);
+    if (!session) return;
+    setSelection({
+      sessionId: session.id,
+      round: session.round_number,
+      songId,
+    });
     void submit(songId);
   };
 

@@ -124,6 +124,8 @@ export function useAuth({ requireAdmin }: UseAuthOptions = {}) {
         "/avatar/endless",
         "/holosong/daily",
         "/holosong/endless",
+        "/holosong/quiz/daily",
+        "/holosong/quiz/endless",
         "/admin",
       ]);
       let redirectPath: string;
