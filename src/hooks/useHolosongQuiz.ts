@@ -15,11 +15,7 @@ import {
   type HolosongQuizStats,
 } from "@/lib/holosong-quiz-api";
 
-export type HolosongQuizLoadStatus =
-  | "loading"
-  | "ready"
-  | "unavailable"
-  | "error";
+export type HolosongQuizLoadStatus = "loading" | "ready" | "unavailable" | "error";
 
 function messageOf(error: unknown, fallback: string): string {
   return error instanceof Error && error.message ? error.message : fallback;
@@ -33,8 +29,7 @@ export function useHolosongQuiz(mode: HolosongQuizMode) {
   const [session, setSession] = useState<HolosongQuizSession | null>(null);
   const [stats, setStats] = useState<HolosongQuizStats | null>(null);
   const [statsAuthRequired, setStatsAuthRequired] = useState(false);
-  const [loadStatus, setLoadStatus] =
-    useState<HolosongQuizLoadStatus>("loading");
+  const [loadStatus, setLoadStatus] = useState<HolosongQuizLoadStatus>("loading");
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const startedRef = useRef(false);
@@ -54,9 +49,7 @@ export function useHolosongQuiz(mode: HolosongQuizMode) {
     setError("");
     try {
       const next =
-        mode === "daily"
-          ? await fetchHolosongQuizDaily()
-          : await startHolosongQuizEndless();
+        mode === "daily" ? await fetchHolosongQuizDaily() : await startHolosongQuizEndless();
       setSession(next);
       setLoadStatus("ready");
       void refreshStats();
@@ -86,11 +79,7 @@ export function useHolosongQuiz(mode: HolosongQuizMode) {
       setSubmitting(true);
       setError("");
       try {
-        const next = await submitHolosongQuizGuess(
-          session.id,
-          songId,
-          session.version
-        );
+        const next = await submitHolosongQuizGuess(session.id, songId, session.version);
         setSession(next);
         if (isHolosongQuizFinished(next)) void refreshStats();
       } catch (e) {

@@ -78,9 +78,7 @@ export const HOLOSONG_QUIZ_CLIP_SECONDS = 5;
 export const HOLOSONG_QUIZ_OPTION_COUNT = 3;
 export const HOLOSONG_QUIZ_LEADERBOARD_PAGE_SIZE = 20;
 
-export function isHolosongQuizFinished(
-  session: HolosongQuizSession | null
-): boolean {
+export function isHolosongQuizFinished(session: HolosongQuizSession | null): boolean {
   return session?.status === "won" || session?.status === "lost";
 }
 
@@ -109,12 +107,8 @@ export async function startHolosongQuizEndless(): Promise<HolosongQuizSession> {
   });
 }
 
-export async function fetchHolosongQuizSession(
-  id: string
-): Promise<HolosongQuizSession> {
-  return authedJson<HolosongQuizSession>(
-    `/api/v1/holosong/quiz/session/${encodeURIComponent(id)}`
-  );
+export async function fetchHolosongQuizSession(id: string): Promise<HolosongQuizSession> {
+  return authedJson<HolosongQuizSession>(`/api/v1/holosong/quiz/session/${encodeURIComponent(id)}`);
 }
 
 export async function submitHolosongQuizGuess(
@@ -142,7 +136,5 @@ export async function fetchHolosongQuizLeaderboard(
   page = 1,
   pageSize = HOLOSONG_QUIZ_LEADERBOARD_PAGE_SIZE
 ): Promise<HolosongQuizLeaderboard> {
-  return publicJson<HolosongQuizLeaderboard>(
-    buildHolosongQuizLeaderboardPath(page, pageSize)
-  );
+  return publicJson<HolosongQuizLeaderboard>(buildHolosongQuizLeaderboardPath(page, pageSize));
 }

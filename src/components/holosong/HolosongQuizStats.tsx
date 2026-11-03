@@ -37,9 +37,7 @@ export default function HolosongQuizStats({
           <div className="text-[10px] font-bold uppercase tracking-widest text-[var(--holo-text-muted)]">
             {card.label}
           </div>
-          <div className="text-sm font-black text-[var(--holo-text)]">
-            {card.value}
-          </div>
+          <div className="text-sm font-black text-[var(--holo-text)]">{card.value}</div>
         </div>
       ))}
     </div>

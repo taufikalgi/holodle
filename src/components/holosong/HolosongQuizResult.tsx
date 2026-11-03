@@ -19,9 +19,7 @@ export default function HolosongQuizResult({
       className={`${won ? "win-banner" : "lose-banner"} rounded-2xl p-5 mb-5 text-center animate-bounce-in`}
     >
       <div className="text-3xl mb-2">{won ? "🎊" : "😔"}</div>
-      <h2
-        className={`text-xl font-black mb-1 ${won ? "text-green-600" : "text-red-500"}`}
-      >
+      <h2 className={`text-xl font-black mb-1 ${won ? "text-green-600" : "text-red-500"}`}>
         {won ? "Yatta! ✨" : endless ? "Run over!" : "Dame datta..."}
       </h2>
 
@@ -34,9 +32,7 @@ export default function HolosongQuizResult({
               className="w-24 h-24 rounded-xl object-cover"
             />
           )}
-          <p className="text-base font-black text-[var(--holo-text)]">
-            {answer.title}
-          </p>
+          <p className="text-base font-black text-[var(--holo-text)]">{answer.title}</p>
           <p className="text-sm text-[var(--holo-text-muted)]">
             {[answer.artist, answer.album].filter(Boolean).join(" • ")}
           </p>
@@ -75,11 +71,7 @@ export default function HolosongQuizResult({
         )}
       </div>
 
-      {!endless && (
-        <p className="text-xs mt-3 opacity-60">
-          Come back tomorrow for a new song!
-        </p>
-      )}
+      {!endless && <p className="text-xs mt-3 opacity-60">Come back tomorrow for a new song!</p>}
     </div>
   );
 }

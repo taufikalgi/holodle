@@ -58,13 +58,7 @@ assert.equal(
   "/api/v1/holosong/quiz/leaderboard?page=1&page_size=1"
 );
 
-assert.equal(
-  holosongQuizLeaderboardHasMore({ page: 1, page_size: 20, total: 21 }),
-  true
-);
-assert.equal(
-  holosongQuizLeaderboardHasMore({ page: 2, page_size: 20, total: 21 }),
-  false
-);
+assert.equal(holosongQuizLeaderboardHasMore({ page: 1, page_size: 20, total: 21 }), true);
+assert.equal(holosongQuizLeaderboardHasMore({ page: 2, page_size: 20, total: 21 }), false);
 
 console.log("holosong-quiz.check: all assertions passed");

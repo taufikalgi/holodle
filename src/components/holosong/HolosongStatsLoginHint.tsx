@@ -9,9 +9,7 @@ export default function HolosongStatsLoginHint({
 }) {
   return (
     <div className="holo-card p-4 mb-5 flex flex-col items-center gap-3 text-center">
-      <p className="text-sm font-semibold text-[var(--holo-text-muted)]">
-        {message}
-      </p>
+      <p className="text-sm font-semibold text-[var(--holo-text-muted)]">{message}</p>
       <button
         type="button"
         onClick={onLogin}

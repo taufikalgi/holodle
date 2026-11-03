@@ -11,8 +11,11 @@ export default function HolosongQuizClipPlayer({
   clipStartMS: number;
   clipSeconds: number;
 }) {
-  const { play, pause, playing, progress, error, volume, setVolume } =
-    useHolosongAudio(previewUrl, clipStartMS, clipSeconds);
+  const { play, pause, playing, progress, error, volume, setVolume } = useHolosongAudio(
+    previewUrl,
+    clipStartMS,
+    clipSeconds
+  );
   const finished = !playing && progress >= 1;
 
   return (
@@ -60,9 +63,7 @@ export default function HolosongQuizClipPlayer({
         </label>
       </div>
 
-      {error && (
-        <p className="mt-2 text-xs font-semibold text-rose-600">{error}</p>
-      )}
+      {error && <p className="mt-2 text-xs font-semibold text-rose-600">{error}</p>}
     </div>
   );
 }

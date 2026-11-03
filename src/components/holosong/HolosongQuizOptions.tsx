@@ -1,9 +1,6 @@
 "use client";
 
-import type {
-  HolosongQuizOption,
-  HolosongQuizSession,
-} from "@/lib/holosong-quiz-api";
+import type { HolosongQuizOption, HolosongQuizSession } from "@/lib/holosong-quiz-api";
 
 export default function HolosongQuizOptions({
   session,
@@ -27,11 +24,7 @@ export default function HolosongQuizOptions({
           option={option}
           selected={selectedId === option.song_id}
           correct={finished && correctId === option.song_id}
-          wrong={
-            finished &&
-            selectedId === option.song_id &&
-            correctId !== option.song_id
-          }
+          wrong={finished && selectedId === option.song_id && correctId !== option.song_id}
           disabled={disabled}
           onSelect={() => onSelect(option.song_id)}
         />
