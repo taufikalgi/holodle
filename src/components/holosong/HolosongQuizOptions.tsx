@@ -17,7 +17,7 @@ export default function HolosongQuizOptions({
   const correctId = session.answer?.id;
 
   return (
-    <div className="grid gap-3 mb-5">
+    <div className="mb-5 grid grid-cols-3 gap-2 sm:gap-3">
       {session.options.map((option) => (
         <OptionCard
           key={option.song_id}
@@ -61,29 +61,37 @@ function OptionCard({
       type="button"
       onClick={onSelect}
       disabled={disabled}
-      className={`flex items-center gap-3 rounded-2xl border px-4 py-3 text-left transition-colors disabled:cursor-not-allowed disabled:opacity-60 ${tone}`}
+      className={`flex h-full min-w-0 flex-col items-center gap-2 rounded-2xl border p-2 text-center transition-colors disabled:cursor-not-allowed disabled:opacity-60 sm:p-3 ${tone}`}
     >
-      {option.artwork_url ? (
-        <img
-          src={option.artwork_url}
-          alt={option.title}
-          className="h-12 w-12 rounded-xl object-cover"
-        />
-      ) : (
-        <span className="flex h-12 w-12 items-center justify-center rounded-xl bg-[var(--holo-off-white)] text-lg">
-          🎵
-        </span>
-      )}
-      <span className="min-w-0">
-        <span className="block truncate text-sm font-black text-[var(--holo-text)]">
-          {option.title}
-        </span>
-        <span className="block truncate text-xs text-[var(--holo-text-muted)]">
-          {option.artist}
-        </span>
+      <span className="relative block w-full overflow-hidden rounded-xl">
+        {option.artwork_url ? (
+          <img
+            src={option.artwork_url}
+            alt={option.title}
+            className="aspect-square w-full object-cover"
+          />
+        ) : (
+          <span className="flex aspect-square w-full items-center justify-center bg-[var(--holo-off-white)] text-2xl">
+            🎵
+          </span>
+        )}
+        {correct && (
+          <span className="absolute right-1 top-1 flex h-6 w-6 items-center justify-center rounded-full bg-green-600 text-xs font-black text-white">
+            ✓
+          </span>
+        )}
+        {wrong && (
+          <span className="absolute right-1 top-1 flex h-6 w-6 items-center justify-center rounded-full bg-red-500 text-xs font-black text-white">
+            ✗
+          </span>
+        )}
       </span>
-      {correct && <span className="ml-auto text-lg">✓</span>}
-      {wrong && <span className="ml-auto text-lg">✗</span>}
+      <span className="block w-full truncate text-xs font-black text-[var(--holo-text)] sm:text-sm">
+        {option.title}
+      </span>
+      <span className="block w-full truncate text-[10px] text-[var(--holo-text-muted)] sm:text-xs">
+        {option.artist}
+      </span>
     </button>
   );
 }
