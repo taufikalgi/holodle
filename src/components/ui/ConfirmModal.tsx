@@ -33,7 +33,7 @@ export default function ConfirmModal({
     <Modal onClose={close} label={title} maxWidth="max-w-md">
       <div
         className="holo-card animate-bounce-in"
-        style={{ width: "100%", maxWidth: 420, padding: "1.5rem" }}
+        style={{ width: "100%", padding: "1.5rem" }}
       >
         <div className="mb-4 flex items-center justify-between">
           <h2
