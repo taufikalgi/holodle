@@ -46,22 +46,15 @@ export function useAdminTalents() {
     }
   }, [router]);
 
-  async function handleDelete(talent: Talent) {
-    const confirmed = window.confirm(
-      `Delete ${talent.name}? This hides the talent from the game.`
-    );
-    if (!confirmed) return;
-
+  async function handleDelete(talent: Talent): Promise<string | null> {
     setDeletingId(talent.id);
     try {
       await deleteTalent(talent);
       await fetchTalents();
       showToast(`${talent.name} deleted`, "ok");
+      return null;
     } catch (e: unknown) {
-      showToast(
-        e instanceof Error ? e.message : "Failed to delete talent",
-        "err"
-      );
+      return e instanceof Error ? e.message : "Failed to delete talent";
     } finally {
       setDeletingId(null);
     }
