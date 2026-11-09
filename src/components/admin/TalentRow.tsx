@@ -8,9 +8,18 @@ interface TalentRowProps {
   index: number;
   onEdit: (talent: Talent) => void;
   onCrop: (talent: Talent) => void;
+  onDelete: (talent: Talent) => void;
+  deleting?: boolean;
 }
 
-export default function TalentRow({ talent, index: idx, onEdit, onCrop }: TalentRowProps) {
+export default function TalentRow({
+  talent,
+  index: idx,
+  onEdit,
+  onCrop,
+  onDelete,
+  deleting = false,
+}: TalentRowProps) {
   const bs = getBranchStyle(talent.branch);
   return (
     <tr
@@ -226,6 +235,39 @@ export default function TalentRow({ talent, index: idx, onEdit, onCrop }: Talent
             }}
           >
             ✂️
+          </button>
+          <button
+            onClick={() => onDelete(talent)}
+            disabled={deleting}
+            aria-label={`Delete ${talent.name}`}
+            style={{
+              padding: "6px 10px",
+              borderRadius: 8,
+              border: "1.5px solid rgba(225,29,72,0.35)",
+              background: "rgba(225,29,72,0.10)",
+              color: "var(--holo-rose)",
+              fontFamily: '"Baloo 2", sans-serif',
+              fontWeight: 700,
+              fontSize: 12,
+              cursor: deleting ? "not-allowed" : "pointer",
+              whiteSpace: "nowrap",
+              opacity: deleting ? 0.6 : 1,
+              transition: "all 0.15s ease",
+            }}
+            onMouseEnter={(e) => {
+              (e.currentTarget as HTMLButtonElement).style.borderColor =
+                "var(--holo-rose)";
+              (e.currentTarget as HTMLButtonElement).style.background =
+                "rgba(225,29,72,0.18)";
+            }}
+            onMouseLeave={(e) => {
+              (e.currentTarget as HTMLButtonElement).style.borderColor =
+                "rgba(225,29,72,0.35)";
+              (e.currentTarget as HTMLButtonElement).style.background =
+                "rgba(225,29,72,0.10)";
+            }}
+          >
+            {deleting ? "Deleting..." : "Delete"}
           </button>
         </div>
       </td>

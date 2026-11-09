@@ -5,6 +5,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useRouter } from "next/navigation";
 import type { AdminTalent as Talent } from "@/lib/talents";
 import { fetchTalentList } from "@/lib/queries";
+import { deleteTalent } from "@/lib/commands";
 import { ApiError } from "@/lib/errors";
 import { compareTalentsByKey } from "@/components/admin";
 import type { SortKey, SortDirection } from "@/components/admin";
@@ -22,6 +23,7 @@ export function useAdminTalents() {
   const [sortDirection, setSortDirection] = useState<SortDirection>("asc");
   const [modal, setModal] = useState<{ mode: "create" | "edit"; talent?: Talent } | null>(null);
   const [toast, setToast] = useState<{ msg: string; type: "ok" | "err" } | null>(null);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
 
   const showToast = (msg: string, type: "ok" | "err" = "ok") => {
     setToast({ msg, type });
@@ -43,6 +45,27 @@ export function useAdminTalents() {
       setLoading(false);
     }
   }, [router]);
+
+  async function handleDelete(talent: Talent) {
+    const confirmed = window.confirm(
+      `Delete ${talent.name}? This hides the talent from the game.`
+    );
+    if (!confirmed) return;
+
+    setDeletingId(talent.id);
+    try {
+      await deleteTalent(talent);
+      await fetchTalents();
+      showToast(`${talent.name} deleted`, "ok");
+    } catch (e: unknown) {
+      showToast(
+        e instanceof Error ? e.message : "Failed to delete talent",
+        "err"
+      );
+    } finally {
+      setDeletingId(null);
+    }
+  }
 
   useEffect(() => {
     if (!authLoading && !user) router.replace("/admin/login");
@@ -128,5 +151,7 @@ export function useAdminTalents() {
     fetchTalents,
     handleLogout,
     onSaved,
+    deletingId,
+    handleDelete,
   };
 }

@@ -123,6 +123,8 @@ export default function AdminPage() {
           onSortToggle={a.toggleSort}
           onEdit={(t) => a.setModal({ mode: "edit", talent: t })}
           onCrop={(t) => router.push(`/admin/avatar-crops?talentId=${encodeURIComponent(t.id)}`)}
+          onDelete={a.handleDelete}
+          deletingId={a.deletingId}
           search={a.search}
           branchFilter={a.branchFilter}
           archetypeFilter={a.archetypeFilter}
