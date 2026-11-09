@@ -38,9 +38,16 @@ export type ApiTalent = {
   image_url: string;
   avatar_url: string;
   alt_names: string[];
+  generation: string;
+  is_deleted: boolean;
 };
 
 export type AdminTalent = ApiTalent;
+
+/** Payload for the update endpoint that marks a talent as soft-deleted. */
+export function buildTalentDeletePayload(talent: AdminTalent): AdminTalent {
+  return { ...talent, is_deleted: true };
+}
 
 export interface TalentsResponse {
   success: boolean;
@@ -85,7 +92,9 @@ export function loadTalents(): Promise<Talent[]> {
   if (!poolInflight) {
     poolInflight = publicJson<ApiTalent[]>("/api/v1/talent/").then(
       (data) => {
-        poolCache = dedupeByName(data.map(normalizeTalent));
+        poolCache = dedupeByName(
+          data.filter((t) => !t.is_deleted).map(normalizeTalent)
+        );
         return poolCache;
       },
       (err) => {

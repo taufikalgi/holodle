@@ -53,7 +53,7 @@ function isValidLeaderboard(x: unknown): x is LeaderboardResponse {
 export async function fetchTalentList(): Promise<AdminTalent[]> {
   const data = await authedJson<AdminTalent[]>("/api/v1/talent/");
   if (!Array.isArray(data)) throw new ApiError("invalid talents payload", 500);
-  return data.filter(isAdminTalent);
+  return data.filter(isAdminTalent).filter((t) => !t.is_deleted);
 }
 
 export async function fetchSession(sessionId: string): Promise<GameSession> {
@@ -76,6 +76,7 @@ export async function fetchSessionTalents(): Promise<TalentChoice[]> {
       (t): t is ApiTalent =>
         isRecord(t) && typeof t.id === "string" && typeof t.name === "string"
     )
+    .filter((t) => !t.is_deleted)
     .map(normalizeTalent);
 }
 

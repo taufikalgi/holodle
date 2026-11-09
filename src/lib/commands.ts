@@ -1,5 +1,9 @@
 import { authedJson } from "./api-client";
-import type { TalentFormData } from "./talents";
+import {
+  buildTalentDeletePayload,
+  type AdminTalent,
+  type TalentFormData,
+} from "./talents";
 import type {
   Comparison,
   GameSession,
@@ -61,6 +65,17 @@ export async function saveTalent(
       method: mode === "create" ? "POST" : "PUT",
       credentials: "include",
       body: JSON.stringify(payload),
+    })
+  );
+}
+
+export async function deleteTalent(talent: AdminTalent): Promise<void> {
+  await authedJson<Record<string, unknown>>(
+    "/api/v1/talent/update",
+    withIdempotency({
+      method: "PUT",
+      credentials: "include",
+      body: JSON.stringify(buildTalentDeletePayload(talent)),
     })
   );
 }
