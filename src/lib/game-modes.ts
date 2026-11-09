@@ -110,7 +110,7 @@ export const GAME_CATEGORIES: GameCategory[] = [
       },
       {
         href: "/holosong/quiz/daily",
-        logo: `${THUMB_BASE}/wp-content/uploads/2020/07/Kobo-Kanaeru_list_thumb.png`,
+        logo: `${THUMB_BASE}/wp-content/uploads/2023/09/Mizumiya-Su_list_thumb.png`,
         alt: "holosong quiz logo",
         title: "Holosong Quiz",
         label: "Quiz Daily",
@@ -119,7 +119,7 @@ export const GAME_CATEGORIES: GameCategory[] = [
       },
       {
         href: "/holosong/quiz/endless",
-        logo: `${THUMB_BASE}/wp-content/uploads/2020/06/Tokino-Sora_list_thumb.png`,
+        logo: `${THUMB_BASE}/wp-content/uploads/2020/06/Hoshimachi-Suisei_list_thumb.png`,
         alt: "holosong quiz endless logo",
         title: "Holosong Quiz Endless",
         label: "Quiz Endless",
