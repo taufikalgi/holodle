@@ -14,6 +14,8 @@ const EMPTY: TalentFormData = {
   image_url: "",
   avatar_url: "",
   alt_names: [],
+  generation: "to be filled",
+  is_deleted: false,
 };
 
 export function useTalentForm({

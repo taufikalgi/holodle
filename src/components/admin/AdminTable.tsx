@@ -15,6 +15,8 @@ interface AdminTableProps {
   onSortToggle: (key: SortKey) => void;
   onEdit: (talent: Talent) => void;
   onCrop: (talent: Talent) => void;
+  onDelete: (talent: Talent) => void;
+  deletingId: string | null;
   search: string;
   branchFilter: string;
   archetypeFilter: string;
@@ -30,6 +32,8 @@ export default function AdminTable({
   onSortToggle,
   onEdit,
   onCrop,
+  onDelete,
+  deletingId,
   search,
   branchFilter,
   archetypeFilter,
@@ -89,6 +93,8 @@ export default function AdminTable({
                     index={idx}
                     onEdit={onEdit}
                     onCrop={onCrop}
+                    onDelete={onDelete}
+                    deleting={deletingId === talent.id}
                   />
                 ))
               )}

@@ -27,13 +27,12 @@ export default function TalentModal({ mode, initial, onClose, onSaved }: Props) 
     <Modal
       onClose={onClose}
       label={mode === "edit" ? "Edit talent" : "Add talent"}
-      maxWidth="max-w-2xl"
+      maxWidth="max-w-[560px]"
     >
       <div
         className="holo-card animate-bounce-in"
         style={{
           width: "100%",
-          maxWidth: 560,
           maxHeight: "90vh",
           overflowY: "auto",
           padding: "1.75rem 1.75rem 1.5rem",

@@ -88,7 +88,7 @@ export const GAME_CATEGORIES: GameCategory[] = [
   {
     id: "holosong",
     label: "Holosong",
-    description: "Guess the song — each try plays a longer clip",
+    description: "Guess the song — clips, search, or multiple choice",
     variants: [
       {
         href: "/holosong/daily",
@@ -107,6 +107,24 @@ export const GAME_CATEGORIES: GameCategory[] = [
         label: "Endless",
         description:
           "Guess random Hololive songs in one resumable run. Build a streak and chase a high win rate.",
+      },
+      {
+        href: "/holosong/quiz/daily",
+        logo: `${THUMB_BASE}/wp-content/uploads/2023/09/Mizumiya-Su_list_thumb.png`,
+        alt: "holosong quiz logo",
+        title: "Holosong Quiz",
+        label: "Quiz Daily",
+        description:
+          "Listen to a 5-second clip and pick the right song from three options. One shared song per day.",
+      },
+      {
+        href: "/holosong/quiz/endless",
+        logo: `${THUMB_BASE}/wp-content/uploads/2020/06/Hoshimachi-Suisei_list_thumb.png`,
+        alt: "holosong quiz endless logo",
+        title: "Holosong Quiz Endless",
+        label: "Quiz Endless",
+        description:
+          "Pick the right song from three options, round after round. One wrong answer ends the run.",
       },
     ],
   },
