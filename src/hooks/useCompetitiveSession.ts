@@ -108,6 +108,8 @@ export function useCompetitiveSession(user: AuthUser | null) {
           clearStoredHistory(storedSessionId);
           setSession(null);
           setSessionEnded(false);
+          setCurrentRoundHistory([]);
+          setPreviousRounds([]);
           setSessionError("");
           setSessionLoading(false);
           return;
@@ -115,6 +117,14 @@ export function useCompetitiveSession(user: AuthUser | null) {
 
         localStorage.removeItem(SESSION_KEY);
         clearStoredHistory(storedSessionId);
+        setSession(null);
+        setSessionEnded(false);
+        setCurrentRoundHistory([]);
+        setPreviousRounds([]);
+        setSessionError(
+          err instanceof Error ? err.message : "Failed to load session"
+        );
+        setSessionLoading(false);
       }
     }
   }, [handleUnauthorized]);
@@ -279,7 +289,7 @@ export function useCompetitiveSession(user: AuthUser | null) {
   useEffect(() => {
     if (!toast) return;
     const timer = window.setTimeout(() => setToast(null), 2500);
-    return () => window.clearInterval(timer);
+    return () => window.clearTimeout(timer);
   }, [toast]);
 
   return {
