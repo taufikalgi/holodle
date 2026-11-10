@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { useAuth } from "@/hooks/useAuth";
+import { useAdminGuard } from "@/hooks/useAdminGuard";
 import { useRouter } from "next/navigation";
 import type { AdminTalent as Talent } from "@/lib/talents";
 import { fetchTalentList } from "@/lib/queries";
@@ -11,7 +11,7 @@ import { compareTalentsByKey } from "@/components/admin";
 import type { SortKey, SortDirection } from "@/components/admin";
 
 export function useAdminTalents() {
-  const { user, loading: authLoading, logout } = useAuth({ requireAdmin: true });
+  const { user, authLoading, handleLogout } = useAdminGuard();
   const router = useRouter();
   const [talents, setTalents] = useState<Talent[]>([]);
   const [loading, setLoading] = useState(true);
@@ -61,17 +61,8 @@ export function useAdminTalents() {
   }
 
   useEffect(() => {
-    if (!authLoading && !user) router.replace("/admin/login");
-  }, [authLoading, user, router]);
-
-  useEffect(() => {
     if (!authLoading && user) fetchTalents();
   }, [authLoading, user, fetchTalents]);
-
-  function handleLogout() {
-    logout();
-    router.push("/admin/login");
-  }
 
   const archetypes = useMemo(
     () => [...new Set(talents.map((t) => t.lore_archetype).filter(Boolean))].sort(),

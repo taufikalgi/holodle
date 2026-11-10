@@ -6,7 +6,7 @@ import type { AdminTalent } from "@/lib/talents";
 import ConfirmModal from "@/components/ui/ConfirmModal";
 import TalentModal from "@/components/ui/TalentModal";
 import { AdminToolbar, AdminTable, AdminToast } from "@/components/admin";
-import AdminNav from "@/components/admin/AdminNav";
+import { AdminLoading, AdminShell } from "@/components/admin/AdminShell";
 import { useAdminTalents } from "@/hooks/useAdminTalents";
 
 export default function AdminPage() {
@@ -15,73 +15,16 @@ export default function AdminPage() {
   const [pendingDelete, setPendingDelete] = useState<AdminTalent | null>(null);
   const [deleteError, setDeleteError] = useState("");
 
-  if (a.authLoading || !a.user) {
-    return (
-      <main
-        className="min-h-screen flex items-center justify-center bg-[var(--holo-bg)]"
-      >
-        <span
-          className="text-sm font-semibold animate-pulse text-[var(--holo-text-muted)]"
-        >
-          Loading…
-        </span>
-      </main>
-    );
-  }
+  if (a.authLoading || !a.user) return <AdminLoading />;
 
   return (
-    <div
-      style={{
-        minHeight: "100vh",
-        background: "var(--holo-bg)",
-        fontFamily: '"Baloo 2", sans-serif',
-      }}
-    >
-      <AdminNav
+    <>
+      <AdminShell
         subtitle="Talent Management"
         meta={`${a.talents.length} talents`}
-        userChip={
-          <div className="flex items-center gap-2">
-            {a.user.picture ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img
-                src={a.user.picture}
-                alt={a.user.name}
-                style={{
-                  width: 30,
-                  height: 30,
-                  borderRadius: "50%",
-                  objectFit: "cover",
-                  border: "2px solid var(--holo-border)",
-                }}
-              />
-            ) : (
-              <div
-                style={{
-                  width: 30,
-                  height: 30,
-                  borderRadius: "50%",
-                  background: "linear-gradient(135deg, var(--holo-blue-light), var(--holo-blue))",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  fontSize: 12,
-                  fontWeight: 800,
-                  color: "#fff",
-                }}
-              >
-                {a.user.name[0]?.toUpperCase()}
-              </div>
-            )}
-            <span style={{ fontSize: 13, fontWeight: 700, color: "var(--holo-text)" }}>
-              {a.user.name}
-            </span>
-          </div>
-        }
+        user={a.user}
         onLogout={a.handleLogout}
-      />
-
-      <main style={{ maxWidth: 1200, margin: "0 auto", padding: "2rem 1.5rem" }}>
+      >
         <AdminToolbar
           search={a.search}
           onSearchChange={a.setSearch}
@@ -142,7 +85,7 @@ export default function AdminPage() {
             a.setArchetypeFilter("");
           }}
         />
-      </main>
+    </AdminShell>
 
       {a.modal && (
         <TalentModal
@@ -178,6 +121,6 @@ export default function AdminPage() {
       )}
 
       {a.toast && <AdminToast message={a.toast.msg} type={a.toast.type} />}
-    </div>
+    </>
   );
 }

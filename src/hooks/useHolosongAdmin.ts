@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { useAuth } from "@/hooks/useAuth";
+import { useAdminGuard } from "@/hooks/useAdminGuard";
 import { ApiError } from "@/lib/errors";
 import {
   approveHolosongAdminSong,
@@ -27,7 +27,7 @@ const emptyPage: HolosongAdminSongPage = {
 };
 
 export function useHolosongAdmin() {
-  const { user, loading: authLoading, logout } = useAuth({ requireAdmin: true });
+  const { user, authLoading, handleLogout } = useAdminGuard();
   const router = useRouter();
 
   const [pageData, setPageData] = useState<HolosongAdminSongPage>(emptyPage);
@@ -81,10 +81,6 @@ export function useHolosongAdmin() {
   }, [statusFilter, debouncedSearch, page, router]);
 
   useEffect(() => {
-    if (!authLoading && !user) router.replace("/admin/login");
-  }, [authLoading, user, router]);
-
-  useEffect(() => {
     if (!authLoading && user) void fetchSongs();
   }, [authLoading, user, fetchSongs]);
 
@@ -97,11 +93,6 @@ export function useHolosongAdmin() {
     setStatusFilter(value);
     setPage(1);
   }, []);
-
-  function handleLogout() {
-    logout();
-    router.push("/admin/login");
-  }
 
   const runAction = useCallback(
     async (song: HolosongAdminSong, action: () => Promise<void>, success: string) => {

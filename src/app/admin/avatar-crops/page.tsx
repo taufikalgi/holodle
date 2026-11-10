@@ -6,28 +6,14 @@ import { useRouter } from "next/navigation";
 import { AdminToast } from "@/components/admin";
 import Modal from "@/components/ui/Modal";
 import { CropEditor, SavedCropsList, CropsReviewModal } from "@/components/admin/avatar-crops";
-import AdminNav from "@/components/admin/AdminNav";
+import { AdminLoading, AdminShell } from "@/components/admin/AdminShell";
 import { useAvatarCropAdmin } from "@/hooks/useAvatarCropAdmin";
 
 export default function AvatarCropsAdminPage() {
   return (
-    <Suspense fallback={<LoadingScreen />}>
+    <Suspense fallback={<AdminLoading />}>
       <AvatarCropsAdminContent />
     </Suspense>
-  );
-}
-
-function LoadingScreen() {
-  return (
-    <main
-      className="min-h-screen flex items-center justify-center bg-[var(--holo-bg)]"
-    >
-      <span
-        className="text-sm font-semibold animate-pulse text-[var(--holo-text-muted)]"
-      >
-        Loading…
-      </span>
-    </main>
   );
 }
 
@@ -65,26 +51,18 @@ function AvatarCropsAdminContent() {
   };
 
   if (c.authLoading || !c.user) {
-    return <LoadingScreen />;
+    return <AdminLoading />;
   }
 
   return (
-    <div
-      style={{
-        minHeight: "100vh",
-        background: "var(--holo-bg)",
-        fontFamily: '"Baloo 2", sans-serif',
-      }}
+    <AdminShell
+      subtitle="Avatar Crop Studio"
+      backLabel="← Talent page"
+      onBack={() => router.push("/admin")}
+      meta={c.talent?.name ?? "Loading…"}
+      user={c.user}
+      onLogout={c.handleLogout}
     >
-      <AdminNav
-        subtitle="Avatar Crop Studio"
-        backLabel="← Talent page"
-        onBack={() => router.push("/admin")}
-        meta={c.talent?.name ?? "Loading…"}
-        onLogout={c.handleLogout}
-      />
-
-      <main style={{ maxWidth: 1200, margin: "0 auto", padding: "2rem 1.5rem" }}>
         <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: "1.5rem" }}>
           <button
             type="button"
@@ -475,7 +453,6 @@ function AvatarCropsAdminContent() {
             </div>
           </div>
         )}
-      </main>
 
       {c.review && c.talent && (
         <CropsReviewModal
@@ -589,7 +566,7 @@ function AvatarCropsAdminContent() {
       )}
 
       {c.toast && <AdminToast message={c.toast.msg} type={c.toast.type} />}
-    </div>
+    </AdminShell>
   );
 }
 
