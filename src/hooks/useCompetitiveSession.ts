@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { ApiError } from "@/lib/errors";
+import { clearToken } from "@/lib/api-client";
 import { createGameSession, submitSessionGuess } from "@/lib/commands";
 import { fetchSession, fetchSessionTalents } from "@/lib/queries";
 import {
@@ -57,7 +58,7 @@ export function useCompetitiveSession(user: AuthUser | null) {
   const timeLeftText = session ? formatTimer(timeLeftMs) : "--:--";
 
   const handleUnauthorized = useCallback(() => {
-    localStorage.removeItem("token");
+    clearToken();
     redirectToLogin();
   }, []);
 

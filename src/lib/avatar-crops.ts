@@ -81,7 +81,8 @@ const areaPath = (talentId: string, areaId: string) =>
 export async function fetchAreas(talentId: string): Promise<CropArea[]> {
   const res = await authFetch(areasPath(talentId));
   const data = await readEnvelope<{ talent_id: string; areas: CropArea[] }>(res);
-  return data?.areas ?? [];
+  if (!data) throw new ApiError("invalid avatar areas payload", 500);
+  return data.areas ?? [];
 }
 
 export async function createArea(talentId: string, box: CropAreaData): Promise<CropArea> {

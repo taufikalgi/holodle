@@ -1,4 +1,5 @@
 import { authedJson } from "./api-client";
+import { ApiError } from "./errors";
 
 export type HolosongSessionStatus = "ongoing" | "won" | "lost";
 export type HolosongSessionMode = "daily" | "endless";
@@ -189,11 +190,12 @@ export async function searchHolosongSongs(
   const data = await authedJson<HolosongSongSearchPage>(
     buildHolosongSearchPath(params)
   );
+  if (!data) throw new ApiError("invalid holosong search payload", 500);
 
   return {
-    songs: Array.isArray(data?.songs) ? data.songs : [],
-    next_cursor: data?.next_cursor || undefined,
-    has_more: Boolean(data?.has_more),
+    songs: Array.isArray(data.songs) ? data.songs : [],
+    next_cursor: data.next_cursor || undefined,
+    has_more: Boolean(data.has_more),
   };
 }
 

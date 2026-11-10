@@ -1,4 +1,5 @@
 import { authedJson } from "./api-client";
+import { ApiError } from "./errors";
 import type { HolosongSong } from "./holosong-api";
 
 export type HolosongSongStatus = "pending" | "approved" | "rejected";
@@ -43,13 +44,14 @@ export async function fetchHolosongAdminSongs(
   const data = await authedJson<HolosongAdminSongPage>(
     `/api/v1/holosong/admin/songs?${params.toString()}`
   );
+  if (!data) throw new ApiError("invalid holosong admin songs payload", 500);
 
   return {
-    songs: Array.isArray(data?.songs) ? data.songs : [],
-    total: Number(data?.total ?? 0),
-    page: Number(data?.page ?? query.page ?? 1),
-    page_size: Number(data?.page_size ?? query.pageSize ?? 20),
-    has_more: Boolean(data?.has_more),
+    songs: Array.isArray(data.songs) ? data.songs : [],
+    total: Number(data.total),
+    page: Number(data.page),
+    page_size: Number(data.page_size),
+    has_more: Boolean(data.has_more),
   };
 }
 
