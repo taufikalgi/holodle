@@ -125,7 +125,7 @@ export default function ClassicGame() {
             answerDetails={
               revealAnswer
                 ? {
-                    image: todayAnswer.image,
+                    photoUrl: todayAnswer.photoUrl || todayAnswer.avatarUrl,
                     branch: todayAnswer.branch,
                     debutYear: todayAnswer.debutYear,
                     loreArchetype: todayAnswer.loreArchetype,

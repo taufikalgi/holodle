@@ -4,13 +4,6 @@ export type Branch = "JP" | "EN" | "ID" | "DEV_IS" | "Stars JP" | "Stars EN";
 
 export const ALL_BRANCHES: Branch[] = ["JP", "EN", "ID", "DEV_IS", "Stars JP", "Stars EN"];
 
-export interface Keypoint {
-  label: string;
-  x: number;
-  y: number;
-  zoom: number;
-}
-
 export interface Talent {
   id: string;
   name: string;
@@ -19,11 +12,9 @@ export interface Talent {
   loreArchetype: string;
   height: number;
   birthMonth: string;
-  image: string;
   avatarUrl: string;
   altNames: string[]; // alternative search names
   photoUrl: string;
-  keypoints?: Keypoint[];
 }
 
 
@@ -49,12 +40,6 @@ export function buildTalentDeletePayload(talent: AdminTalent): AdminTalent {
   return { ...talent, is_deleted: true };
 }
 
-export interface TalentsResponse {
-  success: boolean;
-  message: string;
-  data: AdminTalent[];
-}
-
 export type TalentFormData = Omit<AdminTalent, "id" | "branch"> & {
   id?: string;
   // Draft strings — validated on submit (branch must be a valid Branch).
@@ -71,7 +56,6 @@ export function normalizeTalent(talent: ApiTalent): Talent {
     height: talent.height ?? 0,
     birthMonth: talent.birth_month,
     photoUrl: talent.image_url,
-    image: "",
     avatarUrl: talent.avatar_url,
     altNames: talent.alt_names ?? [],
   };

@@ -17,7 +17,7 @@ export default function GameOverBanner({
   children?: ReactNode;
   revealed?: boolean;
   onReveal?: () => void;
-  answerDetails?: { image?: string; branch?: string; debutYear?: number; loreArchetype?: string };
+  answerDetails?: { photoUrl?: string; branch?: string; debutYear?: number; loreArchetype?: string };
   message?: string;
   actions?: ReactNode;
 }) {
@@ -50,9 +50,9 @@ export default function GameOverBanner({
           </p>
           {revealed && answerDetails && (
             <p className="text-xs text-red-400 mt-1">
-              {answerDetails.image && (
+              {answerDetails.photoUrl && (
                 <img
-                  src={answerDetails.image}
+                  src={answerDetails.photoUrl}
                   alt={answerName}
                   className="w-16 h-16 mx-auto my-2 rounded-full object-cover"
                 />
