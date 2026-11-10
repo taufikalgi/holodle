@@ -1,41 +1,11 @@
 "use client";
 
-import type { ReactNode } from "react";
-import { Navbar, Footer } from "@/components/ui";
-
-export function GameShell({ title, children }: { title: string; children: ReactNode }) {
-  return (
-    <main className="min-h-screen bg-[var(--holo-bg)]">
-      <Navbar title={title} />
-      <div className="max-w-5xl mx-auto px-4 py-8">{children}</div>
-      <Footer />
-    </main>
-  );
-}
-
 export function LoadingBlock({ text }: { text: string }) {
   return (
     <div className="text-center py-14">
       <p className="text-sm font-semibold animate-pulse text-[var(--holo-text-muted)]">
         {text}
       </p>
-    </div>
-  );
-}
-
-export function ClassicErrorBlock({ message, onRetry }: { message: string; onRetry: () => void }) {
-  return (
-    <div className="max-w-5xl mx-auto px-4 py-8 text-center">
-      <p className="text-sm font-semibold text-[var(--holo-text-muted)]">
-        {message}
-      </p>
-      <button
-        type="button"
-        onClick={onRetry}
-        className="mt-4 px-6 py-2 rounded-full text-sm font-bold text-white transition-opacity hover:opacity-80 bg-[var(--holo-blue)]"
-      >
-        Retry
-      </button>
     </div>
   );
 }

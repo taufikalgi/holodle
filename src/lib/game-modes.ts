@@ -1,11 +1,3 @@
-export interface GameMode {
-  href: string;
-  logo: string;
-  alt: string;
-  title: string;
-  description: string;
-}
-
 export interface GameVariant {
   href: string;
   logo: string;
@@ -129,6 +121,3 @@ export const GAME_CATEGORIES: GameCategory[] = [
     ],
   },
 ];
-
-// Flat list for backwards compat / simple iteration. New code should use GAME_CATEGORIES.
-export const GAMES: GameMode[] = GAME_CATEGORIES.flatMap((c) => c.variants);

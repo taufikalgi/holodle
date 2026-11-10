@@ -105,6 +105,3 @@ export function isValidEndlessPersisted(data: unknown): data is EndlessPersisted
     typeof data.lastRunStreak === "number"
   );
 }
-
-export { isValidDailyStreakStats as isValidAvatarStats };
-export { isValidDailyStreakStats as isValidAvatarStatsPersisted };

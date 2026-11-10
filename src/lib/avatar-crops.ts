@@ -9,8 +9,6 @@ export type Corner = "nw" | "ne" | "sw" | "se";
 
 export type Difficulty = "easy" | "medium" | "hard";
 
-export const DIFFICULTIES: Difficulty[] = ["easy", "medium", "hard"];
-
 export const DIFFICULTY_META: Record<Difficulty, { label: string; color: string; bg: string }> = {
   easy: { label: "Easy", color: "#15803d", bg: "#dcfce7" },
   medium: { label: "Medium", color: "#a16207", bg: "#fef9c3" },
