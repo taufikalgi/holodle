@@ -1,6 +1,10 @@
 pnpm-workspace.yaml
 .next
 node_modules/
+.checks/
+tsconfig.tsbuildinfo
+*.tsbuildinfo
+.env
 
 talents.json
 

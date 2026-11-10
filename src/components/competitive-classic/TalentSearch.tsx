@@ -20,8 +20,8 @@ export default function TalentSearch({
   onSelect: (talent: TalentChoice) => void;
   onClear: () => void;
   showDropdown: boolean;
-  dropdownRef: RefObject<HTMLDivElement>;
-  inputRef: RefObject<HTMLInputElement>;
+  dropdownRef: RefObject<HTMLDivElement | null>;
+  inputRef: RefObject<HTMLInputElement | null>;
   disabled?: boolean;
 }) {
   const suggestions = useMemo(() => {

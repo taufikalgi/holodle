@@ -21,7 +21,7 @@ export default function TalentSearchInput({
   onGuess: (talent: Talent) => void;
   onClear: () => void;
   onFocus: () => void;
-  dropdownRef: React.RefObject<HTMLDivElement>;
+  dropdownRef: React.RefObject<HTMLDivElement | null>;
   renderSuggestion?: (talent: Talent) => ReactNode;
 }) {
   const inputRef = useRef<HTMLInputElement>(null);
