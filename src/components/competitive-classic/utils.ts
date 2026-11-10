@@ -1,7 +1,6 @@
 import { googleAuthUrl } from "@/lib/api-client";
+import { AUTH_REDIRECT_KEY, getAuthRedirectTarget } from "@/lib/auth-redirect";
 import type { AuthUser, GameSession } from "./types";
-
-const AUTH_REDIRECT_KEY = "auth_redirect_to";
 
 export { normalizeTalent } from "@/lib/talents";
 
@@ -62,18 +61,7 @@ export function formatTimer(ms: number) {
 
 export function redirectToLogin(path?: string) {
   if (typeof window === "undefined") return;
-  const validPaths = new Set([
-    "/",
-    "/login",
-    "/classic/competitive",
-    "/classic/daily",
-    "/classic/endless",
-    "/avatar/daily",
-    "/avatar/endless",
-    "/admin",
-  ]);
-  const redirectPath = path && validPaths.has(path) ? path : "/classic/competitive";
-  sessionStorage.setItem(AUTH_REDIRECT_KEY, redirectPath);
+  sessionStorage.setItem(AUTH_REDIRECT_KEY, getAuthRedirectTarget(path));
   window.location.href = googleAuthUrl();
 }
 

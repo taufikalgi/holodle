@@ -9,10 +9,12 @@ import {
   googleAuthUrl,
   readEnvelope,
 } from "@/lib/api-client";
+import {
+  AUTH_REDIRECT_KEY,
+  DEFAULT_AUTH_REDIRECT,
+  getAuthRedirectTarget,
+} from "@/lib/auth-redirect";
 
-export { authFetch };
-
-const AUTH_REDIRECT_KEY = "auth_redirect_to";
 const COMPETITIVE_SESSION_KEY = "competitive-classic-session-id";
 
 export interface AuthUser {
@@ -114,28 +116,10 @@ export function useAuth({ requireAdmin }: UseAuthOptions = {}) {
 
   const login = useCallback(
     (redirectTo?: string) => {
-      const validPaths = new Set([
-        "/",
-        "/login",
-        "/classic/competitive",
-        "/classic/daily",
-        "/classic/endless",
-        "/avatar/daily",
-        "/avatar/endless",
-        "/holosong/daily",
-        "/holosong/endless",
-        "/holosong/quiz/daily",
-        "/holosong/quiz/endless",
-        "/admin",
-      ]);
-      let redirectPath: string;
-      if (redirectTo && validPaths.has(redirectTo)) {
-        redirectPath = redirectTo;
-      } else if (requireAdmin) {
-        redirectPath = "/admin";
-      } else {
-        redirectPath = "/classic/competitive";
-      }
+      const redirectPath = getAuthRedirectTarget(
+        redirectTo,
+        requireAdmin ? "/admin" : DEFAULT_AUTH_REDIRECT
+      );
       sessionStorage.setItem(AUTH_REDIRECT_KEY, redirectPath);
       window.location.href = googleAuthUrl();
     },
