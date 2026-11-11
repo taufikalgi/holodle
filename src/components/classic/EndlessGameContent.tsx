@@ -1,25 +1,19 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState } from "react";
 import { ALL_BRANCHES, type Talent } from "@/lib/talents";
 import {
-  ColumnHeaders,
-  DEFAULT_COLUMN_HEADERS,
   Footer,
   GameOverBanner,
-  GuessRow,
   HowToPlay,
   Navbar,
   PageHeader,
   ShareButton,
   StatsBar,
-  TalentSearchInput,
 } from "@/components/ui";
 import { buildGridShareText } from "@/lib/share";
-import { useOutsideClick } from "@/hooks/useOutsideClick";
-import { useTalentSearch } from "@/hooks/useTalentSearch";
 import StatusPill from "@/components/game/StatusPill";
-import { ZeroGuessHint } from "@/components/game/GameShell";
+import ClassicBoard from "@/components/classic/ClassicBoard";
 import { MAX_GUESSES, useEndlessClassic } from "@/hooks/useEndlessClassic";
 
 export function EndlessGameContent({
@@ -35,27 +29,8 @@ export function EndlessGameContent({
 }) {
   const g = useEndlessClassic(storageKey, talents, selectedBranches);
   const [showHowTo, setShowHowTo] = useState(false);
-  const inputRef = useRef<HTMLInputElement>(null);
-  const dropdownRef = useRef<HTMLDivElement>(null);
-
-  const { input, suggestions, showDropdown, handleInput, clear, onFocus, setShowDropdown } = useTalentSearch(g.pool);
 
   const { current, stats, lastRunStreak } = g.state;
-
-  useOutsideClick(dropdownRef, () => setShowDropdown(false), inputRef);
-
-  function handleGuess(talent: Talent) {
-    if (g.makeGuess(talent)) clear();
-  }
-
-  function handleNextRound() {
-    g.nextRound();
-    clear();
-  }
-
-  const displayCurrentHistory = current.guesses
-    .map((g) => ({ talent: g.talent, result: g.result }))
-    .reverse();
 
   return (
     <main className="min-h-screen bg-[var(--holo-bg)]">
@@ -133,7 +108,7 @@ export function EndlessGameContent({
             }
           >
             <button
-              onClick={handleNextRound}
+              onClick={() => g.nextRound()}
               className="mt-4 px-6 py-2 rounded-full text-sm font-bold text-white transition-opacity hover:opacity-80 bg-[var(--holo-blue)]"
             >
               {current.won ? "Next talent →" : "New run →"}
@@ -141,48 +116,24 @@ export function EndlessGameContent({
           </GameOverBanner>
         )}
 
-        {!current.gameOver && (
-          <TalentSearchInput
-            input={input}
-            suggestions={suggestions}
-            showDropdown={showDropdown}
-            onInput={(val) => handleInput(val, g.alreadyGuessed)}
-            onGuess={handleGuess}
-            onClear={clear}
-            onFocus={onFocus}
-            dropdownRef={dropdownRef}
-          />
-        )}
-
-        {current.guesses.length > 0 && (
-          <ColumnHeaders headers={DEFAULT_COLUMN_HEADERS} />
-        )}
-
-        <div className="space-y-2">
-          {displayCurrentHistory.map(({ talent, result }, i) => (
-            <GuessRow key={talent.name} guess={talent} result={result} index={i} />
-          ))}
-        </div>
-
         {g.pool.length === 0 ? (
           <div className="text-center py-14">
             <p className="text-sm font-semibold text-[var(--holo-text-muted)]">
               No talents match the selected branches.
             </p>
             <p className="text-xs mt-1 opacity-50 text-[var(--holo-text-muted)]">
-              <button
-                type="button"
-                onClick={onChangeBranches}
-                className="underline"
-              >
+              <button type="button" onClick={onChangeBranches} className="underline">
                 Choose different branches
               </button>
             </p>
           </div>
-        ) : !current.gameOver && current.guesses.length === 0 && (
-          <ZeroGuessHint
-            line1="Start typing to make your first guess!"
-            line2={`${g.pool.length} talent${g.pool.length !== 1 ? "s" : ""} in the pool`}
+        ) : (
+          <ClassicBoard
+            key={current.answer.id}
+            pool={g.pool}
+            guesses={current.guesses}
+            gameOver={current.gameOver}
+            onGuess={g.makeGuess}
           />
         )}
 

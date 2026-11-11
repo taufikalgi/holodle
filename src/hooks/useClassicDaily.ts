@@ -57,7 +57,6 @@ export function useClassicDaily() {
     won: state.won,
   });
   const guessesLeft = MAX_GUESSES - state.guesses.length;
-  const alreadyGuessed = state.guesses.map((g) => g.talent.name);
 
   const makeGuess = useCallback(
     (talent: Talent) => {
@@ -83,7 +82,6 @@ export function useClassicDaily() {
     status,
     talentsError,
     guessesLeft,
-    alreadyGuessed,
     stats,
     streakResetToast,
     dismissStreakResetPopup,

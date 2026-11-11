@@ -97,7 +97,6 @@ export function useEndlessClassic(
     won: current.won,
   });
   const guessesLeft = MAX_GUESSES - current.guesses.length;
-  const alreadyGuessed = current.guesses.map((g) => g.talent.name);
 
   const makeGuess = useCallback(
     (talent: Talent) => {
@@ -136,7 +135,7 @@ export function useEndlessClassic(
   }
 
   return {
-    pool, state, status, guessesLeft, alreadyGuessed,
+    pool, state, status, guessesLeft,
     makeGuess, nextRound,
   };
 }
