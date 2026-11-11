@@ -1,4 +1,5 @@
 import { publicJson } from "./api-client";
+import { ApiError } from "./errors";
 
 export type Branch = "JP" | "EN" | "ID" | "DEV_IS" | "Stars JP" | "Stars EN";
 
@@ -76,6 +77,7 @@ export function loadTalents(): Promise<Talent[]> {
   if (!poolInflight) {
     poolInflight = publicJson<ApiTalent[]>("/api/v1/talent/").then(
       (data) => {
+        if (!data) throw new ApiError("invalid talent payload", 500);
         poolCache = dedupeByName(
           data.filter((t) => !t.is_deleted).map(normalizeTalent)
         );

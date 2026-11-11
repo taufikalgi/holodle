@@ -25,7 +25,21 @@ export interface Envelope<T> {
 
 /** Single envelope reader — throws ApiError on !ok or success === false. */
 export async function readEnvelope<T>(res: Response): Promise<T> {
-  const json = (await res.json().catch(() => null)) as Envelope<T> | null;
+  const text = await res.text().catch(() => "");
+  let json: Envelope<T> | null = null;
+
+  if (text) {
+    try {
+      json = JSON.parse(text) as Envelope<T>;
+    } catch {
+      throw new ApiError(
+        res.ok ? "Invalid JSON response" : `Request failed (${res.status})`,
+        res.status,
+        res.headers.get("Retry-After")
+      );
+    }
+  }
+
   if (!res.ok) {
     const message =
       json?.error || json?.message || `Request failed (${res.status})`;

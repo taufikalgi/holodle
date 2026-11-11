@@ -5,6 +5,14 @@ async function main() {
   const empty = await readEnvelope(new Response(null, { status: 204 }));
   assert.equal(empty, undefined);
 
+  const empty200 = await readEnvelope(new Response(null, { status: 200 }));
+  assert.equal(empty200, undefined);
+
+  await assert.rejects(
+    () => readEnvelope(new Response("<html>proxy error</html>", { status: 200 })),
+    /Invalid JSON response/
+  );
+
   const ok = await readEnvelope<number>(
     new Response(JSON.stringify({ success: true, data: 5 }), { status: 200 })
   );

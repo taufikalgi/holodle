@@ -152,19 +152,25 @@ export function buildHolosongSearchPath(
 }
 
 export async function fetchHolosongDaily(): Promise<HolosongSession> {
-  return authedJson<HolosongSession>("/api/v1/holosong/daily");
+  const data = await authedJson<HolosongSession>("/api/v1/holosong/daily");
+  if (!data) throw new ApiError("invalid holosong daily payload", 500);
+  return data;
 }
 
 export async function createHolosongEndless(): Promise<HolosongSession> {
-  return authedJson<HolosongSession>("/api/v1/holosong/endless", {
+  const data = await authedJson<HolosongSession>("/api/v1/holosong/endless", {
     method: "POST",
   });
+  if (!data) throw new ApiError("invalid holosong endless payload", 500);
+  return data;
 }
 
 export async function fetchHolosongSession(id: string): Promise<HolosongSession> {
-  return authedJson<HolosongSession>(
+  const data = await authedJson<HolosongSession>(
     `/api/v1/holosong/session/${encodeURIComponent(id)}`
   );
+  if (!data) throw new ApiError("invalid holosong session payload", 500);
+  return data;
 }
 
 export async function submitHolosongGuess(
@@ -172,7 +178,7 @@ export async function submitHolosongGuess(
   songId: string | undefined,
   expectedVersion: number
 ): Promise<HolosongSession> {
-  return authedJson<HolosongSession>(
+  const data = await authedJson<HolosongSession>(
     `/api/v1/holosong/session/${encodeURIComponent(sessionId)}/guess`,
     {
       method: "POST",
@@ -182,6 +188,8 @@ export async function submitHolosongGuess(
       }),
     }
   );
+  if (!data) throw new ApiError("invalid holosong guess payload", 500);
+  return data;
 }
 
 export async function searchHolosongSongs(
@@ -200,5 +208,7 @@ export async function searchHolosongSongs(
 }
 
 export async function fetchHolosongStats(): Promise<HolosongStats> {
-  return authedJson<HolosongStats>("/api/v1/holosong/stats");
+  const data = await authedJson<HolosongStats>("/api/v1/holosong/stats");
+  if (!data) throw new ApiError("invalid holosong stats payload", 500);
+  return data;
 }

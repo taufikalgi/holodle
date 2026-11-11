@@ -133,7 +133,9 @@ export async function generateCrops(
     `${areasPath(talentId)}/generate?${params.toString()}`,
     { method: "POST", credentials: "include" }
   );
-  return readEnvelope<CropGenerationResult>(res);
+  const data = await readEnvelope<CropGenerationResult>(res);
+  if (!data) throw new ApiError("invalid crop generation payload", 500);
+  return data;
 }
 
 export async function generateMissingCrops(
@@ -145,5 +147,7 @@ export async function generateMissingCrops(
     `/api/v1/talent/areas/generate-missing?${params.toString()}`,
     { method: "POST", credentials: "include", signal }
   );
-  return readEnvelope<BatchGenerationSummary>(res);
+  const data = await readEnvelope<BatchGenerationSummary>(res);
+  if (!data) throw new ApiError("invalid batch generation payload", 500);
+  return data;
 }
