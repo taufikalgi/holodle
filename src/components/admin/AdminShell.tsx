@@ -1,6 +1,7 @@
 "use client";
 
 import type { ReactNode } from "react";
+import Image from "next/image";
 import AdminNav from "./AdminNav";
 
 export function AdminLoading() {
@@ -23,11 +24,12 @@ export function AdminUserChip({
   return (
     <div className="flex items-center gap-2">
       {picture ? (
-        // eslint-disable-next-line @next/next/no-img-element
-        <img
+        <Image
           src={picture}
           alt=""
           aria-hidden="true"
+          width={30}
+          height={30}
           className="w-[30px] h-[30px] rounded-full object-cover border-2 border-[var(--holo-border)]"
         />
       ) : (

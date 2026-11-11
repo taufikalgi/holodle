@@ -1,13 +1,15 @@
+import Image from "next/image";
 import type { HolosongSong } from "@/lib/holosong-api";
 
 export function HolosongAnswerCard({ answer }: { answer: HolosongSong }) {
   return (
     <div className="mt-4 flex flex-col items-center gap-2">
       {answer.artwork_url && (
-        // eslint-disable-next-line @next/next/no-img-element
-        <img
+        <Image
           src={answer.artwork_url}
           alt=""
+          width={96}
+          height={96}
           className="w-24 h-24 rounded-xl object-cover"
         />
       )}
