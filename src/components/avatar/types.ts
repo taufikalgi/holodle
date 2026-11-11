@@ -4,6 +4,7 @@ import type { AvatarRound } from "@/lib/avatar-api";
 import type { DailyStreakStats } from "@/lib/daily-streak";
 import { isValidDailyStreakStats } from "@/lib/daily-streak";
 import type { AvatarRoundStatus } from "@/lib/game-status";
+import { isRecord } from "@/lib/type-guards";
 
 export type { AvatarRound };
 
@@ -31,10 +32,6 @@ export interface EndlessPersisted {
   stats: AvatarStats;
   recentTalentIds: string[];
   lastRunStreak: number;
-}
-
-function isRecord(x: unknown): x is Record<string, unknown> {
-  return typeof x === "object" && x !== null;
 }
 
 function isTalentLike(x: unknown): x is Talent {

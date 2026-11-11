@@ -11,11 +11,6 @@ export {
   clearStoredHistory,
 } from "@/lib/session-history";
 
-function parseIsoDate(iso: string): Date {
-  const [y, m, d] = iso.split("-").map(Number);
-  return new Date(y, m - 1, d ?? 1);
-}
-
 export function getMondayDate(date: Date): Date {
   const d = new Date(date);
   const day = d.getDay();
@@ -23,13 +18,6 @@ export function getMondayDate(date: Date): Date {
   d.setDate(d.getDate() + diff);
   d.setHours(0, 0, 0, 0);
   return d;
-}
-
-export function toIsoDate(date: Date): string {
-  const y = date.getFullYear();
-  const m = String(date.getMonth() + 1).padStart(2, "0");
-  const d = String(date.getDate()).padStart(2, "0");
-  return `${y}-${m}-${d}`;
 }
 
 export function toMonthString(date: Date): string {

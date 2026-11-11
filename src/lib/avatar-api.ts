@@ -1,6 +1,7 @@
 import { publicFetch, readEnvelope } from "./api-client";
 import { ApiError } from "./errors";
 import { getDateString, normalizeTalent } from "./talents";
+import { isRecord } from "./type-guards";
 import type { ApiTalent, Talent } from "./talents";
 import type { CropArea } from "./avatar-crops";
 
@@ -15,10 +16,6 @@ export interface AvatarTalentRecord {
   talent?: ApiTalent;
   avatar_url?: string;
   areas?: CropArea[];
-}
-
-function isRecord(x: unknown): x is Record<string, unknown> {
-  return typeof x === "object" && x !== null;
 }
 
 export async function fetchAvatarTalents(): Promise<AvatarTalentRecord[]> {

@@ -2,6 +2,7 @@ import { authedJson, publicJson } from "./api-client";
 import { ApiError } from "./errors";
 import { normalizeTalent, type ApiTalent } from "./talents";
 import type { AdminTalent } from "./talents";
+import { isRecord } from "./type-guards";
 import type {
   GameSession,
   LeaderboardPeriod,
@@ -13,10 +14,6 @@ import type {
  * Read operations (queries). All go through the shared api-client;
  * 401s surface as ApiError so callers decide (e.g. route to login).
  */
-
-function isRecord(x: unknown): x is Record<string, unknown> {
-  return typeof x === "object" && x !== null;
-}
 
 /** Load-bearing fields only — corrupt rows are dropped, never fatal. */
 function isAdminTalent(x: unknown): x is AdminTalent {

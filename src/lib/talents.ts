@@ -96,10 +96,7 @@ export function getTalentOfTheDay(pool: Talent[], date = new Date()): Talent | n
   return pool[seed % pool.length];
 }
 
-export function getDateString(): string {
-  const d = new Date();
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
-}
+export { getDateString } from "./date";
 
 export function filterTalentsByBranch(
   talents: Talent[],
