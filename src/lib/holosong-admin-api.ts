@@ -48,9 +48,9 @@ export async function fetchHolosongAdminSongs(
 
   return {
     songs: Array.isArray(data.songs) ? data.songs : [],
-    total: Number(data.total),
-    page: Number(data.page),
-    page_size: Number(data.page_size),
+    total: Number(data.total ?? 0),
+    page: Number(data.page ?? query.page ?? 1),
+    page_size: Number(data.page_size ?? query.pageSize ?? 20),
     has_more: Boolean(data.has_more),
   };
 }
