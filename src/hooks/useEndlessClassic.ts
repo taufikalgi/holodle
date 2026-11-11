@@ -6,8 +6,7 @@ import {
   type Talent,
   type CompareResult,
 } from "@/lib/talents";
-import { applyClassicGuess, isStoredClassicGuess } from "@/lib/game-status";
-import { useGameMachine } from "@/hooks/useGameMachine";
+import { applyClassicGuess, deriveGameStatus, isStoredClassicGuess } from "@/lib/game-status";
 import { useLocalStorageState } from "@/hooks/useLocalStorageState";
 
 export const MAX_GUESSES = 6;
@@ -90,7 +89,7 @@ export function useEndlessClassic(
   );
 
   const { current } = state;
-  const status = useGameMachine({
+  const status = deriveGameStatus({
     loading: false,
     error: "",
     empty: pool.length === 0,

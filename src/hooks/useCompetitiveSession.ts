@@ -12,8 +12,8 @@ import {
   getEmptySessionHistoryState,
   getStoredHistoryState,
   setStoredHistoryState,
+  getSessionStatus,
 } from "@/components/competitive-classic/utils";
-import { useSessionMachine } from "@/hooks/useGameMachine";
 import type {
   AuthUser,
   GameSession,
@@ -44,7 +44,7 @@ export function useCompetitiveSession(user: AuthUser | null) {
 
   const expiresAt = session ? Date.parse(session.expires_at) : null;
   const expired = expiresAt !== null && expiresAt <= now;
-  const sessionStatus = useSessionMachine({
+  const sessionStatus = getSessionStatus({
     user,
     loading: sessionLoading || talentsLoading,
     session,
