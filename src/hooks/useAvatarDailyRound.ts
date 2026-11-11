@@ -1,17 +1,17 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { getDateString, loadTalents, type Talent } from "@/lib/talents";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { getDateString, type Talent } from "@/lib/talents";
 import { emitAppEvent } from "@/lib/events";
 import { deriveAvatarStatus } from "@/lib/game-status";
 import { useLocalStorageState } from "@/hooks/useLocalStorageState";
+import { useAvatarTalentPool } from "@/hooks/useAvatarTalentPool";
+import { fetchAvatarAreas, getAvatarTalentOfTheDay } from "@/lib/avatar-api";
 import {
-  fetchAvatarAreas,
-  fetchAvatarTalents,
-  getAvatarTalentOfTheDay,
-  getAvatarTalentPool,
-} from "@/lib/avatar-api";
-import { isValidDailyState, type DailyState } from "@/components/avatar/types";
+  isValidDailyState,
+  type DailyState,
+  type RoundStatus,
+} from "@/components/avatar/types";
 import type { DailyStreakStats } from "@/lib/daily-streak";
 import { useDailyStreak } from "@/hooks/useDailyStreak";
 
@@ -30,8 +30,6 @@ const emptyRound: DailyState = {
 
 const emptyStats: DailyStreakStats = { streak: 0, bestStreak: 0, totalPlayed: 0, totalWon: 0, lastPlayedDate: undefined };
 
-export type RoundStatus = "loading" | "ready" | "noValid" | "error";
-
 export function useAvatarDailyRound() {
   const [state, setState] = useLocalStorageState<DailyState>(ROUND_KEY, emptyRound, (d) =>
     isValidDailyState(d, getDateString())
@@ -40,8 +38,8 @@ export function useAvatarDailyRound() {
     useDailyStreak(STATS_KEY, emptyStats);
   const [roundStatus, setRoundStatus] = useState<RoundStatus>(state.talent ? "ready" : "loading");
   const [roundError, setRoundError] = useState("");
-  const [validTalents, setValidTalents] = useState<Talent[]>([]);
-  const hasStoredRoundRef = useRef(Boolean(state.talent));
+  const hasStoredRound = Boolean(state.talent);
+  const { validTalents, poolStatus, poolError, retry: retryPool } = useAvatarTalentPool();
 
   const searchPool = useMemo(() => {
     const talent = state.talent;
@@ -88,52 +86,28 @@ export function useAvatarDailyRound() {
     [setState]
   );
 
+  const retry = useCallback(() => {
+    if (poolStatus === "error") {
+      retryPool();
+      return;
+    }
+    void loadRound(validTalents);
+  }, [poolStatus, retryPool, loadRound, validTalents]);
+
   useEffect(() => {
-    let alive = true;
+    if (hasStoredRound) return;
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- pool loader effect kicks off the async round fetch
+    if (poolStatus === "ready") void loadRound(validTalents);
+  }, [hasStoredRound, poolStatus, validTalents, loadRound]);
 
-    const load = async () => {
-      try {
-        const [talents, avatarTalents] = await Promise.all([
-          loadTalents(),
-          fetchAvatarTalents(),
-        ]);
-        if (!alive) return;
-
-        const pool = getAvatarTalentPool(avatarTalents, talents);
-        setValidTalents(pool);
-
-        if (hasStoredRoundRef.current) {
-          setRoundStatus("ready");
-          return;
-        }
-
-        await loadRound(pool);
-      } catch {
-        if (!alive) return;
-
-        setValidTalents([]);
-        if (hasStoredRoundRef.current) {
-          setRoundStatus("ready");
-          return;
-        }
-
-        setRoundStatus("error");
-        setRoundError("Failed to load avatar talents");
-      }
-    };
-
-    void load();
-
-    return () => {
-      alive = false;
-    };
-  }, [loadRound]);
+  const poolFailed = !hasStoredRound && poolStatus === "error";
+  const resolvedRoundStatus: RoundStatus =
+    poolFailed && roundStatus === "loading" ? "error" : roundStatus;
+  const resolvedRoundError =
+    poolFailed && resolvedRoundStatus === "error" ? poolError : roundError;
 
   const guessesLeft = MAX_GUESSES - state.guesses.length;
-  const status = deriveAvatarStatus(roundStatus, state.gameOver, state.won);
-  const alreadyGuessed = state.guesses.map((g) => g.talent.name);
-  const revealedCount = state.talent ? Math.min(state.guesses.length + 1, state.areas.length) : 0;
-  const displayGuessHistory = [...state.guesses].reverse();
+  const status = deriveAvatarStatus(resolvedRoundStatus, state.gameOver, state.won);
 
   const makeGuess = useCallback(
     (talent: Talent) => {
@@ -162,18 +136,14 @@ export function useAvatarDailyRound() {
   return {
     state,
     status,
-    roundStatus,
-    roundError,
-    validTalents,
+    roundStatus: resolvedRoundStatus,
+    roundError: resolvedRoundError,
     searchPool,
     guessesLeft,
-    alreadyGuessed,
-    revealedCount,
-    displayGuessHistory,
     stats,
     streakResetToast,
     dismissStreakResetPopup,
-    loadRound,
+    retry,
     makeGuess,
   };
 }

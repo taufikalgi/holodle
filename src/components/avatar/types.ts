@@ -3,9 +3,11 @@ import type { CropArea } from "@/lib/avatar-crops";
 import type { AvatarRound } from "@/lib/avatar-api";
 import type { DailyStreakStats } from "@/lib/daily-streak";
 import { isValidDailyStreakStats } from "@/lib/daily-streak";
+import type { AvatarRoundStatus } from "@/lib/game-status";
 
 export type { AvatarRound };
 
+export type RoundStatus = AvatarRoundStatus;
 export type AvatarGuess = { talent: Talent; correct: boolean };
 export type AvatarStats = DailyStreakStats;
 

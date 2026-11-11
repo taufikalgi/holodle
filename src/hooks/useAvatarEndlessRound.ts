@@ -1,13 +1,12 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { loadTalents, type Talent } from "@/lib/talents";
+import type { Talent } from "@/lib/talents";
 import { deriveAvatarStatus } from "@/lib/game-status";
 import { useLocalStorageState } from "@/hooks/useLocalStorageState";
+import { useAvatarTalentPool } from "@/hooks/useAvatarTalentPool";
 import {
   fetchAvatarAreas,
-  fetchAvatarTalents,
-  getAvatarTalentPool,
   pickRandomAvatarTalent,
 } from "@/lib/avatar-api";
 import {
@@ -15,6 +14,7 @@ import {
   isValidEndlessRoundState,
   type EndlessPersisted,
   type EndlessRoundState,
+  type RoundStatus,
 } from "@/components/avatar/types";
 
 export const MAX_GUESSES = 5;
@@ -27,8 +27,6 @@ const emptyPersisted: EndlessPersisted = {
   recentTalentIds: [],
   lastRunStreak: 0,
 };
-
-export type RoundStatus = "loading" | "ready" | "noValid" | "error";
 
 export function useAvatarEndlessRound() {
   const [roundState, setRoundState] = useLocalStorageState<EndlessRoundState>(
@@ -45,8 +43,8 @@ export function useAvatarEndlessRound() {
     roundState.round ? "ready" : "loading"
   );
   const [roundError, setRoundError] = useState("");
-  const [validTalents, setValidTalents] = useState<Talent[]>([]);
-  const hasStoredRoundRef = useRef(Boolean(roundState.round));
+  const hasStoredRound = Boolean(roundState.round);
+  const { validTalents, poolStatus, poolError, retry: retryPool } = useAvatarTalentPool();
   const recentTalentIdsRef = useRef(persisted.recentTalentIds);
 
   const pool = useMemo(() => {
@@ -92,45 +90,12 @@ export function useAvatarEndlessRound() {
   );
 
   useEffect(() => {
-    let alive = true;
-
-    const load = async () => {
-      try {
-        const [talents, avatarTalents] = await Promise.all([
-          loadTalents(),
-          fetchAvatarTalents(),
-        ]);
-        if (!alive) return;
-
-        const playableTalents = getAvatarTalentPool(avatarTalents, talents);
-        setValidTalents(playableTalents);
-
-        if (hasStoredRoundRef.current) {
-          setRoundStatus("ready");
-          return;
-        }
-
-        await startRound(playableTalents, recentTalentIdsRef.current);
-      } catch {
-        if (!alive) return;
-
-        setValidTalents([]);
-        if (hasStoredRoundRef.current) {
-          setRoundStatus("ready");
-          return;
-        }
-
-        setRoundStatus("error");
-        setRoundError("Failed to load avatar talents");
-      }
-    };
-
-    void load();
-
-    return () => {
-      alive = false;
-    };
-  }, [startRound]);
+    if (hasStoredRound) return;
+    if (poolStatus === "ready") {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- pool loader effect kicks off the async round fetch
+      void startRound(validTalents, recentTalentIdsRef.current);
+    }
+  }, [hasStoredRound, poolStatus, validTalents, startRound]);
 
   const makeGuess = useCallback(
     (talent: Talent) => {
@@ -168,25 +133,32 @@ export function useAvatarEndlessRound() {
     await startRound(pool, avoid);
   }, [pool, persisted.recentTalentIds, roundState.round, startRound]);
 
-  const { round, guesses } = roundState;
-  const status = deriveAvatarStatus(roundStatus, roundState.gameOver, roundState.won);
+  const retry = useCallback(() => {
+    if (poolStatus === "error") {
+      retryPool();
+      return;
+    }
+    void startRound(validTalents, recentTalentIdsRef.current);
+  }, [poolStatus, retryPool, startRound, validTalents]);
+
+  const { guesses } = roundState;
+  const poolFailed = !hasStoredRound && poolStatus === "error";
+  const resolvedRoundStatus: RoundStatus =
+    poolFailed && roundStatus === "loading" ? "error" : roundStatus;
+  const resolvedRoundError =
+    poolFailed && resolvedRoundStatus === "error" ? poolError : roundError;
+  const status = deriveAvatarStatus(resolvedRoundStatus, roundState.gameOver, roundState.won);
   const guessesLeft = MAX_GUESSES - guesses.length;
-  const alreadyGuessed = guesses.map((g) => g.talent.name);
-  const revealedCount = round ? Math.min(guesses.length + 1, round.areas.length) : 0;
-  const displayGuessHistory = [...guesses].reverse();
 
   return {
     roundState,
     persisted,
-    roundStatus,
-    roundError,
+    roundStatus: resolvedRoundStatus,
+    roundError: resolvedRoundError,
     pool,
     status,
     guessesLeft,
-    alreadyGuessed,
-    revealedCount,
-    displayGuessHistory,
-    startRound,
+    retry,
     makeGuess,
     nextRound,
   };

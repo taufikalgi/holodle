@@ -1,7 +1,6 @@
 "use client";
 
-import { Suspense, useRef, useState } from "react";
-import type { Talent } from "@/lib/talents";
+import { Suspense, useState } from "react";
 import {
   Footer,
   GameOverBanner,
@@ -9,22 +8,11 @@ import {
   PageHeader,
   ShareButton,
   StatsBar,
-  TalentSearchInput,
 } from "@/components/ui";
 import { buildAvatarShareText } from "@/lib/share";
-import { useOutsideClick } from "@/hooks/useOutsideClick";
-import { useTalentSearch } from "@/hooks/useTalentSearch";
-import CropStage from "@/components/avatar/CropStage";
 import AvatarHowToPlay from "@/components/avatar/AvatarHowToPlay";
-import AvatarGuessList from "@/components/avatar/AvatarGuessList";
-import AvatarSuggestion from "@/components/avatar/AvatarSuggestion";
+import AvatarRoundBoard from "@/components/avatar/AvatarRoundBoard";
 import StatusPill from "@/components/game/StatusPill";
-import {
-  AvatarEmptyBlock,
-  AvatarErrorBlock,
-  LoadingBlock,
-  ZeroGuessHint,
-} from "@/components/game/GameShell";
 import { MAX_GUESSES, useAvatarEndlessRound } from "@/hooks/useAvatarEndlessRound";
 
 function EndlessGamePage() {
@@ -36,27 +24,11 @@ function EndlessGamePage() {
     pool,
     status,
     guessesLeft,
-    alreadyGuessed,
-    revealedCount,
-    displayGuessHistory,
-    startRound,
+    retry,
     makeGuess,
     nextRound,
   } = useAvatarEndlessRound();
   const [showHowTo, setShowHowTo] = useState(false);
-  const inputRef = useRef<HTMLInputElement>(null);
-  const dropdownRef = useRef<HTMLDivElement>(null);
-
-  const { input, suggestions, showDropdown, handleInput, clear, onFocus, setShowDropdown } =
-    useTalentSearch(pool);
-
-  useOutsideClick(dropdownRef, () => setShowDropdown(false), inputRef);
-
-  const handleGuess = (talent: Talent) => {
-    if (makeGuess(talent)) clear();
-  };
-
-  const { round, guesses } = roundState;
 
   return (
     <main className="min-h-screen bg-[var(--holo-bg)]">
@@ -86,47 +58,33 @@ function EndlessGamePage() {
           totalWon={persisted.stats.totalWon}
         />
 
-        {roundStatus === "loading" && <LoadingBlock text="Loading a new avatar…" />}
-
-        {roundStatus === "noValid" && (
-          <AvatarEmptyBlock onRetry={() => void startRound(pool, persisted.recentTalentIds)} />
-        )}
-
-        {roundStatus === "error" && (
-          <AvatarErrorBlock
-            message={roundError}
-            onRetry={() => void startRound(pool, persisted.recentTalentIds)}
-          />
-        )}
-
-        {roundStatus === "ready" && round && (
-          <>
-            <div className="holo-card p-4 mb-5">
-              <CropStage
-                key={round.talent.id}
-                src={round.talent.avatarUrl || round.talent.photoUrl}
-                areas={round.areas}
-                revealedCount={revealedCount}
-                fullReveal={roundState.gameOver}
-                answerName={round.talent.name}
-              />
-            </div>
-
-            {roundState.gameOver && (
+        <AvatarRoundBoard
+          talent={roundState.round?.talent ?? null}
+          areas={roundState.round?.areas ?? []}
+          guesses={roundState.guesses}
+          gameOver={roundState.gameOver}
+          searchPool={pool}
+          roundStatus={roundStatus}
+          roundError={roundError}
+          loadingText="Loading a new avatar…"
+          onRetry={retry}
+          onGuess={makeGuess}
+          banner={
+            roundState.gameOver && roundState.round ? (
               <GameOverBanner
                 won={roundState.won}
-                answerName={round.talent.name}
-                guessCount={guesses.length}
+                answerName={roundState.round.talent.name}
+                guessCount={roundState.guesses.length}
                 actions={
                   !roundState.won ? (
                     <div>
                       <ShareButton
                         text={buildAvatarShareText({
                           mode: "AVATAR ENDLESS",
-                          guessCount: guesses.length,
+                          guessCount: roundState.guesses.length,
                           maxGuesses: MAX_GUESSES,
                           streak: persisted.lastRunStreak,
-                          guesses: guesses.map((g) => g.correct),
+                          guesses: roundState.guesses.map((g) => g.correct),
                         })}
                       />
                     </div>
@@ -141,37 +99,9 @@ function EndlessGamePage() {
                   {roundState.won ? "Next talent →" : "New run →"}
                 </button>
               </GameOverBanner>
-            )}
-
-            {!roundState.gameOver && (
-              <TalentSearchInput
-                input={input}
-                suggestions={suggestions}
-                showDropdown={showDropdown}
-                onInput={(val) => handleInput(val, alreadyGuessed)}
-                onGuess={handleGuess}
-                onClear={clear}
-                onFocus={onFocus}
-                dropdownRef={dropdownRef}
-                renderSuggestion={(t) => <AvatarSuggestion talent={t} />}
-              />
-            )}
-
-            {guesses.length > 0 && <AvatarGuessList guesses={displayGuessHistory} />}
-
-            {!roundState.gameOver && guesses.length === 0 && (
-              <ZeroGuessHint
-                compact
-                line1="Start typing to make your first guess!"
-                line2={
-                  pool.length > 0
-                    ? `${pool.length} playable talent${pool.length !== 1 ? "s" : ""}`
-                    : undefined
-                }
-              />
-            )}
-          </>
-        )}
+            ) : null
+          }
+        />
 
         <Footer />
       </div>
