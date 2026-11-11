@@ -134,12 +134,16 @@ export function useAvatarEndlessRound() {
   }, [pool, persisted.recentTalentIds, roundState.round, startRound]);
 
   const retry = useCallback(() => {
-    if (poolStatus === "error") {
+    if (poolStatus === "error" || validTalents.length === 0) {
       retryPool();
       return;
     }
-    void startRound(validTalents, recentTalentIdsRef.current);
-  }, [poolStatus, retryPool, startRound, validTalents]);
+    const finishedId = roundState.round?.talent.id;
+    const avoid = finishedId
+      ? [...persisted.recentTalentIds, finishedId]
+      : persisted.recentTalentIds;
+    void startRound(validTalents, avoid);
+  }, [poolStatus, retryPool, startRound, validTalents, persisted.recentTalentIds, roundState.round]);
 
   const { guesses } = roundState;
   const poolFailed = !hasStoredRound && poolStatus === "error";

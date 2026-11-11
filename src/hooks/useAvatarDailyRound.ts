@@ -87,7 +87,7 @@ export function useAvatarDailyRound() {
   );
 
   const retry = useCallback(() => {
-    if (poolStatus === "error") {
+    if (poolStatus === "error" || validTalents.length === 0) {
       retryPool();
       return;
     }
