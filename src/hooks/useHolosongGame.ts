@@ -1,7 +1,11 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { ApiError } from "@/lib/errors";
+import {
+  holosongLoadError,
+  holosongSubmitError,
+  statusOf,
+} from "@/lib/api-errors";
 import { deriveGameStatus } from "@/lib/game-status";
 import {
   createHolosongEndless,
@@ -17,14 +21,6 @@ import {
 } from "@/lib/holosong-api";
 
 export type HolosongLoadStatus = "loading" | "ready" | "unavailable" | "error";
-
-function messageOf(error: unknown, fallback: string): string {
-  return error instanceof Error && error.message ? error.message : fallback;
-}
-
-function statusOf(error: unknown): number {
-  return error instanceof ApiError ? error.status : 0;
-}
 
 export function useHolosongGame(mode: HolosongSessionMode) {
   const [session, setSession] = useState<HolosongSession | null>(null);
@@ -55,14 +51,13 @@ export function useHolosongGame(mode: HolosongSessionMode) {
       void refreshStats();
     } catch (e) {
       const status = statusOf(e);
-      setLoadStatus(status === 404 ? "unavailable" : "error");
-      setError(
-        status === 404
-          ? "No Holosong songs are available yet. Try again later."
-          : status === 401
-            ? "Please sign in to play Holosong."
-            : messageOf(e, "Failed to load Holosong.")
+      const { loadStatus: nextStatus, message } = holosongLoadError(
+        status,
+        "Holosong",
+        e
       );
+      setLoadStatus(nextStatus);
+      setError(message);
     }
   }, [refreshStats]);
 
@@ -74,12 +69,13 @@ export function useHolosongGame(mode: HolosongSessionMode) {
       setLoadStatus("ready");
     } catch (e) {
       const status = statusOf(e);
-      setLoadStatus("error");
-      setError(
-        status === 401
-          ? "Please sign in to play Holosong."
-          : messageOf(e, "Failed to start an endless session.")
+      const { loadStatus: nextStatus, message } = holosongLoadError(
+        status,
+        "Holosong",
+        e
       );
+      setLoadStatus(nextStatus);
+      setError(message);
     }
   }, []);
 
@@ -114,17 +110,7 @@ export function useHolosongGame(mode: HolosongSessionMode) {
             setError("Session expired. Reload the page.");
           }
         } else {
-          setError(
-            status === 401
-              ? "Your session expired. Please sign in again."
-              : status === 403
-                ? "This session belongs to another user."
-                : status === 404
-                  ? "Session or song not found."
-                  : status === 429
-                    ? "Too many guesses — wait a moment and try again."
-                    : messageOf(e, "Guess failed. Try again.")
-          );
+          setError(holosongSubmitError(status, e));
         }
       } finally {
         setSubmitting(false);
