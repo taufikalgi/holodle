@@ -31,7 +31,7 @@ export default function DesktopNav({
   }, [openCategory, onClose]);
 
   return (
-    <div ref={desktopRef} className="hidden md:flex items-center gap-4">
+    <div ref={desktopRef} className="hidden lg:flex items-center gap-4">
       {GAME_CATEGORIES.map((category) => (
         <div key={category.id} className="relative">
           <button
@@ -79,6 +79,19 @@ export default function DesktopNav({
           )}
         </div>
       ))}
+
+      <Link
+        href="/visitors"
+        className="text-sm font-black tracking-widest relative"
+        style={{ color: isActive("/visitors") ? "var(--holo-blue)" : "var(--holo-text)" }}
+      >
+        VISITORS
+        <span
+          className={`absolute bottom-0 left-0 h-0.5 transition-all duration-300 ease-in-out bg-[var(--holo-blue)] ${
+            isActive("/visitors") ? "w-full" : "w-0"
+          }`}
+        />
+      </Link>
     </div>
   );
 }

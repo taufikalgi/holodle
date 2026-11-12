@@ -73,7 +73,7 @@ export default function Navbar({
 
           {/* Hamburger button */}
           <button
-            className="md:hidden flex flex-col justify-center items-center w-8 h-8 gap-1.5"
+            className="lg:hidden flex flex-col justify-center items-center w-8 h-8 gap-1.5"
             onClick={() => setIsOpen(!isOpen)}
             aria-label="Toggle menu"
           >
@@ -106,7 +106,7 @@ export default function Navbar({
 
       {/* Mobile dropdown */}
       <div
-        className={`md:hidden overflow-hidden transition-all duration-300 ease-in-out border-[var(--holo-border)] ${
+        className={`lg:hidden overflow-hidden transition-all duration-300 ease-in-out border-[var(--holo-border)] ${
           isOpen ? "max-h-[500px] border-t" : "max-h-0"
         }`}
       >

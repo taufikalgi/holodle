@@ -56,6 +56,19 @@ export default function MobileNav({
           </div>
         </div>
       ))}
+
+      <Link
+        href="/visitors"
+        onClick={onNavigate}
+        className="rounded-xl px-3 py-2.5 text-sm font-black tracking-widest"
+        style={{
+          border: "1px solid var(--holo-border)",
+          background: "var(--holo-bg-card)",
+          color: isActive("/visitors") ? "var(--holo-blue)" : "var(--holo-text)",
+        }}
+      >
+        VISITORS
+      </Link>
     </>
   );
 }
