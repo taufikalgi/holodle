@@ -5,6 +5,8 @@
 
 export interface AppEventMap {
   "holodle:auth-change": void;
+  "holodle:unauthorized": void;
+  "holodle:notice": { message: string };
   "holodle:game-over": { mode: "classic" | "avatar"; won: boolean; date: string };
 }
 

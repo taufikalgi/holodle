@@ -1,4 +1,5 @@
 import { ApiError } from "./errors";
+import { emitAppEvent } from "./events";
 
 function requiredEnv(name: string, value: string | undefined): string {
   if (!value) throw new Error(`Missing ${name} (check .env / deployment env)`);
@@ -88,6 +89,12 @@ export function authFetch(path: string, init?: RequestInit): Promise<Response> {
     ...init,
     credentials: "include",
     headers: jsonHeaders(init),
+  }).then((response) => {
+    if (response.status === 401) {
+      clearToken();
+      emitAppEvent("holodle:unauthorized", undefined);
+    }
+    return response;
   });
 }
 

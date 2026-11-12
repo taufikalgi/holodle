@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Albert_Sans } from "next/font/google";
 import { ThemeProvider } from "@/components/theme/ThemeProvider";
+import AuthNotice from "@/components/ui/AuthNotice";
 import "./globals.css";
 
 const albertSans = Albert_Sans({
@@ -29,7 +30,10 @@ export default function RootLayout({
         />
       </head>
       <body className={albertSans.variable}>
-        <ThemeProvider>{children}</ThemeProvider>
+        <ThemeProvider>
+          {children}
+          <AuthNotice />
+        </ThemeProvider>
       </body>
     </html>
   );
