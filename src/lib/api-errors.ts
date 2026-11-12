@@ -35,3 +35,10 @@ export function holosongSubmitError(status: number, error: unknown): string {
   if (status === 429) return "Too many guesses — wait a moment and try again.";
   return messageOf(error, "Guess failed. Try again.");
 }
+
+/** Generic status-aware copy for non-game requests. */
+export function requestErrorMessage(status: number, fallback: string): string {
+  if (status === 401) return "Please sign in again.";
+  if (status === 429) return "Too many requests — wait a moment and try again.";
+  return fallback;
+}
