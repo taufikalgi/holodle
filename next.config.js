@@ -25,6 +25,7 @@ const nextConfig = {
       { source: "/avatar-endless", destination: "/avatar/endless", permanent: true },
       { source: "/holosong", destination: "/holosong/daily", permanent: true },
       { source: "/holosong/practice", destination: "/holosong/endless", permanent: true },
+      { source: "/visitors", destination: "/admin/visitors", permanent: false },
     ];
   },
 };

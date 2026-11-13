@@ -8,7 +8,7 @@ const ADMIN_LINKS = [
   { href: "/admin", label: "Talents" },
   { href: "/admin/holosong", label: "Holosong" },
   { href: "/admin/avatar-crops", label: "Avatar Crops" },
-  { href: "/visitors", label: "Visitors" },
+  { href: "/admin/visitors", label: "Visitors" },
 ];
 
 export default function AdminNav({
