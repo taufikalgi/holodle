@@ -8,8 +8,8 @@ export const metadata: Metadata = {
     "How Holodle uses the holodle_session cookie and aggregate, cookieless visitor statistics.",
 };
 
-const LAST_UPDATED = "November 12, 2026";
-const ISSUES_URL = "https://github.com/taufikalgi/holodle/issues";
+const LAST_UPDATED = "November 13, 2026";
+const TWITTER_URL = "https://x.com/_Kertia";
 
 export default function PrivacyPage() {
   return (
@@ -65,14 +65,14 @@ export default function PrivacyPage() {
           <section>
             <h2 className="text-base font-black uppercase tracking-widest">Contact</h2>
             <p className="mt-2 text-[var(--holo-text-muted)]">
-              Questions or concerns? Open an issue at{" "}
+              Questions or concerns? Reach out on Twitter/X:{" "}
               <a
-                href={ISSUES_URL}
+                href={TWITTER_URL}
                 target="_blank"
                 rel="noreferrer"
                 className="font-bold underline text-[var(--holo-blue-dark)]"
               >
-                github.com/taufikalgi/holodle/issues
+                @_Kertia
               </a>
               .
             </p>
