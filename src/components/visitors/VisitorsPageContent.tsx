@@ -1,12 +1,12 @@
 "use client";
 
-import Footer from "@/components/ui/Footer";
-import Navbar from "@/components/ui/Navbar";
+import { AdminLoading, AdminShell } from "@/components/admin/AdminShell";
 import RangeToggle from "@/components/visitors/RangeToggle";
 import VisitorsChart from "@/components/visitors/VisitorsChart";
 import VisitorsPrivacyNote from "@/components/visitors/VisitorsPrivacyNote";
 import VisitorsSummary from "@/components/visitors/VisitorsSummary";
 import VisitorsTable from "@/components/visitors/VisitorsTable";
+import { useAdminGuard } from "@/hooks/useAdminGuard";
 import { useVisitorStats } from "@/hooks/useVisitorStats";
 
 function LoadingSkeleton() {
@@ -39,78 +39,80 @@ function ErrorState({ message, onRetry }: { message: string; onRetry: () => void
 }
 
 export default function VisitorsPageContent() {
+  const { user, authLoading, handleLogout } = useAdminGuard();
   const { days, setDays, data, loading, error, unavailable, retry } =
-    useVisitorStats();
+    useVisitorStats(Boolean(user));
+
+  if (authLoading || !user) return <AdminLoading />;
 
   return (
-    <div className="min-h-screen flex flex-col bg-[var(--holo-bg)]">
-      <Navbar title="VISITORS" />
+    <AdminShell
+      subtitle="Visitors"
+      meta={data ? `${data.range_days} days` : "Aggregate stats"}
+      user={user}
+      onLogout={handleLogout}
+    >
+      <header className="mb-8 text-center">
+        <h1 className="text-3xl font-black tracking-widest text-[var(--holo-text)]">
+          VISITORS
+        </h1>
+        <p className="mx-auto mt-2 max-w-xl text-sm text-[var(--holo-text-muted)]">
+          Aggregate gameplay activity from the last {days} days. Guests rotate,
+          so these are not unique-human counts.
+        </p>
+        <div className="mt-4 flex items-center justify-center gap-3">
+          <RangeToggle days={days} onChange={setDays} />
+          {loading && data && (
+            <span className="text-[11px] font-bold uppercase tracking-widest text-[var(--holo-text-muted)]">
+              Updating…
+            </span>
+          )}
+        </div>
+      </header>
 
-      <main className="mx-auto w-full max-w-5xl flex-1 px-4 py-8">
-        <header className="mb-8 text-center">
-          <h1 className="text-3xl font-black tracking-widest text-[var(--holo-text)]">
-            VISITORS
-          </h1>
-          <p className="mx-auto mt-2 max-w-xl text-sm text-[var(--holo-text-muted)]">
-            Aggregate gameplay activity from the last {days} days. Guests rotate,
-            so these are not unique-human counts.
+      {error && data && (
+        <div
+          role="alert"
+          className="mb-4 rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-semibold text-rose-700"
+        >
+          {error}{" "}
+          <button type="button" onClick={retry} className="font-black underline">
+            Retry
+          </button>
+        </div>
+      )}
+
+      {!data && loading && <LoadingSkeleton />}
+
+      {!data && !loading && unavailable && (
+        <section className="holo-card p-8 text-center">
+          <p className="text-sm font-semibold text-[var(--holo-text-muted)]">
+            Visitor stats aren&apos;t available yet. Check back soon.
           </p>
-          <div className="mt-4 flex items-center justify-center gap-3">
-            <RangeToggle days={days} onChange={setDays} />
-            {loading && data && (
-              <span className="text-[11px] font-bold uppercase tracking-widest text-[var(--holo-text-muted)]">
-                Updating…
-              </span>
-            )}
-          </div>
-        </header>
+        </section>
+      )}
 
-        {error && data && (
-          <div
-            role="alert"
-            className="mb-4 rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-semibold text-rose-700"
-          >
-            {error}{" "}
-            <button type="button" onClick={retry} className="font-black underline">
-              Retry
-            </button>
-          </div>
-        )}
+      {!data && !loading && !unavailable && error && (
+        <ErrorState message={error} onRetry={retry} />
+      )}
 
-        {!data && loading && <LoadingSkeleton />}
+      {data && data.series.length === 0 && (
+        <section className="holo-card p-8 text-center">
+          <p className="text-sm font-semibold text-[var(--holo-text-muted)]">
+            No activity recorded for this range yet.
+          </p>
+        </section>
+      )}
 
-        {!data && !loading && unavailable && (
-          <section className="holo-card p-8 text-center">
-            <p className="text-sm font-semibold text-[var(--holo-text-muted)]">
-              Visitor stats aren&apos;t available yet. Check back soon.
-            </p>
-          </section>
-        )}
+      {data && data.series.length > 0 && (
+        <div aria-busy={loading}>
+          <VisitorsSummary totals={data.totals} />
+          <VisitorsChart series={data.series} />
+          <VisitorsTable series={data.series} />
+        </div>
+      )}
 
-        {!data && !loading && !unavailable && error && (
-          <ErrorState message={error} onRetry={retry} />
-        )}
-
-        {data && data.series.length === 0 && (
-          <section className="holo-card p-8 text-center">
-            <p className="text-sm font-semibold text-[var(--holo-text-muted)]">
-              No activity recorded for this range yet.
-            </p>
-          </section>
-        )}
-
-        {data && data.series.length > 0 && (
-          <div aria-busy={loading}>
-            <VisitorsSummary totals={data.totals} />
-            <VisitorsChart series={data.series} />
-            <VisitorsTable series={data.series} />
-          </div>
-        )}
-
-        <VisitorsPrivacyNote note={data?.privacy_note} />
-      </main>
-
-      <Footer />
-    </div>
+      <VisitorsPrivacyNote note={data?.privacy_note} />
+    </AdminShell>
   );
 }

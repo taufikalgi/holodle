@@ -1,4 +1,4 @@
-import { publicJson } from "./api-client";
+import { authedJson } from "./api-client";
 import { ApiError } from "./errors";
 import { isRecord } from "./type-guards";
 
@@ -80,7 +80,7 @@ export async function fetchVisitors(
   days: number,
   signal?: AbortSignal
 ): Promise<VisitorStatsResponse> {
-  const data = await publicJson<unknown>(buildVisitorsPath(days), { signal });
+  const data = await authedJson<unknown>(buildVisitorsPath(days), { signal });
   return parseVisitorsResponse(data);
 }
 

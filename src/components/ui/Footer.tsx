@@ -11,9 +11,6 @@ export default function Footer() {
         <div className="h-px flex-1 bg-[var(--holo-border)]" />
       </div>
       <div className="mb-3 flex items-center justify-center gap-4 text-xs font-bold text-[var(--holo-text-muted)]">
-        <Link href="/visitors" className="transition-opacity hover:opacity-70">
-          Visitors
-        </Link>
         <Link href="/privacy" className="transition-opacity hover:opacity-70">
           Privacy
         </Link>

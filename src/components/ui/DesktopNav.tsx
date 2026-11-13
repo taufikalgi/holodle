@@ -79,19 +79,6 @@ export default function DesktopNav({
           )}
         </div>
       ))}
-
-      <Link
-        href="/visitors"
-        className="text-sm font-black tracking-widest relative"
-        style={{ color: isActive("/visitors") ? "var(--holo-blue)" : "var(--holo-text)" }}
-      >
-        VISITORS
-        <span
-          className={`absolute bottom-0 left-0 h-0.5 transition-all duration-300 ease-in-out bg-[var(--holo-blue)] ${
-            isActive("/visitors") ? "w-full" : "w-0"
-          }`}
-        />
-      </Link>
     </div>
   );
 }

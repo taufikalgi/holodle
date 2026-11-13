@@ -9,7 +9,7 @@ import {
 
 export type VisitorRange = 7 | 30;
 
-export function useVisitorStats() {
+export function useVisitorStats(enabled = true) {
   const [days, setDaysState] = useState<VisitorRange>(7);
   const [data, setData] = useState<VisitorStatsResponse | null>(null);
   const [loading, setLoading] = useState(true);
@@ -18,6 +18,7 @@ export function useVisitorStats() {
   const [attempt, setAttempt] = useState(0);
 
   useEffect(() => {
+    if (!enabled) return;
     const controller = new AbortController();
     let active = true;
 
@@ -30,7 +31,12 @@ export function useVisitorStats() {
         const status = statusOf(reason);
         setUnavailable(status === 404 || status === 501);
         setError(
-          requestErrorMessage(status, "Could not load visitor stats. Try again.")
+          status === 403
+            ? "Admin access required."
+            : requestErrorMessage(
+                status,
+                "Could not load visitor stats. Try again."
+              )
         );
       })
       .finally(() => {
@@ -41,7 +47,7 @@ export function useVisitorStats() {
       active = false;
       controller.abort();
     };
-  }, [days, attempt]);
+  }, [days, attempt, enabled]);
 
   const setDays = useCallback(
     (next: VisitorRange) => {
