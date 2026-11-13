@@ -4,8 +4,7 @@ import Navbar from "@/components/ui/Navbar";
 
 export const metadata: Metadata = {
   title: "Privacy — Holodle",
-  description:
-    "How Holodle uses the holodle_session cookie and aggregate, cookieless visitor statistics.",
+  description: "How Holodle uses the holodle_session cookie.",
 };
 
 const LAST_UPDATED = "November 13, 2026";
@@ -36,19 +35,6 @@ export default function PrivacyPage() {
               in production. It is not used for advertising or cross-site tracking.
               The Google sign-in flow may also set a short-lived OAuth state cookie
               that is cleared after the callback completes.
-            </p>
-          </section>
-
-          <section>
-            <h2 className="text-base font-black uppercase tracking-widest">
-              Visitor statistics
-            </h2>
-            <p className="mt-2 text-[var(--holo-text-muted)]">
-              The public visitors page shows aggregate, server-side gameplay counts.
-              No analytics cookies, third-party scripts, or browser fingerprinting
-              are used. Counts describe sessions and guesses, not unique people;
-              guest sessions rotate, so the page deliberately avoids claiming unique
-              visitor numbers.
             </p>
           </section>
 

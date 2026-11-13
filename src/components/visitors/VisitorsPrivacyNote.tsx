@@ -12,7 +12,7 @@ export default function VisitorsPrivacyNote({ note }: { note?: string }) {
         <Link href="/privacy" className="font-bold underline text-[var(--holo-blue-dark)]">
           privacy page
         </Link>{" "}
-        for details about the session cookie and visitor stats.
+        for details about the session cookie.
       </p>
     </section>
   );
