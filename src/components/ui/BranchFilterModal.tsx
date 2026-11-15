@@ -1,22 +1,25 @@
 "use client";
 
 import { useState } from "react";
-import { ALL_BRANCHES } from "@/lib/talents";
+import { ALL_BRANCHES, type Branch } from "@/lib/talents";
 import Modal from "./Modal";
 
 interface BranchFilterModalProps {
   onStart: (branches: string[]) => void;
   onClose: () => void;
   initialBranches?: string[];
+  /** Branches offered for selection. Defaults to every known branch. */
+  branches?: Branch[];
 }
 
 export default function BranchFilterModal({
   onStart,
   onClose,
   initialBranches,
+  branches = ALL_BRANCHES,
 }: BranchFilterModalProps) {
   const [selected, setSelected] = useState<Set<string>>(
-    new Set(initialBranches ?? ALL_BRANCHES)
+    new Set(initialBranches ?? branches)
   );
 
   function toggle(branch: string) {
@@ -28,13 +31,13 @@ export default function BranchFilterModal({
     });
   }
 
-  const allSelected = selected.size === ALL_BRANCHES.length;
+  const allSelected = selected.size === branches.length;
 
   function toggleAll() {
     if (allSelected) {
       setSelected(new Set());
     } else {
-      setSelected(new Set(ALL_BRANCHES));
+      setSelected(new Set(branches));
     }
   }
 
@@ -67,7 +70,7 @@ export default function BranchFilterModal({
             </button>
 
             <div className="space-y-2">
-              {ALL_BRANCHES.map((branch) => (
+              {branches.map((branch) => (
                 <label
                   key={branch}
                   className="flex cursor-pointer items-center gap-3 rounded-xl border px-4 py-3 transition-colors hover:bg-[var(--holo-off-white)]"

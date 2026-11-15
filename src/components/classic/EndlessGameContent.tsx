@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { ALL_BRANCHES, type Talent } from "@/lib/talents";
+import { ENDLESS_BRANCHES, type Talent } from "@/lib/talents";
 import {
   Footer,
   GameOverBanner,
@@ -53,7 +53,7 @@ export function EndlessGameContent({
               guessesLeft={g.guessesLeft}
               variant="endless"
               extra={
-                selectedBranches && selectedBranches.length < ALL_BRANCHES.length ? (
+                selectedBranches && selectedBranches.length < ENDLESS_BRANCHES.length ? (
                   <>
                     <span className="opacity-30">|</span>
                     {selectedBranches.map((b) => (

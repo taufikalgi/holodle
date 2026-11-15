@@ -2,15 +2,27 @@
 
 import { Suspense, useState, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { ALL_BRANCHES } from "@/lib/talents";
+import { ENDLESS_BRANCHES } from "@/lib/talents";
 import { useTalents } from "@/hooks/useTalents";
 import { BranchFilterModal, Navbar } from "@/components/ui";
 import { EndlessGameContent } from "@/components/classic/EndlessGameContent";
 
 const LAST_BRANCHES_KEY = "holodle-endless-last-branches";
 
+/**
+ * Drops branches that are no longer offered (e.g. the decommissioned Stars
+ * rosters) from a persisted or shared selection. Returns null when nothing
+ * usable remains, which sends the player back to the branch picker.
+ */
+function sanitizeBranches(branches: string[] | null): string[] | null {
+  if (!branches) return null;
+  const allowed = new Set<string>(ENDLESS_BRANCHES);
+  const kept = branches.filter((b) => allowed.has(b));
+  return kept.length > 0 ? kept : null;
+}
+
 function getEndlessStorageKey(branches: string[] | null): string {
-  if (!branches || branches.length === 0 || branches.length === ALL_BRANCHES.length) {
+  if (!branches || branches.length === 0 || branches.length === ENDLESS_BRANCHES.length) {
     return "holodle-endless-stats";
   }
   return `holodle-endless-stats-${branches.join("-")}`;
@@ -36,6 +48,7 @@ function EndlessGamePage() {
         if (last) branches = JSON.parse(last);
       } catch {}
     }
+    branches = sanitizeBranches(branches);
     // eslint-disable-next-line react-hooks/set-state-in-effect -- mount-only hydration from URL/localStorage must stay in an effect (SSR has no localStorage)
     setSelectedBranches(branches);
     setShowFilter(!branches);
@@ -62,6 +75,7 @@ function EndlessGamePage() {
       <main className="min-h-screen bg-[var(--holo-bg)]">
         <Navbar title="ENDLESS" />
         <BranchFilterModal
+          branches={ENDLESS_BRANCHES}
           initialBranches={selectedBranches ?? undefined}
           onStart={handleBranchSelect}
           onClose={() => setShowFilter(false)}
