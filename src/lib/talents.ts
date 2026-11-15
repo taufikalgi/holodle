@@ -5,6 +5,15 @@ export type Branch = "JP" | "EN" | "ID" | "DEV_IS" | "Stars JP" | "Stars EN";
 
 export const ALL_BRANCHES: Branch[] = ["JP", "EN", "ID", "DEV_IS", "Stars JP", "Stars EN"];
 
+/**
+ * Branches offered in Classic Endless.
+ *
+ * The Stars EN / Stars JP rosters are removed in production, so those branches
+ * always yield an empty talent pool and produce unwinnable rounds. Keep them in
+ * ALL_BRANCHES for admin surfaces, but never offer them for play here.
+ */
+export const ENDLESS_BRANCHES: Branch[] = ["JP", "EN", "ID", "DEV_IS"];
+
 export interface Talent {
   id: string;
   name: string;
