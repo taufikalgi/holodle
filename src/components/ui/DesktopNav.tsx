@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { useEffect, useRef } from "react";
 import Link from "next/link";
 import { GAME_CATEGORIES } from "@/lib/game-modes";
@@ -66,7 +67,14 @@ export default function DesktopNav({
                     isActive(variant.href) ? "bg-[var(--holo-off-white)]" : ""
                   }`}
                 >
-                  <img src={variant.logo} alt={variant.alt} className="w-6 h-6 rounded-full object-cover flex-shrink-0" />
+                  <Image
+                    src={variant.logo}
+                    alt={variant.alt}
+                    width={24}
+                    height={24}
+                    unoptimized
+                    className="w-6 h-6 rounded-full object-cover flex-shrink-0"
+                  />
                   <span>{variant.label.toUpperCase()}</span>
                   {isActive(variant.href) && (
                     <span className="ml-auto text-xs text-[var(--holo-blue)]">

@@ -1,3 +1,5 @@
+import Image from "next/image";
+
 export interface AvatarGuessItem {
   talent: { name: string; avatarUrl?: string | null };
   correct: boolean;
@@ -18,9 +20,12 @@ export default function AvatarGuessList({ guesses }: { guesses: AvatarGuessItem[
           }`}
         >
           {g.talent.avatarUrl ? (
-            <img
+            <Image
               src={g.talent.avatarUrl}
               alt={g.talent.name}
+              width={28}
+              height={28}
+              unoptimized
               className="w-7 h-7 rounded-full object-cover"
             />
           ) : (
