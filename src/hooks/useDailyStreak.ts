@@ -25,7 +25,7 @@ export function useDailyStreak(storageKey: string, emptyStats: DailyStreakStats)
       // eslint-disable-next-line react-hooks/set-state-in-effect -- wall-clock + localStorage sync; self-stable since reset writes streak 0
       setStreakResetToast(true);
     }
-  }, [storageKey, stats.lastPlayedDate, stats.streak]); // re-evaluate when the key or outcome changes; stable: reset writes streak 0, after which shouldResetDailyStreakForMissedDay(..., 0) is false
+  }, [setStats, storageKey, stats.lastPlayedDate, stats.streak]); // re-evaluate when the key or outcome changes; stable: reset writes streak 0, after which shouldResetDailyStreakForMissedDay(..., 0) is false
 
   const dismissStreakResetPopup = () => setStreakResetToast(false);
 

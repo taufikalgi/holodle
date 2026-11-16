@@ -1,6 +1,6 @@
 "use client";
 
-import { Suspense, useState, useEffect } from "react";
+import { Suspense, useState, useEffect, useRef } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { ENDLESS_BRANCHES } from "@/lib/talents";
 import { useTalents } from "@/hooks/useTalents";
@@ -31,7 +31,7 @@ function getEndlessStorageKey(branches: string[] | null): string {
 function EndlessGamePage() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const initialBranchParam = searchParams.get("branches");
+  const initialBranchParamRef = useRef(searchParams.get("branches"));
 
   const [hydrated, setHydrated] = useState(false);
   const [selectedBranches, setSelectedBranches] = useState<string[] | null>(null);
@@ -40,6 +40,7 @@ function EndlessGamePage() {
 
   useEffect(() => {
     let branches: string[] | null = null;
+    const initialBranchParam = initialBranchParamRef.current;
     if (initialBranchParam) {
       branches = initialBranchParam.split(",");
     } else {
@@ -65,7 +66,7 @@ function EndlessGamePage() {
   if (!hydrated) {
     return (
       <main className="min-h-screen bg-[var(--holo-bg)]">
-        <Navbar title="ENDLESS" />
+        <Navbar />
       </main>
     );
   }
@@ -73,7 +74,7 @@ function EndlessGamePage() {
   if (showFilter) {
     return (
       <main className="min-h-screen bg-[var(--holo-bg)]">
-        <Navbar title="ENDLESS" />
+        <Navbar />
         <BranchFilterModal
           branches={ENDLESS_BRANCHES}
           initialBranches={selectedBranches ?? undefined}
@@ -89,7 +90,7 @@ function EndlessGamePage() {
   if (talentsLoading || !talents) {
     return (
       <main className="min-h-screen bg-[var(--holo-bg)]">
-        <Navbar title="ENDLESS" />
+        <Navbar />
         <div className="max-w-5xl mx-auto px-4 py-8 text-center">
           <p className="text-sm font-semibold text-[var(--holo-text-muted)]">
             Loading talents…
@@ -102,7 +103,7 @@ function EndlessGamePage() {
   if (talentsError || talents.length === 0) {
     return (
       <main className="min-h-screen bg-[var(--holo-bg)]">
-        <Navbar title="ENDLESS" />
+        <Navbar />
         <div className="max-w-5xl mx-auto px-4 py-8 text-center">
           <p className="text-sm font-semibold text-[var(--holo-text-muted)]">
             {talentsError || "Failed to load talents."}

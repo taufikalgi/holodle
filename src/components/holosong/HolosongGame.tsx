@@ -63,7 +63,7 @@ export default function HolosongGame({
 
   return (
     <main className="min-h-screen bg-[var(--holo-bg)]">
-      <Navbar title={endless ? "HOLOSONG ENDLESS" : "HOLOSONG"} />
+      <Navbar />
 
       <div className="max-w-3xl mx-auto px-4 py-8">
         <header className="text-center mb-6">
