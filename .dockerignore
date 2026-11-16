@@ -1,0 +1,14 @@
+.git
+.github
+node_modules
+.next
+.checks
+docs
+*.md
+.env
+.env.*
+artifact.tar.gz
+artifact.tar.gz.sha256
+tsconfig.tsbuildinfo
+compose.yaml
+scripts/deploy-remote.sh
