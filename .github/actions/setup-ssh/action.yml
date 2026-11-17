@@ -1,0 +1,48 @@
+name: Set up SSH agent
+description: Load a deploy key into ssh-agent, normalizing common secret-paste artifacts.
+
+inputs:
+  ssh-private-key:
+    description: Private key contents.
+    required: true
+
+runs:
+  using: composite
+  steps:
+    - name: Start ssh-agent and load key
+      shell: bash
+      env:
+        SSH_PRIVATE_KEY: ${{ inputs.ssh-private-key }}
+      run: |
+        set -euo pipefail
+
+        mkdir -p ~/.ssh
+        chmod 700 ~/.ssh
+
+        eval "$(ssh-agent -s)"
+        echo "SSH_AUTH_SOCK=$SSH_AUTH_SOCK" >> "$GITHUB_ENV"
+        echo "SSH_AGENT_PID=$SSH_AGENT_PID" >> "$GITHUB_ENV"
+
+        key="$(printf '%s' "$SSH_PRIVATE_KEY" | tr -d '\r')"
+
+        # Secrets pasted from Windows or JSON can arrive quoted or with literal
+        # \n escapes; some secret stores keep the key base64-encoded.
+        key="${key#\"}"
+        key="${key%\"}"
+        key="$(printf '%s' "$key" | sed 's/\\n/\n/g')"
+        if ! printf '%s' "$key" | grep -q 'BEGIN .*PRIVATE KEY'; then
+          decoded="$(printf '%s' "$key" | base64 -d 2>/dev/null || true)"
+          if printf '%s' "$decoded" | grep -q 'BEGIN .*PRIVATE KEY'; then
+            key="$decoded"
+          fi
+        fi
+
+        if ! printf '%s' "$key" | grep -q 'BEGIN .*PRIVATE KEY'; then
+          echo "::error::SSH_KEY is not a PEM private key. Re-add it with: gh secret set SSH_KEY < path/to/key"
+          exit 1
+        fi
+
+        if ! printf '%s\n' "$key" | ssh-add -; then
+          echo "::error::ssh-add could not load SSH_KEY. Use an unencrypted private key."
+          exit 1
+        fi

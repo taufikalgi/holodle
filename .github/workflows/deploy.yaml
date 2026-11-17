@@ -73,7 +73,6 @@ jobs:
           SSH_HOST: ${{ secrets.HOST }}
           SSH_USER: ${{ secrets.USER }}
           SSH_KEY: ${{ secrets.SSH_KEY }}
-          SSH_HOST_FINGERPRINT: ${{ secrets.SSH_HOST_FINGERPRINT }}
         run: |
           set -euo pipefail
           : "${DEPLOY_PATH:?PROD_DEPLOY_PATH or STAGING_DEPLOY_PATH is not set}"
@@ -84,7 +83,6 @@ jobs:
           : "${SSH_HOST:?HOST secret is not set}"
           : "${SSH_USER:?USER secret is not set}"
           : "${SSH_KEY:?SSH_KEY secret is not set}"
-          : "${SSH_HOST_FINGERPRINT:?SSH_HOST_FINGERPRINT secret is not set}"
           case "$DEPLOY_PATH" in
             /*) ;;
             *) echo "DEPLOY_PATH must be absolute" >&2; exit 1 ;;
@@ -101,28 +99,32 @@ jobs:
             *) echo "IMAGE must be pinned by digest" >&2; exit 1 ;;
           esac
 
-      - name: Upload deploy files
-        uses: appleboy/scp-action@v0.1.7
+      - name: Set up SSH agent
+        uses: ./.github/actions/setup-ssh
         with:
-          host: ${{ secrets.HOST }}
-          username: ${{ secrets.USER }}
-          key: ${{ secrets.SSH_KEY }}
-          fingerprint: ${{ secrets.SSH_HOST_FINGERPRINT }}
-          source: "compose.yaml,scripts/deploy-remote.sh"
-          target: ${{ env.DEPLOY_PATH }}
-          overwrite: true
+          ssh-private-key: ${{ secrets.SSH_KEY }}
+
+      - name: Add host to known hosts
+        run: |
+          mkdir -p ~/.ssh
+          chmod 700 ~/.ssh
+          ssh-keyscan -H "${{ secrets.HOST }}" >> ~/.ssh/known_hosts
+
+      - name: Upload deploy files
+        run: |
+          set -euo pipefail
+          rsync -az --mkpath \
+            compose.yaml \
+            scripts/deploy-remote.sh \
+            "${{ secrets.USER }}@${{ secrets.HOST }}:${{ env.DEPLOY_PATH }}/"
 
       - name: Deploy
-        uses: appleboy/ssh-action@v1.0.3
-        with:
-          host: ${{ secrets.HOST }}
-          username: ${{ secrets.USER }}
-          key: ${{ secrets.SSH_KEY }}
-          fingerprint: ${{ secrets.SSH_HOST_FINGERPRINT }}
-          command_timeout: 10m
-          script_stop: true
-          envs: DEPLOY_PATH,ENV_NAME,IMAGE,BLUE_PORT,GREEN_PORT
-          script: |
-            set -euo pipefail
-            cd "$DEPLOY_PATH"
-            bash scripts/deploy-remote.sh
+        run: |
+          # These values are intentionally expanded locally into the remote env.
+          # shellcheck disable=SC2029
+          ssh "${{ secrets.USER }}@${{ secrets.HOST }}" \
+            "DEPLOY_PATH='$DEPLOY_PATH' ENV_NAME='$ENV_NAME' IMAGE='$IMAGE' BLUE_PORT='$BLUE_PORT' GREEN_PORT='$GREEN_PORT' bash -s" <<'ENDSSH'
+          set -euo pipefail
+          cd "$DEPLOY_PATH"
+          bash scripts/deploy-remote.sh
+          ENDSSH
