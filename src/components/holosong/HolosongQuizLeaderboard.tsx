@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import type { HolosongQuizLeaderboardEntry } from "@/lib/holosong-quiz-api";
 
 export default function HolosongQuizLeaderboard({
@@ -45,9 +46,12 @@ export default function HolosongQuizLeaderboard({
               #{entry.rank}
             </span>
             {entry.picture ? (
-              <img
+              <Image
                 src={entry.picture}
                 alt={entry.name}
+                width={36}
+                height={36}
+                unoptimized
                 className="h-9 w-9 rounded-full object-cover"
               />
             ) : (

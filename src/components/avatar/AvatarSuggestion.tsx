@@ -1,12 +1,16 @@
+import Image from "next/image";
 import type { Talent } from "@/lib/talents";
 
 export default function AvatarSuggestion({ talent: t }: { talent: Talent }) {
   return (
     <>
       {t.avatarUrl ? (
-        <img
+        <Image
           src={t.avatarUrl}
           alt={t.name}
+          width={40}
+          height={40}
+          unoptimized
           className="w-10 h-10 rounded-full object-cover flex-shrink-0"
         />
       ) : (

@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { useEffect, useState } from "react";
 import type { HolosongQuizOption } from "@/lib/holosong-quiz-api";
 
@@ -33,9 +34,12 @@ export default function HolosongQuizCorrect({
 
       <div className="mt-4 flex flex-col items-center gap-2">
         {option.artwork_url && (
-          <img
+          <Image
             src={option.artwork_url}
             alt={option.title}
+            width={96}
+            height={96}
+            unoptimized
             className="w-24 h-24 rounded-xl object-cover"
           />
         )}

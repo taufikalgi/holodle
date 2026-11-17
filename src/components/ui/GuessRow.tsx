@@ -1,3 +1,4 @@
+import Image from "next/image";
 import { memo } from "react";
 import { getLoreArchetypeCategory } from "@/lib/talents";
 import Cell from "./Cell";
@@ -78,9 +79,12 @@ export default memo(function GuessRow({
         style={{ animationDelay: `${base}ms` }}
       >
         <div className="flex justify-center px-2 py-3 rounded-xl min-h-[54px] bg-[var(--holo-bg-card)] border-2 border-[#00B4D8]/30 text-[#0077A3]">
-          <img
+          <Image
             src={guess.photoUrl}
             alt={guess.name}
+            width={32}
+            height={32}
+            unoptimized
             className="w-8 h-8 rounded-full object-cover mr-1 flex-shrink-0"
           />
         </div>
@@ -93,9 +97,12 @@ export default memo(function GuessRow({
         style={{ animationDelay: `${base}ms` }}
       >
         <div className="flex justify-center items-center gap-2 px-3 py-2 rounded-xl bg-[var(--holo-bg-card)] border-2 border-[#00B4D8]/30 text-[#0077A3]">
-          <img
+          <Image
             src={guess.photoUrl}
             alt={guess.name}
+            width={40}
+            height={40}
+            unoptimized
             className="w-10 h-10 rounded-full object-cover flex-shrink-0"
           />
           <Cell label={guess.name} status={result.name} delay={base + 80} />

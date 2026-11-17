@@ -6,7 +6,7 @@ import { GAME_CATEGORIES } from "@/lib/game-modes";
 export default function Home() {
   return (
     <div className="min-h-screen flex flex-col bg-[var(--holo-bg)]">
-      <Navbar title="Holodle" />
+      <Navbar />
       <main className="flex-1 flex flex-col items-center pt-8">
       <div className="flex items-center gap-2 mb-1 mt-6">
         <div className="w-8 h-0.5 bg-gradient-to-r from-transparent to-[#00B4D8]" />

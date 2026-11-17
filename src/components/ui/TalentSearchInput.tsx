@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { useRef, type ReactNode } from "react";
 import { type Talent } from "@/lib/talents";
 
@@ -27,9 +28,12 @@ export default function TalentSearchInput({
   const inputRef = useRef<HTMLInputElement>(null);
   const defaultSuggestion = (t: Talent) => (
     <>
-      <img
+      <Image
         src={t.photoUrl}
         alt={t.name}
+        width={40}
+        height={40}
+        unoptimized
         className="w-10 h-10 rounded-full object-cover flex-shrink-0"
       />
       <div className="text-sm font-bold text-[var(--holo-text)]">

@@ -35,7 +35,7 @@ export default function ClassicGame() {
   if (status === "loading") {
     return (
       <main className="min-h-screen bg-[var(--holo-bg)]">
-        <Navbar title="CLASSIC" />
+        <Navbar />
         <div className="max-w-5xl mx-auto px-4 py-8 text-center">
           <p className="text-sm font-semibold text-[var(--holo-text-muted)]">
             Loading talents…
@@ -48,7 +48,7 @@ export default function ClassicGame() {
   if (status === "error" || status === "empty" || !todayAnswer) {
     return (
       <main className="min-h-screen bg-[var(--holo-bg)]">
-        <Navbar title="CLASSIC" />
+        <Navbar />
         <div className="max-w-5xl mx-auto px-4 py-8 text-center">
           <p className="text-sm font-semibold text-[var(--holo-text-muted)]">
             {talentsError || "Failed to load talents."}
@@ -67,7 +67,7 @@ export default function ClassicGame() {
 
   return (
     <main className="min-h-screen bg-[var(--holo-bg)]">
-      <Navbar title="CLASSIC" />
+      <Navbar />
       <div className="max-w-5xl mx-auto px-4 py-8">
         <header className="text-center mb-8">
           <PageHeader

@@ -10,12 +10,10 @@ import MobileNav from "@/components/ui/MobileNav";
 import AuthCluster from "@/components/ui/AuthCluster";
 
 export default function Navbar({
-  title,
   user: userProp,
   onLogout: onLogoutProp,
   onLogin: onLoginProp,
 }: {
-  title: string;
   user?: AuthUser | null;
   onLogout?: () => void;
   onLogin?: (redirectTo?: string) => void;

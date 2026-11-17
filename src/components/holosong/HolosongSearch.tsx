@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { useState } from "react";
 import type {
   HolosongSearchField,
@@ -126,9 +127,12 @@ export default function HolosongSearch({
               className="dropdown-item w-full text-left px-4 py-3 flex items-center gap-3 border-b last:border-0 transition-colors border-[var(--holo-border)]"
             >
               {song.artwork_url ? (
-                <img
+                <Image
                   src={song.artwork_url}
                   alt={song.title}
+                  width={40}
+                  height={40}
+                  unoptimized
                   className="w-10 h-10 rounded-lg object-cover flex-shrink-0"
                 />
               ) : (

@@ -13,7 +13,7 @@ const TWITTER_URL = "https://x.com/_Kertia";
 export default function PrivacyPage() {
   return (
     <div className="min-h-screen flex flex-col bg-[var(--holo-bg)]">
-      <Navbar title="PRIVACY" />
+      <Navbar />
 
       <main className="mx-auto w-full max-w-3xl flex-1 px-4 py-8">
         <h1 className="text-3xl font-black tracking-widest text-[var(--holo-text)]">

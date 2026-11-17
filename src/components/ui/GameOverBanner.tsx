@@ -1,3 +1,4 @@
+import Image from "next/image";
 import type { ReactNode } from "react";
 
 export default function GameOverBanner({
@@ -51,9 +52,12 @@ export default function GameOverBanner({
           {revealed && answerDetails && (
             <p className="text-xs text-red-400 mt-1">
               {answerDetails.photoUrl && (
-                <img
+                <Image
                   src={answerDetails.photoUrl}
                   alt={answerName}
+                  width={64}
+                  height={64}
+                  unoptimized
                   className="w-16 h-16 mx-auto my-2 rounded-full object-cover"
                 />
               )}

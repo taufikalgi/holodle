@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
 import { useOutsideClick } from "@/hooks/useOutsideClick";
 import type { GameCategory } from "@/lib/game-modes";
@@ -8,6 +9,7 @@ import GameCard from "@/components/ui/GameCard";
 export default function CategoryDropdown({ category }: { category: GameCategory }) {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
+  const logo = category.variants[0]?.logo;
 
   useOutsideClick(ref, () => setOpen(false));
 
@@ -48,13 +50,18 @@ export default function CategoryDropdown({ category }: { category: GameCategory 
             <path d="M3 2L7 5L3 8" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
           </svg>
         </span>
-        <img
-          src={category.variants[0]?.logo ?? ""}
-          alt=""
-          loading="lazy"
-          referrerPolicy="no-referrer"
-          className="w-8 h-8 rounded-full object-cover flex-shrink-0 border-[1.5px] border-solid border-[var(--holo-border)]"
-        />
+        {logo && (
+          <Image
+            src={logo}
+            alt=""
+            width={32}
+            height={32}
+            unoptimized
+            loading="lazy"
+            referrerPolicy="no-referrer"
+            className="w-8 h-8 rounded-full object-cover flex-shrink-0 border-[1.5px] border-solid border-[var(--holo-border)]"
+          />
+        )}
         <div className="flex flex-col min-w-0">
           <h2 className="text-sm font-black tracking-widest leading-none text-[var(--holo-text)]">
             {category.label.toUpperCase()}

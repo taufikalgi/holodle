@@ -65,6 +65,7 @@ export default function CropEditor({
 
   return (
     <div ref={wrapRef} style={{ width: "100%", userSelect: "none" }}>
+      {/* eslint-disable-next-line @next/next/no-img-element -- hidden image used only to measure naturalWidth/naturalHeight */}
       <img
         src={src}
         alt={talent.name}
