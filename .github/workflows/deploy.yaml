@@ -58,8 +58,6 @@ jobs:
           SSH_USER: ${{ secrets.USER }}
           SSH_KEY: ${{ secrets.SSH_KEY }}
           SSH_HOST_FINGERPRINT: ${{ secrets.SSH_HOST_FINGERPRINT }}
-          GHCR_USER: ${{ secrets.GHCR_USER }}
-          GHCR_TOKEN: ${{ secrets.GHCR_TOKEN }}
         run: |
           set -euo pipefail
           : "${DEPLOY_PATH:?PROD_DEPLOY_PATH or STAGING_DEPLOY_PATH is not set}"
@@ -67,8 +65,6 @@ jobs:
           : "${GREEN_PORT:?GREEN_PORT is not set}"
           : "${IMAGE:?IMAGE is not set}"
           : "${IMAGE_DIGEST:?IMAGE_DIGEST is not set}"
-          : "${GHCR_USER:?GHCR_USER secret is not set}"
-          : "${GHCR_TOKEN:?GHCR_TOKEN secret is not set}"
           : "${SSH_HOST:?HOST secret is not set}"
           : "${SSH_USER:?USER secret is not set}"
           : "${SSH_KEY:?SSH_KEY secret is not set}"
@@ -101,9 +97,6 @@ jobs:
           overwrite: true
 
       - name: Deploy
-        env:
-          GHCR_USER: ${{ secrets.GHCR_USER }}
-          GHCR_TOKEN: ${{ secrets.GHCR_TOKEN }}
         uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ secrets.HOST }}
@@ -112,7 +105,7 @@ jobs:
           fingerprint: ${{ secrets.SSH_HOST_FINGERPRINT }}
           command_timeout: 10m
           script_stop: true
-          envs: DEPLOY_PATH,ENV_NAME,IMAGE,BLUE_PORT,GREEN_PORT,GHCR_USER,GHCR_TOKEN
+          envs: DEPLOY_PATH,ENV_NAME,IMAGE,BLUE_PORT,GREEN_PORT
           script: |
             set -euo pipefail
             cd "$DEPLOY_PATH"

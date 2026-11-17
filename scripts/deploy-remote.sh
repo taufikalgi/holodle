@@ -6,13 +6,11 @@ MODE="${MODE:-deploy}"
 : "${ENV_NAME:?ENV_NAME is required}"
 : "${BLUE_PORT:?BLUE_PORT is required}"
 : "${GREEN_PORT:?GREEN_PORT is required}"
-: "${GHCR_USER:?GHCR_USER is required}"
-: "${GHCR_TOKEN:?GHCR_TOKEN is required}"
 DRAIN_SECONDS="${DRAIN_SECONDS:-10}"
 NGINX_UPSTREAM_DIR="${NGINX_UPSTREAM_DIR:-/etc/nginx/holodle}"
 NGINX_BIN="${NGINX_BIN:-/usr/sbin/nginx}"
 
-export DEPLOY_PATH ENV_NAME BLUE_PORT GREEN_PORT GHCR_USER GHCR_TOKEN MODE DRAIN_SECONDS NGINX_UPSTREAM_DIR NGINX_BIN
+export DEPLOY_PATH ENV_NAME BLUE_PORT GREEN_PORT MODE DRAIN_SECONDS NGINX_UPSTREAM_DIR NGINX_BIN
 export PATH="/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:$PATH"
 
 log() { printf '[deploy] %s\n' "$*"; }
@@ -69,13 +67,6 @@ docker compose version >/dev/null 2>&1 || fail "docker compose plugin not found"
 
 exec 9>"$DEPLOY_PATH/.deploy.lock"
 flock -n 9 || fail "another deploy is running for $DEPLOY_PATH"
-
-DOCKER_CONFIG="$(mktemp -d)"
-export DOCKER_CONFIG
-cleanup() { rm -rf "$DOCKER_CONFIG"; }
-trap cleanup EXIT
-
-printf '%s' "$GHCR_TOKEN" | docker login ghcr.io -u "$GHCR_USER" --password-stdin >/dev/null
 
 COMPOSE_PROJECT_NAME="holodle-$ENV_NAME"
 COMPOSE_FILE="$DEPLOY_PATH/compose.yaml"
