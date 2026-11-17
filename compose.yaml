@@ -2,8 +2,6 @@ x-app: &app
   image: ${IMAGE:?IMAGE is required}
   restart: unless-stopped
   init: true
-  env_file:
-    - ${APP_ENV_FILE:?APP_ENV_FILE is required}
   environment:
     NODE_ENV: production
     PORT: "3000"
