@@ -115,7 +115,7 @@ jobs:
         with:
           context: .
           file: ./Dockerfile
-          push: ${{ inputs.push-image }}
+          push: ${{ github.event_name != 'pull_request' && inputs.push-image }}
           tags: ghcr.io/${{ github.repository }}:${{ github.sha }}
           build-args: |
             NODE_VERSION=${{ steps.versions.outputs.node }}
