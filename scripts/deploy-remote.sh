@@ -65,6 +65,8 @@ for cmd in docker curl flock mktemp; do
 done
 docker compose version >/dev/null 2>&1 || fail "docker compose plugin not found"
 
+sudo -n "$NGINX_BIN" -t >/dev/null 2>&1 || fail "nginx config test failed; check the upstream include and sudoers rule"
+
 exec 9>"$DEPLOY_PATH/.deploy.lock"
 flock -n 9 || fail "another deploy is running for $DEPLOY_PATH"
 
