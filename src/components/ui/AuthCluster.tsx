@@ -54,7 +54,7 @@ export default function AuthCluster({
       );
     }
     return (
-      <div className="hidden md:flex items-center gap-3">
+      <div className="hidden lg:flex items-center gap-3">
         {user.picture && (
           <Image
             src={user.picture}
@@ -98,7 +98,7 @@ export default function AuthCluster({
   return (
     <button
       onClick={onLogin}
-      className="hidden md:inline-flex items-center gap-2 text-xs font-semibold px-3 py-1.5 rounded-full transition-opacity hover:opacity-80 border-[1.5px] border-solid border-[var(--holo-border)] bg-[var(--holo-bg-card)] text-[var(--holo-text)]"
+      className="hidden lg:inline-flex items-center gap-2 text-xs font-semibold px-3 py-1.5 rounded-full transition-opacity hover:opacity-80 border-[1.5px] border-solid border-[var(--holo-border)] bg-[var(--holo-bg-card)] text-[var(--holo-text)]"
     >
       <GoogleIcon />
       Sign in

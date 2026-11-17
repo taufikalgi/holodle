@@ -63,9 +63,3 @@ export type LeaderboardResponse = {
   has_more: boolean;
   entries: LeaderboardEntry[];
 };
-
-export type ApiResponse<T> = {
-  success: boolean;
-  message: string;
-  data: T;
-};

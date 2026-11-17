@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { GAME_CATEGORIES } from "@/lib/game-modes";
 
@@ -43,7 +44,14 @@ export default function MobileNav({
                   className={`flex items-center gap-2 px-2 py-1.5 rounded-lg text-sm font-bold text-[var(--holo-text)] ${isActive(variant.href) ? "bg-[var(--holo-off-white)]" : ""}`}
                   onClick={onNavigate}
                 >
-                  <img src={variant.logo} alt={variant.alt} className="w-6 h-6 rounded-full object-cover" />
+                  <Image
+                    src={variant.logo}
+                    alt={variant.alt}
+                    width={24}
+                    height={24}
+                    unoptimized
+                    className="w-6 h-6 rounded-full object-cover"
+                  />
                   {variant.label.toUpperCase()}
                   {isActive(variant.href) && (
                     <span className="ml-auto text-xs text-[var(--holo-blue)]">

@@ -1,4 +1,5 @@
 import { authedJson, publicJson } from "./api-client";
+import { ApiError } from "./errors";
 import type { HolosongSong } from "./holosong-api";
 
 export type HolosongQuizMode = "daily" | "endless";
@@ -108,17 +109,25 @@ export function buildHolosongQuizLeaderboardPath(
 }
 
 export async function fetchHolosongQuizDaily(): Promise<HolosongQuizSession> {
-  return authedJson<HolosongQuizSession>("/api/v1/holosong/quiz/daily");
+  const data = await authedJson<HolosongQuizSession>("/api/v1/holosong/quiz/daily");
+  if (!data) throw new ApiError("invalid holosong quiz daily payload", 500);
+  return data;
 }
 
 export async function startHolosongQuizEndless(): Promise<HolosongQuizSession> {
-  return authedJson<HolosongQuizSession>("/api/v1/holosong/quiz/endless", {
+  const data = await authedJson<HolosongQuizSession>("/api/v1/holosong/quiz/endless", {
     method: "POST",
   });
+  if (!data) throw new ApiError("invalid holosong quiz endless payload", 500);
+  return data;
 }
 
 export async function fetchHolosongQuizSession(id: string): Promise<HolosongQuizSession> {
-  return authedJson<HolosongQuizSession>(`/api/v1/holosong/quiz/session/${encodeURIComponent(id)}`);
+  const data = await authedJson<HolosongQuizSession>(
+    `/api/v1/holosong/quiz/session/${encodeURIComponent(id)}`
+  );
+  if (!data) throw new ApiError("invalid holosong quiz session payload", 500);
+  return data;
 }
 
 export async function submitHolosongQuizGuess(
@@ -126,7 +135,7 @@ export async function submitHolosongQuizGuess(
   songId: string,
   expectedVersion: number
 ): Promise<HolosongQuizSession> {
-  return authedJson<HolosongQuizSession>(
+  const data = await authedJson<HolosongQuizSession>(
     `/api/v1/holosong/quiz/session/${encodeURIComponent(sessionId)}/guess`,
     {
       method: "POST",
@@ -136,15 +145,23 @@ export async function submitHolosongQuizGuess(
       }),
     }
   );
+  if (!data) throw new ApiError("invalid holosong quiz guess payload", 500);
+  return data;
 }
 
 export async function fetchHolosongQuizStats(): Promise<HolosongQuizStats> {
-  return authedJson<HolosongQuizStats>("/api/v1/holosong/quiz/stats");
+  const data = await authedJson<HolosongQuizStats>("/api/v1/holosong/quiz/stats");
+  if (!data) throw new ApiError("invalid holosong quiz stats payload", 500);
+  return data;
 }
 
 export async function fetchHolosongQuizLeaderboard(
   page = 1,
   pageSize = HOLOSONG_QUIZ_LEADERBOARD_PAGE_SIZE
 ): Promise<HolosongQuizLeaderboard> {
-  return publicJson<HolosongQuizLeaderboard>(buildHolosongQuizLeaderboardPath(page, pageSize));
+  const data = await publicJson<HolosongQuizLeaderboard>(
+    buildHolosongQuizLeaderboardPath(page, pageSize)
+  );
+  if (!data) throw new ApiError("invalid holosong quiz leaderboard payload", 500);
+  return data;
 }

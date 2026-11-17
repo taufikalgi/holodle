@@ -1,27 +1,20 @@
 "use client";
 
-import { useState, useRef } from "react";
-import { type Talent } from "@/lib/talents";
+import { useState } from "react";
 import {
-  ColumnHeaders,
-  DEFAULT_COLUMN_HEADERS,
   Footer,
   GameOverBanner,
-  GuessRow,
   HowToPlay,
   Navbar,
   PageHeader,
   ShareButton,
   StatsBar,
-  TalentSearchInput,
 } from "@/components/ui";
 import { buildGridShareText } from "@/lib/share";
-import { useOutsideClick } from "@/hooks/useOutsideClick";
-import { useTalentSearch } from "@/hooks/useTalentSearch";
 import { MAX_GUESSES, useClassicDaily } from "@/hooks/useClassicDaily";
 import StatusPill from "@/components/game/StatusPill";
 import StreakResetModal from "@/components/game/StreakResetModal";
-import { ZeroGuessHint } from "@/components/game/GameShell";
+import ClassicBoard from "@/components/classic/ClassicBoard";
 
 export default function ClassicGame() {
   const {
@@ -31,7 +24,6 @@ export default function ClassicGame() {
     status,
     talentsError,
     guessesLeft,
-    alreadyGuessed,
     stats,
     streakResetToast,
     dismissStreakResetPopup,
@@ -39,24 +31,11 @@ export default function ClassicGame() {
   } = useClassicDaily();
   const [showHowTo, setShowHowTo] = useState(false);
   const [revealAnswer, setRevealAnswer] = useState(false);
-  const inputRef = useRef<HTMLInputElement>(null);
-  const dropdownRef = useRef<HTMLDivElement>(null);
-  const { input, suggestions, showDropdown, handleInput, clear, onFocus, setShowDropdown } = useTalentSearch(talents ?? []);
-
-  useOutsideClick(dropdownRef, () => setShowDropdown(false), inputRef);
-
-  const handleGuess = (talent: Talent) => {
-    if (makeGuess(talent)) clear();
-  };
-
-  const displayCurrentHistory = state.guesses
-    .map((g) => ({ talent: g.talent, result: g.result }))
-    .reverse();
 
   if (status === "loading") {
     return (
       <main className="min-h-screen bg-[var(--holo-bg)]">
-        <Navbar title="CLASSIC" />
+        <Navbar />
         <div className="max-w-5xl mx-auto px-4 py-8 text-center">
           <p className="text-sm font-semibold text-[var(--holo-text-muted)]">
             Loading talents…
@@ -69,7 +48,7 @@ export default function ClassicGame() {
   if (status === "error" || status === "empty" || !todayAnswer) {
     return (
       <main className="min-h-screen bg-[var(--holo-bg)]">
-        <Navbar title="CLASSIC" />
+        <Navbar />
         <div className="max-w-5xl mx-auto px-4 py-8 text-center">
           <p className="text-sm font-semibold text-[var(--holo-text-muted)]">
             {talentsError || "Failed to load talents."}
@@ -88,7 +67,7 @@ export default function ClassicGame() {
 
   return (
     <main className="min-h-screen bg-[var(--holo-bg)]">
-      <Navbar title="CLASSIC" />
+      <Navbar />
       <div className="max-w-5xl mx-auto px-4 py-8">
         <header className="text-center mb-8">
           <PageHeader
@@ -125,7 +104,7 @@ export default function ClassicGame() {
             answerDetails={
               revealAnswer
                 ? {
-                    image: todayAnswer.image,
+                    photoUrl: todayAnswer.photoUrl || todayAnswer.avatarUrl,
                     branch: todayAnswer.branch,
                     debutYear: todayAnswer.debutYear,
                     loreArchetype: todayAnswer.loreArchetype,
@@ -146,35 +125,12 @@ export default function ClassicGame() {
           />
         )}
 
-        {status === "playing" && (
-          <TalentSearchInput
-            input={input}
-            suggestions={suggestions}
-            showDropdown={showDropdown}
-            onInput={(val) => handleInput(val, alreadyGuessed)}
-            onGuess={handleGuess}
-            onClear={clear}
-            onFocus={onFocus}
-            dropdownRef={dropdownRef}
-          />
-        )}
-
-        {state.guesses.length > 0 && (
-          <ColumnHeaders headers={DEFAULT_COLUMN_HEADERS} />
-        )}
-
-        <div className="space-y-2">
-          {displayCurrentHistory.map(({ talent, result }, i) => (
-            <GuessRow key={talent.name} guess={talent} result={result} index={i} />
-          ))}
-        </div>
-
-        {!state.gameOver && state.guesses.length === 0 && (
-          <ZeroGuessHint
-            line1="Start typing above to make your first guess!"
-            line2={`${(talents ?? []).length} talents in the pool`}
-          />
-        )}
+        <ClassicBoard
+          pool={talents ?? []}
+          guesses={state.guesses}
+          gameOver={state.gameOver}
+          onGuess={makeGuess}
+        />
 
         <Footer />
       </div>

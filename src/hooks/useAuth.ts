@@ -9,10 +9,12 @@ import {
   googleAuthUrl,
   readEnvelope,
 } from "@/lib/api-client";
+import {
+  AUTH_REDIRECT_KEY,
+  DEFAULT_AUTH_REDIRECT,
+  getAuthRedirectTarget,
+} from "@/lib/auth-redirect";
 
-export { authFetch };
-
-const AUTH_REDIRECT_KEY = "auth_redirect_to";
 const COMPETITIVE_SESSION_KEY = "competitive-classic-session-id";
 
 export interface AuthUser {
@@ -106,36 +108,23 @@ export function useAuth({ requireAdmin }: UseAuthOptions = {}) {
     syncFromSession();
     const onAuthChange = () => syncFromSession();
     const offAuthChange = onAppEvent("holodle:auth-change", onAuthChange);
+    const offUnauthorized = onAppEvent("holodle:unauthorized", () => {
+      if (!active) return;
+      setUser(null);
+    });
     return () => {
       active = false;
       offAuthChange();
+      offUnauthorized();
     };
   }, [requireAdmin]);
 
   const login = useCallback(
     (redirectTo?: string) => {
-      const validPaths = new Set([
-        "/",
-        "/login",
-        "/classic/competitive",
-        "/classic/daily",
-        "/classic/endless",
-        "/avatar/daily",
-        "/avatar/endless",
-        "/holosong/daily",
-        "/holosong/endless",
-        "/holosong/quiz/daily",
-        "/holosong/quiz/endless",
-        "/admin",
-      ]);
-      let redirectPath: string;
-      if (redirectTo && validPaths.has(redirectTo)) {
-        redirectPath = redirectTo;
-      } else if (requireAdmin) {
-        redirectPath = "/admin";
-      } else {
-        redirectPath = "/classic/competitive";
-      }
+      const redirectPath = getAuthRedirectTarget(
+        redirectTo,
+        requireAdmin ? "/admin" : DEFAULT_AUTH_REDIRECT
+      );
       sessionStorage.setItem(AUTH_REDIRECT_KEY, redirectPath);
       window.location.href = googleAuthUrl();
     },
@@ -143,8 +132,10 @@ export function useAuth({ requireAdmin }: UseAuthOptions = {}) {
   );
 
   const logout = useCallback(async () => {
+    let revoked = false;
     try {
-      await authFetch("/api/v1/auth/logout", { method: "POST" });
+      const response = await authFetch("/api/v1/auth/logout", { method: "POST" });
+      revoked = response.ok || response.status === 401;
     } catch {
       // Clear the local UI even if the server is unavailable.
     }
@@ -154,6 +145,11 @@ export function useAuth({ requireAdmin }: UseAuthOptions = {}) {
     setUser(null);
     setLoading(false);
     setUnauthorized(false);
+    emitAppEvent("holodle:notice", {
+      message: revoked
+        ? "Signed out on all devices."
+        : "Signed out on this device. Could not reach the server.",
+    });
     // Notify other useAuth instances (e.g. Navbar) in same tab
     emitAppEvent("holodle:auth-change", undefined);
   }, []);

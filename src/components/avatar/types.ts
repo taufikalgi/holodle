@@ -3,9 +3,12 @@ import type { CropArea } from "@/lib/avatar-crops";
 import type { AvatarRound } from "@/lib/avatar-api";
 import type { DailyStreakStats } from "@/lib/daily-streak";
 import { isValidDailyStreakStats } from "@/lib/daily-streak";
+import type { AvatarRoundStatus } from "@/lib/game-status";
+import { isRecord } from "@/lib/type-guards";
 
 export type { AvatarRound };
 
+export type RoundStatus = AvatarRoundStatus;
 export type AvatarGuess = { talent: Talent; correct: boolean };
 export type AvatarStats = DailyStreakStats;
 
@@ -29,10 +32,6 @@ export interface EndlessPersisted {
   stats: AvatarStats;
   recentTalentIds: string[];
   lastRunStreak: number;
-}
-
-function isRecord(x: unknown): x is Record<string, unknown> {
-  return typeof x === "object" && x !== null;
 }
 
 function isTalentLike(x: unknown): x is Talent {
@@ -105,6 +104,3 @@ export function isValidEndlessPersisted(data: unknown): data is EndlessPersisted
     typeof data.lastRunStreak === "number"
   );
 }
-
-export { isValidDailyStreakStats as isValidAvatarStats };
-export { isValidDailyStreakStats as isValidAvatarStatsPersisted };

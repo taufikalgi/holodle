@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import type { HolosongQuizOption, HolosongQuizSession } from "@/lib/holosong-quiz-api";
 
 export default function HolosongQuizOptions({
@@ -63,12 +64,15 @@ function OptionCard({
       disabled={disabled}
       className={`flex h-full min-w-0 flex-col items-center gap-2 rounded-2xl border p-2 text-center transition-colors disabled:cursor-not-allowed disabled:opacity-60 sm:p-3 ${tone}`}
     >
-      <span className="relative block w-full overflow-hidden rounded-xl">
+      <span className="relative block aspect-square w-full overflow-hidden rounded-xl">
         {option.artwork_url ? (
-          <img
+          <Image
             src={option.artwork_url}
             alt={option.title}
-            className="aspect-square w-full object-cover"
+            fill
+            sizes="(max-width: 640px) 50vw, 240px"
+            unoptimized
+            className="object-cover"
           />
         ) : (
           <span className="flex aspect-square w-full items-center justify-center bg-[var(--holo-off-white)] text-2xl">

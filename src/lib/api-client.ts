@@ -1,4 +1,5 @@
 import { ApiError } from "./errors";
+import { emitAppEvent } from "./events";
 
 function requiredEnv(name: string, value: string | undefined): string {
   if (!value) throw new Error(`Missing ${name} (check .env / deployment env)`);
@@ -25,42 +26,47 @@ export interface Envelope<T> {
 
 /** Single envelope reader — throws ApiError on !ok or success === false. */
 export async function readEnvelope<T>(res: Response): Promise<T> {
-  const json = (await res.json().catch(() => null)) as Envelope<T> | null;
+  const text = await res.text().catch(() => "");
+  let json: Envelope<T> | null = null;
+
+  if (text) {
+    try {
+      json = JSON.parse(text) as Envelope<T>;
+    } catch {
+      throw new ApiError(
+        res.ok ? "Invalid JSON response" : `Request failed (${res.status})`,
+        res.status,
+        res.headers.get("Retry-After")
+      );
+    }
+  }
+
   if (!res.ok) {
     const message =
       json?.error || json?.message || `Request failed (${res.status})`;
     throw new ApiError(message, res.status, res.headers.get("Retry-After"));
   }
-  if (!json || json.success === false) {
+  if (json && json.success === false) {
     throw new ApiError(
-      json?.message ?? json?.error ?? "Request failed",
+      json.message ?? json.error ?? "Request failed",
       res.status,
       res.headers.get("Retry-After")
     );
   }
-  return json.data as T;
+  return (json?.data ?? undefined) as T;
 }
 
-const TOKEN_KEY = "token";
-
-/** Stored JWT or null (safe on server). */
-export function getToken(): string | null {
-  if (typeof window === "undefined") return null;
-  return localStorage.getItem(TOKEN_KEY);
-}
-
-/** Remove the stored JWT (safe on server). */
+/** Remove a legacy stored JWT (safe on server). */
 export function clearToken(): void {
   if (typeof window === "undefined") return;
-  localStorage.removeItem(TOKEN_KEY);
+  localStorage.removeItem("token");
 }
 
-function jsonHeaders(token: string | null, init?: RequestInit): Headers {
+function jsonHeaders(init?: RequestInit): Headers {
   const headers = new Headers(init?.headers);
   if (init?.body != null && !headers.has("Content-Type")) {
     headers.set("Content-Type", "application/json");
   }
-  if (token) headers.set("Authorization", `Bearer ${token}`);
   return headers;
 }
 
@@ -76,14 +82,19 @@ export function publicFetch(path: string, init?: RequestInit): Promise<Response>
   return fetch(`${apiBaseUrl()}${path}`, init);
 }
 
-/** Authenticated request — sends the browser's session cookie and Bearer token. */
+/** Authenticated request — sends the browser's session cookie. */
 export function authFetch(path: string, init?: RequestInit): Promise<Response> {
   assertPath(path);
-  const token = getToken();
   return fetch(`${apiBaseUrl()}${path}`, {
     ...init,
     credentials: "include",
-    headers: jsonHeaders(token, init),
+    headers: jsonHeaders(init),
+  }).then((response) => {
+    if (response.status === 401) {
+      clearToken();
+      emitAppEvent("holodle:unauthorized", undefined);
+    }
+    return response;
   });
 }
 

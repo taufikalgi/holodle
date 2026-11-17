@@ -1,6 +1,7 @@
 import ShareButton from "@/components/ui/ShareButton";
 import { formatHolosongWinRate } from "@/lib/holosong-api";
 import type { HolosongSession } from "@/lib/holosong-api";
+import { HolosongAnswerCard } from "./HolosongAnswerCard";
 
 export default function HolosongResult({
   session,
@@ -34,33 +35,7 @@ export default function HolosongResult({
           : "The answer was"}
       </p>
 
-      {answer && (
-        <div className="mt-4 flex flex-col items-center gap-2">
-          {answer.artwork_url && (
-            <img
-              src={answer.artwork_url}
-              alt={answer.title}
-              className="w-24 h-24 rounded-xl object-cover"
-            />
-          )}
-          <p className="text-base font-black text-[var(--holo-text)]">
-            {answer.title}
-          </p>
-          <p className="text-sm text-[var(--holo-text-muted)]">
-            {[answer.artist, answer.album].filter(Boolean).join(" • ")}
-          </p>
-          {answer.track_view_url && (
-            <a
-              href={answer.track_view_url}
-              target="_blank"
-              rel="noreferrer"
-              className="text-xs font-bold underline text-[var(--holo-blue-dark)]"
-            >
-              Open in Apple Music
-            </a>
-          )}
-        </div>
-      )}
+      {answer && <HolosongAnswerCard answer={answer} />}
 
       {endless && (
         <div className="mt-4 grid grid-cols-2 gap-1 text-xs font-semibold text-[var(--holo-text-muted)]">

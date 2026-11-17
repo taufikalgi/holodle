@@ -1,4 +1,5 @@
 import type { GuessEntry, SessionHistoryState } from "@/components/competitive-classic/types";
+import { isRecord } from "./type-guards";
 
 export const HISTORY_KEY_PREFIX = "competitive-classic-history:";
 
@@ -7,10 +8,6 @@ export function getEmptySessionHistoryState(): SessionHistoryState {
     currentRound: [],
     previousRounds: [],
   };
-}
-
-function isRecord(x: unknown): x is Record<string, unknown> {
-  return typeof x === "object" && x !== null;
 }
 
 /** Corrupt entries are dropped so one bad write never kills history. */

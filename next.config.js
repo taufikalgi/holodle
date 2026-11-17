@@ -1,5 +1,6 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  output: "standalone",
   images: {
     remotePatterns: [
       {
@@ -9,6 +10,10 @@ const nextConfig = {
       {
         protocol: "https",
         hostname: "lh3.googleusercontent.com",
+      },
+      {
+        protocol: "https",
+        hostname: "*.mzstatic.com",
       },
     ],
   },
@@ -21,6 +26,7 @@ const nextConfig = {
       { source: "/avatar-endless", destination: "/avatar/endless", permanent: true },
       { source: "/holosong", destination: "/holosong/daily", permanent: true },
       { source: "/holosong/practice", destination: "/holosong/endless", permanent: true },
+      { source: "/visitors", destination: "/admin/visitors", permanent: false },
     ];
   },
 };

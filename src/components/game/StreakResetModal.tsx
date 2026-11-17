@@ -1,5 +1,7 @@
 "use client";
 
+import Modal from "@/components/ui/Modal";
+
 export default function StreakResetModal({
   open,
   onClose,
@@ -7,19 +9,9 @@ export default function StreakResetModal({
   open: boolean;
   onClose: () => void;
 }) {
-  if (!open) return null;
   return (
-    <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4"
-      onClick={onClose}
-      role="dialog"
-      aria-modal="true"
-      aria-label="Streak reset"
-    >
-      <div
-        className="holo-card w-full max-w-sm p-6 text-center relative"
-        onClick={(e) => e.stopPropagation()}
-      >
+    <Modal open={open} onClose={onClose} label="Streak reset">
+      <div className="p-6 text-center relative">
         <button
           type="button"
           onClick={onClose}
@@ -42,6 +34,6 @@ export default function StreakResetModal({
           Got it
         </button>
       </div>
-    </div>
+    </Modal>
   );
 }

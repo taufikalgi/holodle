@@ -102,7 +102,6 @@ export function useCropDrag({
       const d = dragRef.current;
       if (d?.mode === "draw") {
         const p = previewRef.current;
-        const s = scaleRef.current;
         if (p && p.w >= 12 && p.h >= 12) {
           propsRef.current.onAdd(clampBox({ x: p.x, y: p.y, w: p.w, h: p.h }, naturalRef.current));
         }

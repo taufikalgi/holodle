@@ -22,22 +22,12 @@ export function isValidDailyStreakStats(data: unknown): data is DailyStreakStats
   );
 }
 
-export function isValidDailyStreakDateString(s: string): boolean {
-  if (!DAILY_STREAK_DATE_RE.test(s)) return false;
-  const d = parseDailyStreakDateString(s);
-  return d !== null && formatDailyStreakDate(d) === s;
-}
-
 export function parseDailyStreakDateString(s: string): Date | null {
   if (!DAILY_STREAK_DATE_RE.test(s)) return null;
   const [y, m, d] = s.split("-").map(Number);
   const dt = new Date(y, m - 1, d);
   if (dt.getFullYear() !== y || dt.getMonth() !== m - 1 || dt.getDate() !== d) return null;
   return dt;
-}
-
-export function formatDailyStreakDate(d: Date): string {
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
 }
 
 export function daysBetweenDailyStreakDates(a: string, b: string): number | null {
@@ -47,14 +37,6 @@ export function daysBetweenDailyStreakDates(a: string, b: string): number | null
   const utcA = Date.UTC(da.getFullYear(), da.getMonth(), da.getDate());
   const utcB = Date.UTC(db.getFullYear(), db.getMonth(), db.getDate());
   return Math.round((utcB - utcA) / 86400000);
-}
-
-export function isConsecutiveDailyStreakDay(
-  lastPlayedDate: string | undefined,
-  today: string
-): boolean {
-  if (!lastPlayedDate) return false;
-  return daysBetweenDailyStreakDates(lastPlayedDate, today) === 1;
 }
 
 export function shouldResetDailyStreakForMissedDay(

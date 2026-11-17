@@ -3,28 +3,14 @@
 import { useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { authFetch } from "@/lib/api-client";
+import { AUTH_REDIRECT_KEY, getAuthRedirectTarget } from "@/lib/auth-redirect";
 
 type Status = "loading" | "success" | "error";
-
-const AUTH_REDIRECT_KEY = "auth_redirect_to";
-const AUTH_REDIRECT_PATHS = new Set([
-  "/",
-  "/login",
-  "/classic/competitive",
-  "/classic/daily",
-  "/classic/endless",
-  "/avatar/daily",
-  "/avatar/endless",
-  "/holosong/daily",
-  "/holosong/endless",
-  "/admin",
-]);
 
 function getRedirectTarget(): string {
   const target = sessionStorage.getItem(AUTH_REDIRECT_KEY);
   sessionStorage.removeItem(AUTH_REDIRECT_KEY);
-
-  return target && AUTH_REDIRECT_PATHS.has(target) ? target : "/classic/competitive";
+  return getAuthRedirectTarget(target);
 }
 
 export default function AuthCallbackContent() {

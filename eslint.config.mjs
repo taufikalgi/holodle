@@ -13,6 +13,7 @@ const rulesWithoutReact = Object.fromEntries(
 );
 
 const config = [
+  { ignores: [".checks/**"] },
   { ...baseRest, rules: rulesWithoutReact },
   ...nextRest,
   ...nextTS,

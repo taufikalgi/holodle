@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { useMemo, type RefObject } from "react";
 import type { TalentChoice } from "./types";
 
@@ -20,8 +21,8 @@ export default function TalentSearch({
   onSelect: (talent: TalentChoice) => void;
   onClear: () => void;
   showDropdown: boolean;
-  dropdownRef: RefObject<HTMLDivElement>;
-  inputRef: RefObject<HTMLInputElement>;
+  dropdownRef: RefObject<HTMLDivElement | null>;
+  inputRef: RefObject<HTMLInputElement | null>;
   disabled?: boolean;
 }) {
   const suggestions = useMemo(() => {
@@ -89,9 +90,12 @@ export default function TalentSearch({
                 onClick={() => onSelect(talent)}
                 className="flex w-full items-center gap-3 border-b px-4 py-3 text-left transition-colors last:border-0 hover:bg-[var(--holo-off-white)] border-[var(--holo-border)]"
               >
-                <img
+                <Image
                   src={talent.photoUrl}
                   alt={talent.name}
+                  width={40}
+                  height={40}
+                  unoptimized
                   className="h-10 w-10 rounded-full object-cover"
                 />
                 <div className="min-w-0">

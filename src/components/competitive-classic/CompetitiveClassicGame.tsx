@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   Navbar,
   PageHeader,
@@ -29,6 +29,7 @@ export default function CompetitiveClassicGame({
 }) {
   const s = useCompetitiveSession(user);
   const lb = useLeaderboard((m) => s.setSessionError(m));
+  const { fetchLeaderboard } = lb;
 
   const [search, setSearch] = useState("");
   const [showDropdown, setShowDropdown] = useState(false);
@@ -53,24 +54,12 @@ export default function CompetitiveClassicGame({
     });
   }
 
-  const suggestions = useMemo(() => {
-    const query = search.trim().toLowerCase();
-    if (!query) return [];
-    return s.talents
-      .filter((talent) => !s.guessedIds.has(talent.id))
-      .filter((talent) => {
-        const haystack = [talent.name, ...talent.altNames].join(" ").toLowerCase();
-        return haystack.includes(query);
-      })
-      .slice(0, 12);
-  }, [search, s.talents, s.guessedIds]);
-
   useOutsideClick(dropdownRef, () => setShowDropdown(false), inputRef);
 
   useEffect(() => {
     if (!showLeaderboard) return;
-    void lb.fetchLeaderboard();
-  }, [lb.fetchLeaderboard, showLeaderboard]);
+    void fetchLeaderboard();
+  }, [fetchLeaderboard, showLeaderboard]);
 
   const totalGuessCount =
     s.currentRoundHistory.length + s.previousRounds.reduce((count, round) => count + round.length, 0);
@@ -92,7 +81,6 @@ export default function CompetitiveClassicGame({
   return (
     <main className="min-h-screen bg-[var(--holo-bg)]">
       <Navbar
-        title="Classic - Competitive"
         user={user ?? null}
         onLogout={onLogout}
         onLogin={onLogin}

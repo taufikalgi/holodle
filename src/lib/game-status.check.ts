@@ -23,7 +23,6 @@ const base: Talent = {
   loreArchetype: "Animal",
   height: 160,
   birthMonth: "March",
-  image: "",
   avatarUrl: "",
   altNames: [],
   photoUrl: "",

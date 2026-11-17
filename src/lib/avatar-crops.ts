@@ -9,8 +9,6 @@ export type Corner = "nw" | "ne" | "sw" | "se";
 
 export type Difficulty = "easy" | "medium" | "hard";
 
-export const DIFFICULTIES: Difficulty[] = ["easy", "medium", "hard"];
-
 export const DIFFICULTY_META: Record<Difficulty, { label: string; color: string; bg: string }> = {
   easy: { label: "Easy", color: "#15803d", bg: "#dcfce7" },
   medium: { label: "Medium", color: "#a16207", bg: "#fef9c3" },
@@ -81,7 +79,8 @@ const areaPath = (talentId: string, areaId: string) =>
 export async function fetchAreas(talentId: string): Promise<CropArea[]> {
   const res = await authFetch(areasPath(talentId));
   const data = await readEnvelope<{ talent_id: string; areas: CropArea[] }>(res);
-  return data?.areas ?? [];
+  if (!data) throw new ApiError("invalid avatar areas payload", 500);
+  return data.areas ?? [];
 }
 
 export async function createArea(talentId: string, box: CropAreaData): Promise<CropArea> {
@@ -134,7 +133,9 @@ export async function generateCrops(
     `${areasPath(talentId)}/generate?${params.toString()}`,
     { method: "POST", credentials: "include" }
   );
-  return readEnvelope<CropGenerationResult>(res);
+  const data = await readEnvelope<CropGenerationResult>(res);
+  if (!data) throw new ApiError("invalid crop generation payload", 500);
+  return data;
 }
 
 export async function generateMissingCrops(
@@ -146,5 +147,7 @@ export async function generateMissingCrops(
     `/api/v1/talent/areas/generate-missing?${params.toString()}`,
     { method: "POST", credentials: "include", signal }
   );
-  return readEnvelope<BatchGenerationSummary>(res);
+  const data = await readEnvelope<BatchGenerationSummary>(res);
+  if (!data) throw new ApiError("invalid batch generation payload", 500);
+  return data;
 }

@@ -1,4 +1,5 @@
 import { authedJson } from "./api-client";
+import { ApiError } from "./errors";
 import {
   buildTalentDeletePayload,
   type AdminTalent,
@@ -28,11 +29,13 @@ export function withIdempotency(init?: RequestInit): RequestInit {
   return { ...init, headers };
 }
 
-export function createGameSession(): Promise<GameSession> {
-  return authedJson<GameSession>(
+export async function createGameSession(): Promise<GameSession> {
+  const data = await authedJson<GameSession>(
     "/api/v1/game-session/create",
     withIdempotency({ method: "POST", credentials: "include" })
   );
+  if (!data) throw new ApiError("invalid game session payload", 500);
+  return data;
 }
 
 export interface SessionGuessResult {
@@ -41,11 +44,11 @@ export interface SessionGuessResult {
   session: SessionSummary;
 }
 
-export function submitSessionGuess(
+export async function submitSessionGuess(
   sessionId: string,
   talentId: string
 ): Promise<SessionGuessResult> {
-  return authedJson<SessionGuessResult>(
+  const data = await authedJson<SessionGuessResult>(
     `/api/v1/game-session/${sessionId}/answer`,
     withIdempotency({
       method: "POST",
@@ -53,6 +56,8 @@ export function submitSessionGuess(
       body: JSON.stringify({ talent_id: talentId }),
     })
   );
+  if (!data) throw new ApiError("invalid session guess payload", 500);
+  return data;
 }
 
 export async function saveTalent(

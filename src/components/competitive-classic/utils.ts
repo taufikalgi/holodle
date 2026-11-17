@@ -1,7 +1,6 @@
 import { googleAuthUrl } from "@/lib/api-client";
+import { AUTH_REDIRECT_KEY, getAuthRedirectTarget } from "@/lib/auth-redirect";
 import type { AuthUser, GameSession } from "./types";
-
-const AUTH_REDIRECT_KEY = "auth_redirect_to";
 
 export { normalizeTalent } from "@/lib/talents";
 
@@ -12,11 +11,6 @@ export {
   clearStoredHistory,
 } from "@/lib/session-history";
 
-function parseIsoDate(iso: string): Date {
-  const [y, m, d] = iso.split("-").map(Number);
-  return new Date(y, m - 1, d ?? 1);
-}
-
 export function getMondayDate(date: Date): Date {
   const d = new Date(date);
   const day = d.getDay();
@@ -24,13 +18,6 @@ export function getMondayDate(date: Date): Date {
   d.setDate(d.getDate() + diff);
   d.setHours(0, 0, 0, 0);
   return d;
-}
-
-export function toIsoDate(date: Date): string {
-  const y = date.getFullYear();
-  const m = String(date.getMonth() + 1).padStart(2, "0");
-  const d = String(date.getDate()).padStart(2, "0");
-  return `${y}-${m}-${d}`;
 }
 
 export function toMonthString(date: Date): string {
@@ -62,18 +49,7 @@ export function formatTimer(ms: number) {
 
 export function redirectToLogin(path?: string) {
   if (typeof window === "undefined") return;
-  const validPaths = new Set([
-    "/",
-    "/login",
-    "/classic/competitive",
-    "/classic/daily",
-    "/classic/endless",
-    "/avatar/daily",
-    "/avatar/endless",
-    "/admin",
-  ]);
-  const redirectPath = path && validPaths.has(path) ? path : "/classic/competitive";
-  sessionStorage.setItem(AUTH_REDIRECT_KEY, redirectPath);
+  sessionStorage.setItem(AUTH_REDIRECT_KEY, getAuthRedirectTarget(path));
   window.location.href = googleAuthUrl();
 }
 

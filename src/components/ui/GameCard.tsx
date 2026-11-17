@@ -1,3 +1,4 @@
+import Image from "next/image";
 import Link from "next/link";
 
 interface GameCardProps {
@@ -12,9 +13,12 @@ interface GameCardProps {
 export default function GameCard({ href, logo, alt, title, description, onPlay }: GameCardProps) {
   const content = (
     <>
-      <img
+      <Image
         src={logo}
         alt={alt}
+        width={80}
+        height={80}
+        unoptimized
         loading="lazy"
         referrerPolicy="no-referrer"
         className="w-20 h-20 rounded-full object-cover mr-1 flex-shrink-0"

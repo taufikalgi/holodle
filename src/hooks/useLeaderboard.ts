@@ -2,11 +2,11 @@
 
 import { useCallback, useRef, useState } from "react";
 import { fetchLeaderboardPage } from "@/lib/queries";
+import { toIsoDate } from "@/lib/date";
 import {
   addDays,
   addMonths,
   getMondayDate,
-  toIsoDate,
   toMonthString,
 } from "@/components/competitive-classic/utils";
 import type {

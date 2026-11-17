@@ -1,13 +1,5 @@
+import RouteLoading from "@/components/ui/RouteLoading";
+
 export default function Loading() {
-  return (
-    <main className="min-h-screen bg-[var(--holo-bg)]">
-      <div className="max-w-5xl mx-auto px-4 py-8 text-center">
-        <p
-          className="text-sm font-semibold animate-pulse text-[var(--holo-text-muted)]"
-        >
-          Loading…
-        </p>
-      </div>
-    </main>
-  );
+  return <RouteLoading />;
 }

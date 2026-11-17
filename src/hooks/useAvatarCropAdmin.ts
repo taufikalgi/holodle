@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useAuth } from "@/hooks/useAuth";
+import { useAdminGuard } from "@/hooks/useAdminGuard";
 import { ApiError } from "@/lib/errors";
 import { fetchTalentList } from "@/lib/queries";
 import {
@@ -35,7 +35,7 @@ type SingleGenerationConfirmation = {
 };
 
 export function useAvatarCropAdmin() {
-  const { user, loading: authLoading, logout } = useAuth({ requireAdmin: true });
+  const { user, authLoading, handleLogout } = useAdminGuard();
   const router = useRouter();
   const searchParams = useSearchParams();
 
@@ -132,15 +132,6 @@ export function useAvatarCropAdmin() {
     setGeneratedPreview(null);
     if (talent) loadAreas(talent.id);
   }, [talent, loadAreas]);
-
-  useEffect(() => {
-    if (!authLoading && !user) router.replace("/admin/login");
-  }, [authLoading, user, router]);
-
-  function handleLogout() {
-    logout();
-    router.push("/admin/login");
-  }
 
   const addArea = useCallback((box: CropBox) => {
     const key = nextKey();

@@ -3,6 +3,7 @@
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/hooks/useAuth";
+import { AUTH_REDIRECT_KEY, getAuthRedirectTarget } from "@/lib/auth-redirect";
 import AuthGate from "@/components/competitive-classic/AuthGate";
 
 export default function LoginPage() {
@@ -11,22 +12,9 @@ export default function LoginPage() {
 
   useEffect(() => {
     if (!loading && user) {
-      const target = sessionStorage.getItem("auth_redirect_to");
-      const validPaths = new Set([
-        "/",
-        "/login",
-        "/classic/competitive",
-        "/classic/daily",
-        "/classic/endless",
-        "/avatar/daily",
-        "/avatar/endless",
-        "/holosong/daily",
-        "/holosong/endless",
-        "/admin",
-      ]);
-      const redirectTo = target && validPaths.has(target) ? target : "/classic/competitive";
-      if (target) sessionStorage.removeItem("auth_redirect_to");
-      router.replace(redirectTo);
+      const target = sessionStorage.getItem(AUTH_REDIRECT_KEY);
+      if (target) sessionStorage.removeItem(AUTH_REDIRECT_KEY);
+      router.replace(getAuthRedirectTarget(target));
     }
   }, [user, loading, router]);
 

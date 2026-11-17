@@ -1,15 +1,18 @@
 import { publicJson } from "./api-client";
+import { ApiError } from "./errors";
 
 export type Branch = "JP" | "EN" | "ID" | "DEV_IS" | "Stars JP" | "Stars EN";
 
 export const ALL_BRANCHES: Branch[] = ["JP", "EN", "ID", "DEV_IS", "Stars JP", "Stars EN"];
 
-export interface Keypoint {
-  label: string;
-  x: number;
-  y: number;
-  zoom: number;
-}
+/**
+ * Branches offered in Classic Endless.
+ *
+ * The Stars EN / Stars JP rosters are removed in production, so those branches
+ * always yield an empty talent pool and produce unwinnable rounds. Keep them in
+ * ALL_BRANCHES for admin surfaces, but never offer them for play here.
+ */
+export const ENDLESS_BRANCHES: Branch[] = ["JP", "EN", "ID", "DEV_IS"];
 
 export interface Talent {
   id: string;
@@ -19,11 +22,9 @@ export interface Talent {
   loreArchetype: string;
   height: number;
   birthMonth: string;
-  image: string;
   avatarUrl: string;
   altNames: string[]; // alternative search names
   photoUrl: string;
-  keypoints?: Keypoint[];
 }
 
 
@@ -49,12 +50,6 @@ export function buildTalentDeletePayload(talent: AdminTalent): AdminTalent {
   return { ...talent, is_deleted: true };
 }
 
-export interface TalentsResponse {
-  success: boolean;
-  message: string;
-  data: AdminTalent[];
-}
-
 export type TalentFormData = Omit<AdminTalent, "id" | "branch"> & {
   id?: string;
   // Draft strings — validated on submit (branch must be a valid Branch).
@@ -71,7 +66,6 @@ export function normalizeTalent(talent: ApiTalent): Talent {
     height: talent.height ?? 0,
     birthMonth: talent.birth_month,
     photoUrl: talent.image_url,
-    image: "",
     avatarUrl: talent.avatar_url,
     altNames: talent.alt_names ?? [],
   };
@@ -92,6 +86,7 @@ export function loadTalents(): Promise<Talent[]> {
   if (!poolInflight) {
     poolInflight = publicJson<ApiTalent[]>("/api/v1/talent/").then(
       (data) => {
+        if (!data) throw new ApiError("invalid talent payload", 500);
         poolCache = dedupeByName(
           data.filter((t) => !t.is_deleted).map(normalizeTalent)
         );
@@ -112,10 +107,7 @@ export function getTalentOfTheDay(pool: Talent[], date = new Date()): Talent | n
   return pool[seed % pool.length];
 }
 
-export function getDateString(): string {
-  const d = new Date();
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
-}
+export { getDateString } from "./date";
 
 export function filterTalentsByBranch(
   talents: Talent[],

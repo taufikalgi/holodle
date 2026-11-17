@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { ApiError } from "@/lib/errors";
+import { clearToken } from "@/lib/api-client";
 import { createGameSession, submitSessionGuess } from "@/lib/commands";
 import { fetchSession, fetchSessionTalents } from "@/lib/queries";
 import {
@@ -11,8 +12,8 @@ import {
   getEmptySessionHistoryState,
   getStoredHistoryState,
   setStoredHistoryState,
+  getSessionStatus,
 } from "@/components/competitive-classic/utils";
-import { useSessionMachine } from "@/hooks/useGameMachine";
 import type {
   AuthUser,
   GameSession,
@@ -43,7 +44,7 @@ export function useCompetitiveSession(user: AuthUser | null) {
 
   const expiresAt = session ? Date.parse(session.expires_at) : null;
   const expired = expiresAt !== null && expiresAt <= now;
-  const sessionStatus = useSessionMachine({
+  const sessionStatus = getSessionStatus({
     user,
     loading: sessionLoading || talentsLoading,
     session,
@@ -57,7 +58,7 @@ export function useCompetitiveSession(user: AuthUser | null) {
   const timeLeftText = session ? formatTimer(timeLeftMs) : "--:--";
 
   const handleUnauthorized = useCallback(() => {
-    localStorage.removeItem("token");
+    clearToken();
     redirectToLogin();
   }, []);
 
@@ -107,6 +108,8 @@ export function useCompetitiveSession(user: AuthUser | null) {
           clearStoredHistory(storedSessionId);
           setSession(null);
           setSessionEnded(false);
+          setCurrentRoundHistory([]);
+          setPreviousRounds([]);
           setSessionError("");
           setSessionLoading(false);
           return;
@@ -114,6 +117,14 @@ export function useCompetitiveSession(user: AuthUser | null) {
 
         localStorage.removeItem(SESSION_KEY);
         clearStoredHistory(storedSessionId);
+        setSession(null);
+        setSessionEnded(false);
+        setCurrentRoundHistory([]);
+        setPreviousRounds([]);
+        setSessionError(
+          err instanceof Error ? err.message : "Failed to load session"
+        );
+        setSessionLoading(false);
       }
     }
   }, [handleUnauthorized]);
@@ -278,7 +289,7 @@ export function useCompetitiveSession(user: AuthUser | null) {
   useEffect(() => {
     if (!toast) return;
     const timer = window.setTimeout(() => setToast(null), 2500);
-    return () => window.clearInterval(timer);
+    return () => window.clearTimeout(timer);
   }, [toast]);
 
   return {

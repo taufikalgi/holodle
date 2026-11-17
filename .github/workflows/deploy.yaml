@@ -1,143 +1,132 @@
-name: CI/CD Deploy
+name: Deploy
 
 on:
   push:
     branches:
       - master
       - dev
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  packages: write
+
+concurrency:
+  group: deploy-${{ github.ref_name == 'master' && 'production' || 'staging' }}
+  cancel-in-progress: false
 
 jobs:
-  deploy:
-    name: Deploy (${{ github.ref_name == 'master' || 'staging' }})
+  validate:
+    name: Validate public build config
+    if: github.ref_name == 'master' || github.ref_name == 'dev'
     runs-on: ubuntu-latest
-
+    timeout-minutes: 5
+    env:
+      GOOGLE_AUTH_URL: ${{ github.ref_name == 'master' && vars.NEXT_PUBLIC_GOOGLE_AUTH_URL_PROD || vars.NEXT_PUBLIC_GOOGLE_AUTH_URL_STAGING }}
+      API_URL: ${{ github.ref_name == 'master' && vars.NEXT_PUBLIC_API_URL_PROD || vars.NEXT_PUBLIC_API_URL_STAGING }}
     steps:
-      # ── 1. Checkout ────────────────────────────────────────────────────────
-      - name: Checkout code
+      - name: Check public build variables
+        run: |
+          set -euo pipefail
+          [ -n "$GOOGLE_AUTH_URL" ] || { echo "Missing NEXT_PUBLIC_GOOGLE_AUTH_URL_PROD/STAGING repository variable" >&2; exit 1; }
+          [ -n "$API_URL" ] || { echo "Missing NEXT_PUBLIC_API_URL_PROD/STAGING repository variable" >&2; exit 1; }
+
+  ci:
+    needs: validate
+    if: github.ref_name == 'master' || github.ref_name == 'dev'
+    uses: ./.github/workflows/ci.yml
+    with:
+      push-image: true
+      next-public-google-auth-url: ${{ github.ref_name == 'master' && vars.NEXT_PUBLIC_GOOGLE_AUTH_URL_PROD || vars.NEXT_PUBLIC_GOOGLE_AUTH_URL_STAGING }}
+      next-public-api-url: ${{ github.ref_name == 'master' && vars.NEXT_PUBLIC_API_URL_PROD || vars.NEXT_PUBLIC_API_URL_STAGING }}
+
+  deploy:
+    name: Deploy (${{ github.ref_name == 'master' && 'production' || 'staging' }})
+    needs: ci
+    if: github.ref_name == 'master' || github.ref_name == 'dev'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: read
+    environment:
+      name: ${{ github.ref_name == 'master' && 'production' || 'staging' }}
+    env:
+      ENV_NAME: ${{ github.ref_name == 'master' && 'production' || 'staging' }}
+      BLUE_PORT: ${{ github.ref_name == 'master' && '3001' || '3002' }}
+      GREEN_PORT: ${{ github.ref_name == 'master' && '3003' || '3004' }}
+      DEPLOY_PATH: ${{ github.ref_name == 'master' && secrets.PROD_DEPLOY_PATH || secrets.STAGING_DEPLOY_PATH }}
+    steps:
+      - name: Checkout
         uses: actions/checkout@v6
 
-      # ── 2. Set environment config based on branch ──────────────────────────
-      - name: Set environment config
-        id: config
-        run: |
-          if [[ "${{ github.ref_name }}" == "master" ]]; then
-            echo "ENV_NAME=production"                             >> $GITHUB_OUTPUT
-            echo "SSH_HOST=${{ secrets.HOST }}"              >> $GITHUB_OUTPUT
-            echo "SSH_USER=${{ secrets.USER }}"              >> $GITHUB_OUTPUT
-            echo "DEPLOY_PATH=${{ secrets.PROD_DEPLOY_PATH }}"    >> $GITHUB_OUTPUT
-            echo "APP_PORT=3001"                                  >> $GITHUB_OUTPUT
-            echo "PM2_APP=holodle-prod"                            >> $GITHUB_OUTPUT
-            {
-              echo "SSH_KEY<<EOF"
-              echo "${{ secrets.SSH_KEY }}"
-              echo "EOF"
-            } >> $GITHUB_OUTPUT
-            echo "NEXT_PUBLIC_GOOGLE_AUTH_URL=${{ secrets.NEXT_PUBLIC_GOOGLE_AUTH_URL_PROD }}" >> $GITHUB_OUTPUT
-            echo "NEXT_PUBLIC_API_URL=${{ vars.NEXT_PUBLIC_API_URL_PROD }}" >> $GITHUB_OUTPUT
-          else
-            echo "ENV_NAME=staging"                               >> $GITHUB_OUTPUT
-            echo "SSH_HOST=${{ secrets.HOST }}"           >> $GITHUB_OUTPUT
-            echo "SSH_USER=${{ secrets.USER }}"           >> $GITHUB_OUTPUT
-            echo "DEPLOY_PATH=${{ secrets.STAGING_DEPLOY_PATH }}" >> $GITHUB_OUTPUT
-            echo "APP_PORT=3002"                                  >> $GITHUB_OUTPUT
-            echo "PM2_APP=holodle-staging"                         >> $GITHUB_OUTPUT
-            {
-              echo "SSH_KEY<<EOF"
-              echo "${{ secrets.SSH_KEY }}"
-              echo "EOF"
-            } >> $GITHUB_OUTPUT
-            echo "NEXT_PUBLIC_GOOGLE_AUTH_URL=${{ secrets.NEXT_PUBLIC_GOOGLE_AUTH_URL_STAGING }}" >> $GITHUB_OUTPUT
-            echo "NEXT_PUBLIC_API_URL=${{ vars.NEXT_PUBLIC_API_URL_STAGING }}" >> $GITHUB_OUTPUT
-          fi
-
-      # ── 3. Setup pnpm ───────────────────────────────────────────────────
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v6
-        with:
-          version: 10.30.3
-
-      # ── 4. Setup Node.js ───────────────────────────────────────────────────
-      - name: Setup Node.js
-        uses: actions/setup-node@v6
-        with:
-          node-version: 24
-          cache: pnpm
-
-      # ── 5. Install dependencies ────────────────────────────────────────────
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
-
-      # ── 6. Lint ────────────────────────────────────────────────────────────
-      # - name: Lint
-      #   run: pnpm run lint
-
-      # ── 7. Run tests ───────────────────────────────────────────────────────
-      #   - name: Run tests
-      #     run: npm test -- --passWithNoTests
-
-      # ── 8. Build Next.js ───────────────────────────────────────────────────
-      - name: Build
-        run: pnpm build
+      - name: Resolve image digest
         env:
-          NODE_ENV: production
-          NEXT_PUBLIC_GOOGLE_AUTH_URL: ${{ steps.config.outputs.NEXT_PUBLIC_GOOGLE_AUTH_URL }}
-          NEXT_PUBLIC_API_URL: ${{ steps.config.outputs.NEXT_PUBLIC_API_URL }}
-
-      # ── 9. Bundle build artifact ───────────────────────────────────────────
-      # Packages only what's needed to run on the server (no devDependencies)
-      - name: Package build artifact
+          DIGEST: ${{ needs.ci.outputs.image-digest }}
         run: |
-          tar -czf artifact.tar.gz \
-            .next \
-            public \
-            package.json \
-            pnpm-lock.yaml \
-            next.config.* \
-            next-env.d.ts 2>/dev/null || true
+          set -euo pipefail
+          [ -n "$DIGEST" ] || { echo "CI did not produce an image digest" >&2; exit 1; }
+          echo "IMAGE_DIGEST=$DIGEST" >> "$GITHUB_ENV"
+          echo "IMAGE=ghcr.io/${{ github.repository }}@$DIGEST" >> "$GITHUB_ENV"
 
-      # ── 10. Upload artifact to Droplet ─────────────────────────────────────
-      - name: Upload artifact
-        uses: appleboy/scp-action@v0.1.7
+      - name: Validate configuration
+        env:
+          SSH_HOST: ${{ secrets.HOST }}
+          SSH_USER: ${{ secrets.USER }}
+          SSH_KEY: ${{ secrets.SSH_KEY }}
+        run: |
+          set -euo pipefail
+          : "${DEPLOY_PATH:?PROD_DEPLOY_PATH or STAGING_DEPLOY_PATH is not set}"
+          : "${BLUE_PORT:?BLUE_PORT is not set}"
+          : "${GREEN_PORT:?GREEN_PORT is not set}"
+          : "${IMAGE:?IMAGE is not set}"
+          : "${IMAGE_DIGEST:?IMAGE_DIGEST is not set}"
+          : "${SSH_HOST:?HOST secret is not set}"
+          : "${SSH_USER:?USER secret is not set}"
+          : "${SSH_KEY:?SSH_KEY secret is not set}"
+          case "$DEPLOY_PATH" in
+            /*) ;;
+            *) echo "DEPLOY_PATH must be absolute" >&2; exit 1 ;;
+          esac
+          case "$BLUE_PORT" in
+            *[!0-9]*) echo "BLUE_PORT must be numeric" >&2; exit 1 ;;
+          esac
+          case "$GREEN_PORT" in
+            *[!0-9]*) echo "GREEN_PORT must be numeric" >&2; exit 1 ;;
+          esac
+          [ "$BLUE_PORT" != "$GREEN_PORT" ] || { echo "BLUE_PORT and GREEN_PORT must differ" >&2; exit 1; }
+          case "$IMAGE" in
+            ghcr.io/*@sha256:*) ;;
+            *) echo "IMAGE must be pinned by digest" >&2; exit 1 ;;
+          esac
+
+      - name: Set up SSH agent
+        uses: ./.github/actions/setup-ssh
         with:
-          host: ${{ steps.config.outputs.SSH_HOST }}
-          username: ${{ steps.config.outputs.SSH_USER }}
-          key: ${{ steps.config.outputs.SSH_KEY }}
-          source: artifact.tar.gz
-          target: ${{ steps.config.outputs.DEPLOY_PATH }}
+          ssh-private-key: ${{ secrets.SSH_KEY }}
 
-      # ── 10. Deploy on Droplet ─────────────────────────────────────────────
-      - name: Deploy to ${{ steps.config.outputs.ENV_NAME }}
-        uses: appleboy/ssh-action@v1.0.3
-        with:
-          host: ${{ steps.config.outputs.SSH_HOST }}
-          username: ${{ steps.config.outputs.SSH_USER }}
-          key: ${{ steps.config.outputs.SSH_KEY }}
-          script: |
-            set -e
+      - name: Add host to known hosts
+        run: |
+          mkdir -p ~/.ssh
+          chmod 700 ~/.ssh
+          ssh-keyscan -H "${{ secrets.HOST }}" >> ~/.ssh/known_hosts
 
-            DEPLOY_PATH="${{ steps.config.outputs.DEPLOY_PATH }}"
-            PM2_APP="${{ steps.config.outputs.PM2_APP }}"
-            APP_PORT="${{ steps.config.outputs.APP_PORT }}"
+      - name: Upload deploy files
+        run: |
+          set -euo pipefail
+          rsync -azR --mkpath \
+            compose.yaml \
+            scripts/deploy-remote.sh \
+            "${{ secrets.USER }}@${{ secrets.HOST }}:${{ env.DEPLOY_PATH }}/"
+          ssh "${{ secrets.USER }}@${{ secrets.HOST }}" \
+            "test -f '${{ env.DEPLOY_PATH }}/compose.yaml' && test -f '${{ env.DEPLOY_PATH }}/scripts/deploy-remote.sh'"
 
-            cd $DEPLOY_PATH
-
-            # Extract new build
-            tar -xzf artifact.tar.gz
-            rm artifact.tar.gz
-
-            # Install production dependencies only
-            pnpm install --prod
-
-            # Copy environment file
-            # Expects .env.production or .env.staging to already exist on the server
-            cp .env.${{ steps.config.outputs.ENV_NAME }} .env.local 2>/dev/null || true
-
-            # Reload app with PM2 (zero-downtime reload)
-            if pm2 show $PM2_APP > /dev/null 2>&1; then
-              pm2 reload $PM2_APP --update-env
-            else
-              PORT=$APP_PORT pm2 start pnpm --name $PM2_APP --update-env -- start
-              pm2 save
-            fi
-
-            echo "✅ Deployed to ${{ steps.config.outputs.ENV_NAME }} on port $APP_PORT"
+      - name: Deploy
+        run: |
+          # These values are intentionally expanded locally into the remote env.
+          # shellcheck disable=SC2029
+          ssh "${{ secrets.USER }}@${{ secrets.HOST }}" \
+            "DEPLOY_PATH='$DEPLOY_PATH' ENV_NAME='$ENV_NAME' IMAGE='$IMAGE' BLUE_PORT='$BLUE_PORT' GREEN_PORT='$GREEN_PORT' bash -s" <<'ENDSSH'
+          set -euo pipefail
+          cd "$DEPLOY_PATH"
+          bash scripts/deploy-remote.sh
+          ENDSSH

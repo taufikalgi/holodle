@@ -1,3 +1,4 @@
+import Image from "next/image";
 import type { ReactNode } from "react";
 
 export default function GameOverBanner({
@@ -17,7 +18,7 @@ export default function GameOverBanner({
   children?: ReactNode;
   revealed?: boolean;
   onReveal?: () => void;
-  answerDetails?: { image?: string; branch?: string; debutYear?: number; loreArchetype?: string };
+  answerDetails?: { photoUrl?: string; branch?: string; debutYear?: number; loreArchetype?: string };
   message?: string;
   actions?: ReactNode;
 }) {
@@ -50,10 +51,13 @@ export default function GameOverBanner({
           </p>
           {revealed && answerDetails && (
             <p className="text-xs text-red-400 mt-1">
-              {answerDetails.image && (
-                <img
-                  src={answerDetails.image}
+              {answerDetails.photoUrl && (
+                <Image
+                  src={answerDetails.photoUrl}
                   alt={answerName}
+                  width={64}
+                  height={64}
+                  unoptimized
                   className="w-16 h-16 mx-auto my-2 rounded-full object-cover"
                 />
               )}
