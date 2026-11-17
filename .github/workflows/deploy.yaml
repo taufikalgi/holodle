@@ -113,10 +113,12 @@ jobs:
       - name: Upload deploy files
         run: |
           set -euo pipefail
-          rsync -az --mkpath \
+          rsync -azR --mkpath \
             compose.yaml \
             scripts/deploy-remote.sh \
             "${{ secrets.USER }}@${{ secrets.HOST }}:${{ env.DEPLOY_PATH }}/"
+          ssh "${{ secrets.USER }}@${{ secrets.HOST }}" \
+            "test -f '${{ env.DEPLOY_PATH }}/compose.yaml' && test -f '${{ env.DEPLOY_PATH }}/scripts/deploy-remote.sh'"
 
       - name: Deploy
         run: |
