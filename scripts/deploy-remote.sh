@@ -56,10 +56,6 @@ fi
 NGINX_UPSTREAM_FILE="$NGINX_UPSTREAM_DIR/$ENV_NAME-upstream.conf"
 [ -f "$NGINX_UPSTREAM_FILE" ] || fail "missing Nginx upstream file: $NGINX_UPSTREAM_FILE"
 
-APP_ENV_FILE="$DEPLOY_PATH/.env.$ENV_NAME"
-[ -f "$APP_ENV_FILE" ] || fail "missing app env file: $APP_ENV_FILE"
-chmod 600 "$APP_ENV_FILE" 2>/dev/null || true
-
 for cmd in docker curl flock mktemp; do
   command -v "$cmd" >/dev/null 2>&1 || fail "required command not found: $cmd"
 done
@@ -77,7 +73,6 @@ mkdir -p "$STATE_DIR"
 cat > "$COMPOSE_ENV" <<EOF
 BLUE_PORT=$BLUE_PORT
 GREEN_PORT=$GREEN_PORT
-APP_ENV_FILE=$APP_ENV_FILE
 EOF
 
 compose() {
