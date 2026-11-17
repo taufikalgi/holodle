@@ -78,6 +78,9 @@ jobs:
     permissions:
       contents: read
       packages: write
+    env:
+      NEXT_PUBLIC_GOOGLE_AUTH_URL: ${{ github.event_name == 'pull_request' && 'https://example.invalid/google-auth' || inputs.next-public-google-auth-url }}
+      NEXT_PUBLIC_API_URL: ${{ github.event_name == 'pull_request' && 'https://example.invalid/api' || inputs.next-public-api-url }}
     outputs:
       digest: ${{ steps.build.outputs.digest }}
     steps:
@@ -91,12 +94,9 @@ jobs:
           echo "pnpm=$(node -p 'require("./package.json").packageManager.split("@")[1].split("+")[0]')" >> "$GITHUB_OUTPUT"
 
       - name: Validate public build args
-        env:
-          GOOGLE_AUTH_URL: ${{ inputs.next-public-google-auth-url }}
-          API_URL: ${{ inputs.next-public-api-url }}
         run: |
-          test -n "$GOOGLE_AUTH_URL"
-          test -n "$API_URL"
+          test -n "$NEXT_PUBLIC_GOOGLE_AUTH_URL"
+          test -n "$NEXT_PUBLIC_API_URL"
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
@@ -120,8 +120,8 @@ jobs:
           build-args: |
             NODE_VERSION=${{ steps.versions.outputs.node }}
             PNPM_VERSION=${{ steps.versions.outputs.pnpm }}
-            NEXT_PUBLIC_GOOGLE_AUTH_URL=${{ inputs.next-public-google-auth-url }}
-            NEXT_PUBLIC_API_URL=${{ inputs.next-public-api-url }}
+            NEXT_PUBLIC_GOOGLE_AUTH_URL=${{ env.NEXT_PUBLIC_GOOGLE_AUTH_URL }}
+            NEXT_PUBLIC_API_URL=${{ env.NEXT_PUBLIC_API_URL }}
           cache-from: type=gha
           cache-to: ${{ inputs.push-image && 'type=gha,mode=max' || '' }}
           labels: |

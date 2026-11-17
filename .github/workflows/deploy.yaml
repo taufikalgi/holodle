@@ -16,7 +16,23 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  validate:
+    name: Validate public build config
+    if: github.ref_name == 'master' || github.ref_name == 'dev'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    env:
+      GOOGLE_AUTH_URL: ${{ github.ref_name == 'master' && vars.NEXT_PUBLIC_GOOGLE_AUTH_URL_PROD || vars.NEXT_PUBLIC_GOOGLE_AUTH_URL_STAGING }}
+      API_URL: ${{ github.ref_name == 'master' && vars.NEXT_PUBLIC_API_URL_PROD || vars.NEXT_PUBLIC_API_URL_STAGING }}
+    steps:
+      - name: Check public build variables
+        run: |
+          set -euo pipefail
+          [ -n "$GOOGLE_AUTH_URL" ] || { echo "Missing NEXT_PUBLIC_GOOGLE_AUTH_URL_PROD/STAGING repository variable" >&2; exit 1; }
+          [ -n "$API_URL" ] || { echo "Missing NEXT_PUBLIC_API_URL_PROD/STAGING repository variable" >&2; exit 1; }
+
   ci:
+    needs: validate
     if: github.ref_name == 'master' || github.ref_name == 'dev'
     uses: ./.github/workflows/ci.yml
     with:
