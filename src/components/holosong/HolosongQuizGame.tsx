@@ -149,6 +149,13 @@ export default function HolosongQuizGame({
                 option={correctReveal}
                 onNext={nextRound}
               />
+            ) : session.status !== "ongoing" ? (
+              <HolosongQuizResult
+                session={session}
+                endless={endless}
+                stats={stats}
+                onNewRun={endless ? newRun : undefined}
+              />
             ) : (
               <>
                 <HolosongQuizClipPlayer
@@ -167,25 +174,15 @@ export default function HolosongQuizGame({
                 <HolosongQuizOptions
                   session={session}
                   selectedId={selectedId}
-                  disabled={submitting || session.status !== "ongoing"}
+                  disabled={submitting}
                   onSelect={onSelect}
                 />
 
-                {session.status === "ongoing" && (
-                  <ZeroGuessHint
-                    compact
-                    line1="Listen, then pick the song you heard."
-                    line2="One guess per round — no timer"
-                  />
-                )}
-
-                {session.status !== "ongoing" && (
-                  <HolosongQuizResult
-                    session={session}
-                    endless={endless}
-                    onNewRun={endless ? newRun : undefined}
-                  />
-                )}
+                <ZeroGuessHint
+                  compact
+                  line1="Listen, then pick the song you heard."
+                  line2="One guess per round — no timer"
+                />
               </>
             )}
           </>
