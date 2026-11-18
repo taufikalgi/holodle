@@ -89,6 +89,46 @@ export function buildHolosongEndlessShareText({
   return lines.join("\n");
 }
 
+export function buildHolosongQuizShareText({
+  mode,
+  guesses,
+  roundsWon,
+  roundsPlayed,
+  bestStreak,
+  url,
+}: {
+  mode: "DAILY" | "ENDLESS";
+  guesses: boolean[];
+  roundsWon: number;
+  roundsPlayed: number;
+  bestStreak: number;
+  url?: string;
+}): string {
+  const shareUrl = url ?? (typeof window !== "undefined" ? window.location.href : "");
+  const row = guesses.map((correct) => (correct ? "🟩" : "🟥")).join("");
+
+  if (mode === "ENDLESS") {
+    const streakPart = bestStreak > 0 ? ` · best streak ${bestStreak} 🔥` : "";
+    const lines = [
+      "HOLODLE HOLOSONG QUIZ — ENDLESS",
+      `${roundsWon}/${roundsPlayed} rounds${streakPart}`,
+      "",
+      row,
+      "",
+    ];
+    if (shareUrl) lines.push(shareUrl);
+    return lines.join("\n");
+  }
+
+  const lines = [
+    `HOLODLE HOLOSONG QUIZ ${roundsWon > 0 ? "1/1" : "0/1"}`,
+    row,
+    "",
+  ];
+  if (shareUrl) lines.push(shareUrl);
+  return lines.join("\n");
+}
+
 export function buildAvatarShareText({
   mode,
   guessCount,
