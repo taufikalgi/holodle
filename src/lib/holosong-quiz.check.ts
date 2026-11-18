@@ -15,6 +15,7 @@ import {
   isHolosongQuizFinished,
   type HolosongQuizSession,
 } from "./holosong-quiz-api";
+import { buildHolosongQuizShareText } from "./share";
 
 const session: HolosongQuizSession = {
   id: "quiz-1",
@@ -82,5 +83,64 @@ assert.equal(
 
 assert.equal(holosongQuizLeaderboardHasMore({ page: 1, page_size: 20, total: 21 }), true);
 assert.equal(holosongQuizLeaderboardHasMore({ page: 2, page_size: 20, total: 21 }), false);
+
+// Share text: endless run with a mix of correct and wrong rounds.
+assert.equal(
+  buildHolosongQuizShareText({
+    mode: "ENDLESS",
+    guesses: [true, true, true, false, true, true],
+    roundsWon: 5,
+    roundsPlayed: 6,
+    bestStreak: 3,
+    url: "https://holodle.xyz/holosong/quiz/endless",
+  }),
+  [
+    "HOLODLE HOLOSONG QUIZ — ENDLESS",
+    "5/6 rounds · best streak 3 🔥",
+    "",
+    "🟩🟩🟩🟥🟩🟩",
+    "",
+    "https://holodle.xyz/holosong/quiz/endless",
+  ].join("\n")
+);
+
+// Share text: a run that never got a correct answer omits the streak part.
+assert.equal(
+  buildHolosongQuizShareText({
+    mode: "ENDLESS",
+    guesses: [false],
+    roundsWon: 0,
+    roundsPlayed: 1,
+    bestStreak: 0,
+    url: "https://holodle.xyz/holosong/quiz/endless",
+  }),
+  ["HOLODLE HOLOSONG QUIZ — ENDLESS", "0/1 rounds", "", "🟥", "", "https://holodle.xyz/holosong/quiz/endless"].join("\n")
+);
+
+// Share text: daily solved.
+assert.equal(
+  buildHolosongQuizShareText({
+    mode: "DAILY",
+    guesses: [true],
+    roundsWon: 1,
+    roundsPlayed: 1,
+    bestStreak: 1,
+    url: "https://holodle.xyz/holosong/quiz/daily",
+  }),
+  ["HOLODLE HOLOSONG QUIZ 1/1", "🟩", "", "https://holodle.xyz/holosong/quiz/daily"].join("\n")
+);
+
+// Share text: daily missed.
+assert.equal(
+  buildHolosongQuizShareText({
+    mode: "DAILY",
+    guesses: [false],
+    roundsWon: 0,
+    roundsPlayed: 1,
+    bestStreak: 0,
+    url: "https://holodle.xyz/holosong/quiz/daily",
+  }),
+  ["HOLODLE HOLOSONG QUIZ 0/1", "🟥", "", "https://holodle.xyz/holosong/quiz/daily"].join("\n")
+);
 
 console.log("holosong-quiz.check: all assertions passed");
