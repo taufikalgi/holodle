@@ -87,7 +87,10 @@ export default function HolosongQuizResult({
             New run →
           </button>
         )}
-        <ShareButton text={shareText} />
+        <ShareButton
+          text={shareText}
+          className="px-6 py-2 rounded-full text-sm font-bold text-white transition-opacity hover:opacity-80 bg-[var(--holo-blue)]"
+        />
       </div>
 
       {!endless && (

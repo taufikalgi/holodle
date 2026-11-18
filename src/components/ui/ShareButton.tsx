@@ -5,9 +5,12 @@ import { useState, useCallback } from "react";
 export default function ShareButton({
   text,
   label = "Share",
+  className,
 }: {
   text: string;
   label?: string;
+  /** Overrides the default styling, including the stack spacing (mt-3). */
+  className?: string;
 }) {
   const [copied, setCopied] = useState(false);
 
@@ -36,7 +39,10 @@ export default function ShareButton({
     <button
       type="button"
       onClick={copy}
-      className="mt-3 px-6 py-2 rounded-full text-sm font-bold text-white transition-opacity hover:opacity-80 bg-[var(--holo-blue)]"
+      className={
+        className ??
+        "mt-3 px-6 py-2 rounded-full text-sm font-bold text-white transition-opacity hover:opacity-80 bg-[var(--holo-blue)]"
+      }
     >
       {copied ? "Copied!" : label}
     </button>
