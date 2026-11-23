@@ -2,6 +2,19 @@
 
 A collection of daily and endless guessing games for Hololive talents and songs. Inspired by [Valodle](https://valodle.eu/classic).
 
+## Table of Contents
+
+- [Tech Stack](#tech-stack)
+- [Getting Started](#getting-started)
+- [Game Modes](#game-modes)
+- [Classic Rules](#classic-rules)
+- [Categories](#categories)
+- [Data](#data)
+- [Build for Production](#build-for-production)
+- [License](#license)
+- [Disclaimer](#disclaimer)
+- [Contributing](#contributing)
+
 ## Tech Stack
 
 - **Next.js 16**
@@ -56,6 +69,21 @@ pnpm build
 pnpm start
 ```
 
+## License
+
+Source code is licensed under the [MIT License](LICENSE).
+
+Not covered by that license, and documented in [NOTICE.md](NOTICE.md):
+
+- **Fonts** — Albert Sans ships inside the build under the SIL Open Font License 1.1.
+- **Runtime imagery** — talent images, Google avatars and iTunes artwork are fetched from their owners' hosts and remain under their terms.
+- **Trademarks** — Hololive and Hololive Production belong to COVER Corporation; no trademark rights are granted.
+- **Backend** — the API this frontend talks to is a separate private repository.
+
 ## Disclaimer
 
 Fan-made project. Not affiliated with Cover Corp or Hololive Production.
+
+## Contributing
+
+See [CONTRIBUTING.md](CONTRIBUTING.md). Contributions are accepted under the MIT license.
