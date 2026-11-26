@@ -172,7 +172,7 @@ export function useCompetitiveSession(user: AuthUser | null) {
       setSessionError("");
 
       try {
-        const data = await submitSessionGuess(session.id, talent.id);
+        const data = await submitSessionGuess(session.id, talent.id, session.version);
 
         const entry: GuessEntry = {
           talent,
@@ -197,6 +197,7 @@ export function useCompetitiveSession(user: AuthUser | null) {
                 correct_guesses: data.session.correct_guesses,
                 wrong_answers: data.session.wrong_answers,
                 round_number: data.session.round_number,
+                version: data.session.version,
                 updated_at: new Date().toISOString(),
               }
             : prev
