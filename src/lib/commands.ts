@@ -46,14 +46,15 @@ export interface SessionGuessResult {
 
 export async function submitSessionGuess(
   sessionId: string,
-  talentId: string
+  talentId: string,
+  expectedVersion: number
 ): Promise<SessionGuessResult> {
   const data = await authedJson<SessionGuessResult>(
     `/api/v1/game-session/${sessionId}/answer`,
     withIdempotency({
       method: "POST",
       credentials: "include",
-      body: JSON.stringify({ talent_id: talentId }),
+      body: JSON.stringify({ talent_id: talentId, expected_version: expectedVersion }),
     })
   );
   if (!data) throw new ApiError("invalid session guess payload", 500);

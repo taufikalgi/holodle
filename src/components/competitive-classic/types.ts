@@ -15,6 +15,8 @@ export type SessionSummary = {
   correct_guesses: number;
   wrong_answers: number;
   round_number: number;
+  /** Optimistic-concurrency token; the backend rejects answers without it. */
+  version: number;
 };
 
 export type GameSession = {
@@ -24,6 +26,7 @@ export type GameSession = {
   correct_guesses: number;
   wrong_answers: number;
   round_number: number;
+  version: number;
   created_at: string;
   updated_at: string;
   expires_at: string;
