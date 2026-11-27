@@ -31,7 +31,9 @@ export default function HolosongQuizResult({
   const careerBest = stats?.endless.best_streak ?? 0;
 
   return (
-    <div className="holo-card p-5 mb-5 animate-bounce-in">
+    <div
+      className={`${won ? "win-banner" : "lose-banner"} rounded-2xl p-5 mb-5 text-center animate-bounce-in`}
+    >
       <div className="text-center">
         <div className="text-3xl mb-2">{won ? "🎊" : "😔"}</div>
         <h2 className={`text-xl font-black mb-1 ${won ? "text-green-600" : "text-red-500"}`}>
@@ -52,7 +54,7 @@ export default function HolosongQuizResult({
 
       {endless && (
         <div className="mt-4 grid grid-cols-3 gap-2">
-          <div className="rounded-xl border px-3 py-2 text-center border-[var(--holo-border)]">
+          <div className="rounded-xl border px-3 py-2 text-center border-black/10 bg-white/50 dark:border-white/15 dark:bg-white/5">
             <div className="text-[10px] font-bold uppercase tracking-widest text-[var(--holo-text-muted)]">
               Rounds won
             </div>
@@ -60,7 +62,7 @@ export default function HolosongQuizResult({
               {session.rounds_won}/{session.rounds_played}
             </div>
           </div>
-          <div className="rounded-xl border px-3 py-2 text-center border-[var(--holo-border)]">
+          <div className="rounded-xl border px-3 py-2 text-center border-black/10 bg-white/50 dark:border-white/15 dark:bg-white/5">
             <div className="text-[10px] font-bold uppercase tracking-widest text-[var(--holo-text-muted)]">
               Best streak
             </div>
@@ -68,7 +70,7 @@ export default function HolosongQuizResult({
               {session.longest_streak} 🔥
             </div>
           </div>
-          <div className="rounded-xl border px-3 py-2 text-center border-[var(--holo-border)]">
+          <div className="rounded-xl border px-3 py-2 text-center border-black/10 bg-white/50 dark:border-white/15 dark:bg-white/5">
             <div className="text-[10px] font-bold uppercase tracking-widest text-[var(--holo-text-muted)]">
               Career best
             </div>
