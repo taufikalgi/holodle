@@ -151,7 +151,10 @@ jobs:
           for attempt in $(seq 1 30); do
             body="$(curl -fsS --max-time 10 "$URL/api/version" 2>/dev/null || true)"
             served="$(printf '%s' "$body" | python3 -c 'import json,sys; print(json.load(sys.stdin).get("build",""))' 2>/dev/null || true)"
-            if [ "$served" = "$EXPECTED_DIGEST" ]; then
+            # BUILD_ID holds the full image reference (ghcr.io/repo@sha256:...);
+            # the CI output is the bare digest, so compare on the digest part.
+            served_digest="${served##*@}"
+            if [ -n "$served_digest" ] && [ "$served_digest" = "$EXPECTED_DIGEST" ]; then
               echo "✓ $URL is serving $served"
               exit 0
             fi
@@ -162,7 +165,7 @@ jobs:
           echo "::error::$URL is not serving $EXPECTED_DIGEST (last: '${served:-<no response>}')"
           echo "--- remote state ---"
           ssh "${{ secrets.USER }}@${{ secrets.HOST }}" \
-            "cd '${{ env.DEPLOY_PATH }}' && docker compose -p holodle-$ENV_NAME ps || docker compose ps" || true
+            "cd '${{ env.DEPLOY_PATH }}' && docker compose --env-file compose.env -p holodle-$ENV_NAME ps" || true
           ssh "${{ secrets.USER }}@${{ secrets.HOST }}" \
-            "cd '${{ env.DEPLOY_PATH }}' && docker compose logs --tail=60 2>&1 | tail -60" || true
+            "cd '${{ env.DEPLOY_PATH }}' && docker compose --env-file compose.env -p holodle-$ENV_NAME logs --tail=60 2>&1 | tail -60" || true
           exit 1
