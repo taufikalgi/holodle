@@ -130,3 +130,42 @@ jobs:
           cd "$DEPLOY_PATH"
           bash scripts/deploy-remote.sh
           ENDSSH
+
+      # The deploy script already proves a container answers on its loopback port
+      # and switches the upstream only then. This step proves the *public* URL is
+      # serving the image we just built — the difference between "a container is
+      # up" and "users are on the new build".
+      - name: Verify public deployment
+        env:
+          EXPECTED_DIGEST: ${{ env.IMAGE_DIGEST }}
+        run: |
+          set -euo pipefail
+          case "$ENV_NAME" in
+            production) URL="https://holodle.xyz" ;;
+            staging) URL="https://dev-holodle.taufikalgi.dev" ;;
+            *) echo "::error::unknown ENV_NAME $ENV_NAME"; exit 1 ;;
+          esac
+
+          echo "→ Expecting build $EXPECTED_DIGEST on $URL"
+          served=""
+          for attempt in $(seq 1 30); do
+            body="$(curl -fsS --max-time 10 "$URL/api/version" 2>/dev/null || true)"
+            served="$(printf '%s' "$body" | python3 -c 'import json,sys; print(json.load(sys.stdin).get("build",""))' 2>/dev/null || true)"
+            # BUILD_ID holds the full image reference (ghcr.io/repo@sha256:...);
+            # the CI output is the bare digest, so compare on the digest part.
+            served_digest="${served##*@}"
+            if [ -n "$served_digest" ] && [ "$served_digest" = "$EXPECTED_DIGEST" ]; then
+              echo "✓ $URL is serving $served"
+              exit 0
+            fi
+            echo "  attempt $attempt: served '${served:-<no response>}'"
+            sleep 5
+          done
+
+          echo "::error::$URL is not serving $EXPECTED_DIGEST (last: '${served:-<no response>}')"
+          echo "--- remote state ---"
+          ssh "${{ secrets.USER }}@${{ secrets.HOST }}" \
+            "cd '${{ env.DEPLOY_PATH }}' && docker compose --env-file compose.env -p holodle-$ENV_NAME ps" || true
+          ssh "${{ secrets.USER }}@${{ secrets.HOST }}" \
+            "cd '${{ env.DEPLOY_PATH }}' && docker compose --env-file compose.env -p holodle-$ENV_NAME logs --tail=60 2>&1 | tail -60" || true
+          exit 1
