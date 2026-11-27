@@ -6,6 +6,9 @@ x-app: &app
     NODE_ENV: production
     PORT: "3000"
     HOSTNAME: "0.0.0.0"
+    # Digest of the image this container was started from. Exposed by
+    # /api/version so the deploy can prove the new build is actually live.
+    BUILD_ID: ${IMAGE:?IMAGE is required}
   mem_limit: 768m
   cpus: 1.0
   stop_grace_period: 10s
